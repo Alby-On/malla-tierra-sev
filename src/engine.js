@@ -258,12 +258,45 @@ const MG = (() => {
   }
   function laurent(rhoEq, m) { return rhoEq / (4 * Math.sqrt(m.S / PI)) + rhoEq / m.Lt; }
 
+
+  // ---------- Schwarz completo: malla + barras + resistencia mutua (guía de Schwarz) ----------
+  function sistema(p) { // p: rhoEq, a, b, Lc, h, d, n, Lb, rb
+    const a = Math.max(p.a, p.b), b = Math.min(p.a, p.b), A = a * b, sA = Math.sqrt(A), x = a / b, hRel = p.h / sA;
+    const ap = Math.sqrt(p.d * p.h), K1 = 1.43 - 2.3 * hRel - 0.044 * x, K2 = 5.50 - 8 * hRel + (0.15 - hRel) * x;
+    const f = p.rhoEq / (PI * p.Lc);
+    const R1 = f * (Math.log(2 * p.Lc / ap) + K1 * p.Lc / sA - K2);
+    const o = { A, sA, x, hRel, valid: hRel <= 1 / 6 + 1e-9, ap, K1, K2, f, R1, RT: R1 };
+    if (p.n > 0 && p.Lb > 0 && p.rb > 0) {
+      o.R2 = p.rhoEq / (2 * PI * p.n * p.Lb) * (Math.log(4 * p.Lb / p.rb) - 1 + 2 * K1 * (p.Lb / sA) * (Math.sqrt(p.n) - 1) ** 2);
+      o.Rm = f * (Math.log(2 * p.Lc / p.Lb) + K1 * p.Lc / sA - K2 + 1);
+      o.Rm2 = R1 - f * (Math.log(p.Lb / ap) - 1);
+      o.RT = (R1 * o.R2 - o.Rm ** 2) / (R1 + o.R2 - 2 * o.Rm);
+      o.Rpar = R1 * o.R2 / (R1 + o.R2);
+      o.senseOk = o.Rpar < o.RT && o.RT < Math.min(R1, o.R2);
+    }
+    return o;
+  }
+  // Barra sola
+  function barra(rho, Lb, rb) { return rho / (2 * PI * Lb) * (Math.log(4 * Lb / rb) - 1); }
+  // Resistividad que ve una barra: media ponderada (en paralelo) de las capas que atraviesa
+  function rhoBarra(rho, h, t, Lb) {
+    let z = 0, g = 0;
+    for (let i = 0; i < rho.length; i++) {
+      const top = z, bot = i < h.length ? z + h[i] : Infinity;
+      const seg = Math.max(0, Math.min(bot, t + Lb) - Math.max(top, t));
+      g += seg / rho[i]; z = bot;
+    }
+    return Lb / g;
+  }
+  // Corriente real de falla monofásica (guía): If = 3·VL / [√3·√((3R)² + XΣ²)]
+  function fallaIf(VL, X, R) { return 3 * VL / (Math.sqrt(3) * Math.sqrt((3 * R) ** 2 + X * X)); }
+
   // ---------- Sección mínima (Onderdonk) ----------
   function onderdonk(IkA, t, Ta, Tm) {
     const cmil = IkA * 1000 * Math.sqrt(33 * t / LOG10((Tm - Ta) / (234 + Ta) + 1));
     return { cmil, mm2: cmil * 5.067075e-4 };
   }
 
-  return { K, rhoA, codX, codY, decX, decY, T, G, rhoAmodel, rhoAideal, homologar, ajustar, tipo, burgsdorf, malla, schwarz, laurent, onderdonk, buildLibrary, families, familyMembers, curveOf };
+  return { K, rhoA, codX, codY, decX, decY, T, G, rhoAmodel, rhoAideal, homologar, ajustar, tipo, burgsdorf, malla, schwarz, laurent, onderdonk, sistema, barra, rhoBarra, fallaIf, buildLibrary, families, familyMembers, curveOf };
 })();
 if (typeof module !== 'undefined') module.exports = MG;
