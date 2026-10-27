@@ -1,4 +1,4 @@
-global.FILT = require('./filt.json');
+global.FILT = require('./filt.json'); global.CAT = require('./catalog.json');
 const MG = require('./engine.js');
 const D=[[0.6,127.4],[0.8,40.8],[1,25.5],[1.6,11],[2,7.6],[2.5,5.3],[3,3.6],[4,2],[5,1.2],[6,0.7],[8,0.3],[10,0.1]];
 const data=D.map(([L,VI])=>({L,s:1,VI,rho:MG.rhoA(L,1,VI)}));

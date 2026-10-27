@@ -44,21 +44,39 @@ const MG = (() => {
   // ---------- Biblioteca de curvas patrón (ρ1 = 1, E1 = 1) ----------
   const U0 = -2, U1 = 5, DU = 0.05; // log10(L/E1)
   const NU = Math.round((U1 - U0) / DU) + 1;
-  const MU = [0.05, 0.1, 0.2, 0.33, 0.5, 0.65, 1, 1.5, 2, 3, 5, 10, 20];
-  const NUS = [0.1, 0.2, 0.33, 0.5, 1, 1.5, 2, 3, 5, 10, 15, 25];
+  // Catálogo de las láminas Orellana-Mooney (CAT se inyecta antes de este archivo)
+  const INF = 1e4, ZERO = 1e-4;
+  const val = x => x === 'inf' ? INF : (+x === 0 ? ZERO : +x);
+  const fmtR = x => x === 'inf' ? '∞' : String(x);
   let LIB = null;
   function curveOf(rho, h) {
     const out = new Float64Array(NU);
     for (let j = 0; j < NU; j++) out[j] = LOG10(rhoAideal(Math.pow(10, U0 + j * DU), rho, h));
     return out;
   }
+  // Lista de curvas de una familia (para dibujarla como en la lámina)
+  function familyMembers(fam) {
+    if (fam.n === 2) return CAT.two.filter(m => +m !== 1 && m !== 0).map(m => ({ label: fmtR(m), mu: [1, val(m)], nu: [] }));
+    if (fam.n === 3) return CAT.E2.map(e => ({ label: String(e), mu: fam.mu, nu: [e] }));
+    return [...CAT.codes4].map((c, k) => ({ label: c, code: c, mu: fam.mu, nu: [CAT.E2_4[k % 4], CAT.E3_4[Math.floor(k / 4)]] }));
+  }
+  function families() {
+    const out = [{ n: 2, lam: 1, name: '2 capas', ratio: '1-ρ2', mu: null }];
+    for (const [lam, name, r] of CAT.f3) { const p = r.split('-'); out.push({ n: 3, lam, name, ratio: p.map(fmtR).join('-'), mu: p.map(val) }); }
+    for (const [lam, name, r] of CAT.f4) { const p = r.split('-'); out.push({ n: 4, lam, name, ratio: p.map(fmtR).join('-'), mu: p.map(val) }); }
+    return out;
+  }
   function buildLibrary() {
     if (LIB) return LIB;
     LIB = [];
-    for (const m2 of MU) if (m2 !== 1) LIB.push({ n: 2, mu: [1, m2], nu: [], c: curveOf([1, m2], [1]) });
-    for (const m2 of MU) for (const m3 of MU) {
-      if (m2 === 1 || m3 === m2) continue;
-      for (const v of NUS) LIB.push({ n: 3, mu: [1, m2, m3], nu: [v], c: curveOf([1, m2, m3], [1, v]) });
+    for (const m of CAT.two) { if (+m === 1 || m === 0 || m === 'inf') continue;
+      LIB.push({ n: 2, lam: 1, name: '2 capas', ratio: '1-' + fmtR(m), mu: [1, val(m)], nu: [], label: fmtR(m), c: curveOf([1, val(m)], [1]) }); }
+    for (const f of families()) {
+      if (f.n === 2) continue;
+      for (const mb of familyMembers(f)) {
+        const h = [1, ...mb.nu];
+        LIB.push({ n: f.n, lam: f.lam, name: f.name, ratio: f.ratio, mu: f.mu, nu: mb.nu, label: mb.label, code: mb.code, c: curveOf(f.mu, h) });
+      }
     }
     return LIB;
   }
@@ -91,7 +109,7 @@ const MG = (() => {
       if (!isFinite(m.sse)) continue;
       const E1 = Math.pow(10, m.logE1), r1 = Math.pow(10, m.logR1);
       res.push({
-        n: cur.n, mu: cur.mu, nu: cur.nu, E1, rho1: r1,
+        n: cur.n, lam: cur.lam, name: cur.name, ratio: cur.ratio, label: cur.label, code: cur.code, mu: cur.mu, nu: cur.nu, E1, rho1: r1,
         rms: Math.sqrt(m.sse / lx.length) * Math.LN10 * 100,
         rho: cur.mu.map(x => x * r1), h: [E1, ...cur.nu.map(x => x * E1)].slice(0, cur.n - 1),
         Ec: codX(E1), rhoc: codY(r1)
@@ -164,12 +182,12 @@ const MG = (() => {
   }
   function ajustar(data, hom) {
     const out = {};
-    const startsFor = n => hom.filter(c => c.n === Math.min(n, 3)).slice(0, n === 2 ? 2 : 4);
+    const startsFor = n => hom.filter(c => c.n === n || (n === 4 && c.n === 3)).slice(0, n === 2 ? 2 : 4);
     for (const n of [2, 3, 4]) {
       let best = null;
       const starts = [];
       for (const c of startsFor(n)) {
-        if (n <= 3) starts.push([...c.rho.map(Math.log), ...c.h.map(Math.log)]);
+        if (c.n === n) starts.push([...c.rho.map(Math.log), ...c.h.map(Math.log)]);
         else {
           // insertar una capa: dividir cada capa del modelo de 3 capas
           const r = c.rho, h = c.h;
@@ -248,6 +266,6 @@ const MG = (() => {
     return { cmil, mm2: cmil * 5.067075e-4 };
   }
 
-  return { K, rhoA, codX, codY, decX, decY, T, G, rhoAmodel, rhoAideal, homologar, ajustar, tipo, burgsdorf, malla, schwarz, laurent, onderdonk, buildLibrary, MU, NUS };
+  return { K, rhoA, codX, codY, decX, decY, T, G, rhoAmodel, rhoAideal, homologar, ajustar, tipo, burgsdorf, malla, schwarz, laurent, onderdonk, buildLibrary, families, familyMembers, curveOf };
 })();
 if (typeof module !== 'undefined') module.exports = MG;
