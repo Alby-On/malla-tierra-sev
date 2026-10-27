@@ -415,7 +415,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
       <div>
         <h3>Requisitos y recomendaciones</h3>
         <ul class="steps0">
-          <li><b>Mínimo 12 lecturas</b>, recomendado 12 a 16, repartidas en forma pareja en escala logarítmica.</li>
+          <li><b>Mínimo 12 y máximo 20 lecturas</b>, repartidas en forma pareja en escala logarítmica.</li>
           <li><b>Alas de hasta 100 m</b> (50 m aceptable) según el RIC N°06. Si no hay espacio, mide hasta donde se pueda y deja la razón escrita en el informe.</li>
           <li><b>Instrumento de 4 terminales</b> con resolución de 0,01 Ω y certificado de calibración vigente.</li>
           <li><b>Electrodos poco enterrados</b> y con buen contacto. Si el suelo está muy seco, humedece solo el punto de contacto.</li>
@@ -485,7 +485,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
         <p class="hint">Separaciones repartidas en escala logarítmica. Con a = 33 m las alas llegan a 50 m (lo aceptable según el RIC N°06); con a = 67 m llegan a 100 m. Si el terreno no lo permite, termina donde puedas y déjalo escrito en el informe.</p>
         <h3>Requisitos</h3>
         <ul class="steps0">
-          <li>Mínimo 12 lecturas.</li>
+          <li>Mínimo 12 y máximo 20 lecturas.</li>
           <li>Instrumento de 4 terminales, resolución de 0,01 Ω y calibración vigente (RIC N°06).</li>
           <li>Usa un solo método por sondeo: Wenner o Schlumberger (Anexo 6.6).</li>
         </ul>
@@ -573,7 +573,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
       <h3>Consideraciones</h3>
       <ul>
         <li><b>s es MN completo</b>, no MN/2, y L debe ser mayor que s/2.</li>
-        <li>Usa <b>mínimo 12 lecturas</b> (recomendado 12 a 16). El pliego RIC N°06 (Anexo 6.6) pide alas de hasta <b>100 m</b> (50 m aceptable). Si no hay espacio, el programa acepta un sondeo reducido y lo marca para que lo justifiques en el informe.</li>
+        <li>Usa <b>mínimo 12 y máximo 20 lecturas</b>. El pliego RIC N°06 (Anexo 6.6) pide alas de hasta <b>100 m</b> (50 m aceptable). Si no hay espacio, el programa acepta un sondeo reducido y lo marca para que lo justifiques en el informe.</li>
         <li>Las lecturas con L menor que 2,5·s (MN mayor que AB/5) se marcan con <b>!</b>: no cumplen la condición Schlumberger y las curvas patrón no las representan bien.</li>
         <li>Las láminas impresas o escaneadas suelen venir a 62,8 mm por década: reescálalas a 62,5 antes de superponerlas.</li>
         <li>Varias curvas patrón pueden calzar casi igual (equivalencia). Elige la que tenga sentido geológico y compárala con el ajuste fino.</li>
@@ -665,8 +665,8 @@ function refreshRow(i) {
 function updCount() {
   const n = data().length, el = $('cnt');
   const nf = data().filter(d => d.L < 2.5 * d.s).length;
-  el.textContent = `${n} lecturas válidas · mínimo 12, recomendado 12 a 16` + (nf ? ` · ${nf} con MN > AB/5 (!)` : '');
-  el.className = 'count' + (n < 12 || n > 16 ? ' warn' : '');
+  el.textContent = `${n} lecturas válidas · mínimo 12, máximo 20` + (nf ? ` · ${nf} con MN > AB/5 (!)` : '');
+  el.className = 'count' + (n < 12 || n > 20 ? ' warn' : '');
 }
 $('tbl').addEventListener('input', e => {
   const m = e.target.id.match(/^r([Lsvu])(\d+)$/); if (!m) return;
@@ -675,7 +675,7 @@ $('tbl').addEventListener('input', e => {
   refreshRow(i); updCount(); schedule();
 });
 $('tbl').addEventListener('click', e => { const b = e.target.closest('[data-del]'); if (!b) return; st.rows.splice(+b.dataset.del, 1); renderTable(); schedule(); });
-$('add').onclick = () => { const last = st.rows[st.rows.length - 1]; st.rows.push({ L: '', s: last ? last.s : '1', vi: '', on: true }); renderTable(); $('rL' + (st.rows.length - 1)).focus(); };
+$('add').onclick = () => { if (st.rows.length >= 20) { toast('Máximo 20 lecturas'); return; } const last = st.rows[st.rows.length - 1]; st.rows.push({ L: '', s: last ? last.s : '1', vi: '', on: true }); renderTable(); $('rL' + (st.rows.length - 1)).focus(); };
 $('ex').onclick = () => { st.rows = EX.map(r => ({ ...r })); renderTable(); schedule(); };
 $('ex2').onclick = () => { st.rows = EX2.map(r => ({ ...r })); renderTable(); schedule(); };
 function setTab(t) {
@@ -719,6 +719,7 @@ $('pasteOk').onclick = () => {
   const rows = $('pasteTa').value.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(l => l.split(/\t|;|\s{2,}/).map(x => x.trim()).filter(Boolean))
     .filter(c => c.length >= 2 && num(c[0]) > 0).map(c => c.length >= 3 ? { L: c[0], s: c[1], vi: c[2], on: true } : { L: c[0], s: '1', vi: c[1], on: true });
   if (!rows.length) { toast('No se reconocieron filas'); return; }
+  if (rows.length > 20) { rows.length = 20; toast('Se cargaron solo las primeras 20 lecturas (máximo 20)'); }
   st.rows = rows; $('pasteBox').hidden = true; $('pasteTa').value = ''; renderTable(); schedule(); toast(`${rows.length} lecturas cargadas`);
 };
 $('copyTbl').onclick = () => {
@@ -974,7 +975,7 @@ function renderResult() {
 }
 function ricChecks({ elec, res, R, Rdis, Rmax, Ireal, If, I, t, Ta, Tm, Smm }) {
   const out = [], D = data(), Lmax = D.length ? Math.max(...D.map(d => d.L)) : 0;
-  out.push(D.length >= 12 ? { s: 'ok', t: `Lecturas del sondeo: ${D.length}`, d: 'Mínimo 12 lecturas, recomendado 12 a 16.' } : { s: 'warn', t: `Lecturas del sondeo: ${D.length}`, d: 'Se recomiendan al menos 12 lecturas.' });
+  out.push(D.length >= 12 && D.length <= 20 ? { s: 'ok', t: `Lecturas del sondeo: ${D.length}`, d: 'Mínimo 12 y máximo 20 lecturas.' } : { s: 'warn', t: `Lecturas del sondeo: ${D.length}`, d: D.length < 12 ? 'Faltan lecturas: el mínimo es 12.' : 'Sobran lecturas: el máximo es 20. Desmarca «Usar» en las que no correspondan.' });
   out.push(Lmax >= 50 ? { s: 'ok', t: `Sondeo de resistividad: AB/2 máx. = ${fmtS(Lmax)} m`, d: 'Anexo 6.6: alas de hasta 100 m; 50 m es aceptable si no se puede llegar a 100 m.' }
     : { s: 'warn', t: `Sondeo reducido: AB/2 máx. = ${fmtS(Lmax)} m`, d: 'Anexo 6.6 pide alas de hasta 100 m (50 m aceptable). En terreno se reduce cuando no hay espacio: el programa lo acepta, pero conviene dejar la razón escrita en el informe.' });
   out.push({ s: 'ok', t: 'Método de medición: Schlumberger', d: 'Anexo 6.6: se acepta Schlumberger o Wenner, uno a la vez.' });
