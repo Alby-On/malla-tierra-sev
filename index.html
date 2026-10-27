@@ -245,6 +245,24 @@ a.ghost { text-decoration: none; color: var(--accent) }
   .next { justify-content: stretch } .next .nextb { width: 100% }
 }
 @media (pointer: coarse) { button, .stp, .tab, .mainnav a { min-height: 40px } }
+.f.fw { grid-column: 1 / -1 }
+.seg.lv3 button { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 8px 14px; text-align: left }
+.seg.lv3 button small { font-size: 11.5px; font-weight: 500; opacity: .75 }
+.note.lv { border-left-color: var(--accent) }
+#fuT td input { width: 90px }
+.blk { display: flex; flex-direction: column; gap: 12px; border-top: 2px solid var(--ink); padding-top: 14px }
+.tcards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px }
+.tcard { border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; background: var(--paper) }
+.tcard.ok { border-color: var(--ok) } .tcard.bad { border-color: var(--bad) }
+.tcard .tt { display: flex; justify-content: space-between; align-items: baseline; gap: 8px }
+.tcard .tt b { font-family: var(--f-display); font-size: 16px; font-weight: 600 }
+.tcard .nums { display: flex; gap: 16px; flex-wrap: wrap; font-family: var(--f-mono); font-size: 13px; color: var(--muted) }
+.tcard .nums strong { display: block; font-family: var(--f-display); font-size: 24px; color: var(--ink); font-weight: 700 }
+.meter { position: relative; height: 10px; border-radius: 5px; background: var(--grid); overflow: hidden }
+.meter i { position: absolute; inset: 0 auto 0 0; border-radius: 5px; background: var(--ok) }
+.tcard.bad .meter i { background: var(--bad) }
+@media (prefers-reduced-motion: no-preference) { .meter i { transition: width .5s ease-out } }
+@media (max-width: 640px) { .seg.lv3 { flex-direction: column } .seg.lv3 button { border-right: 0; border-bottom: 1px solid var(--line) } }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); padding: 8px 14px; border-radius: 4px; font-size: 14px }
 @media (prefers-reduced-motion: no-preference) { .opt, .row { transition: border-color .12s, background .12s } }
 </style>
@@ -375,12 +393,14 @@ a.ghost { text-decoration: none; color: var(--accent) }
 <section class="step" id="s4">
   <div class="step-h"><span class="n">4</span><h2>Diseño de la puesta a tierra</h2></div>
   <div class="form">
-    <div class="f"><label>Nivel de tensión</label>
-      <div class="seg" id="gV"><button data-v="bt" class="on" type="button">Baja tensión</button><button data-v="at" type="button">Alta tensión</button></div></div>
+    <div class="f fw"><label>Nivel de tensión <span class="u">(SEC, RPTD N°02, sección 4)</span></label>
+      <div class="seg lv3" id="gV"><button data-v="bt" class="on" type="button">Baja tensión<small>hasta 1 kV</small></button><button data-v="mt" type="button">Media tensión<small>sobre 1 y hasta 23 kV</small></button><button data-v="at" type="button">Alta tensión<small>sobre 23 y hasta 230 kV</small></button></div></div>
     <div class="f" id="gKwrap"><label>Tipo de puesta a tierra</label>
       <div class="seg" id="gK"><button data-v="malla" class="on" type="button">Malla a tierra</button><button data-v="electrodo" type="button">Electrodo (barra)</button></div></div>
+    <div class="f" id="gMetWrap" hidden><label for="gMet">Resistencia proyectada con</label>
+      <select id="gMet"><option value="sch" selected>Schwarz (malla + barras)</option><option value="lau">Laurent (solo malla)</option></select></div>
   </div>
-  <p class="note" id="atNote" hidden>Alta tensión: opción en preparación. El cálculo se agregará cuando estén definidas las variables adicionales que entregará el ingeniero. Los pasos 1 a 3 (mediciones, homologación y modelo de suelo) funcionan igual.</p>
+  <p class="note lv" id="lvNote"></p>
 
   <div id="mallaBox" style="display:flex;flex-direction:column;gap:14px">
     <h3>Malla</h3>
@@ -410,7 +430,7 @@ a.ghost { text-decoration: none; color: var(--accent) }
       <div class="f"><label>Unión de conductores</label>
         <div class="seg" id="gJ"><button data-v="soldada" class="on" type="button">Soldada exotérmica</button><button data-v="compresion" type="button">Compresión</button><button data-v="apernada" type="button">Apernada</button></div>
         <span class="u" id="gJnote">Unión bajo tierra permitida por RIC N°06 (7.11)</span></div>
-      <div class="f"><label for="gTm">Temperatura máx. de la unión</label><input id="gTm" value="450" inputmode="decimal"><span class="u">°C · ajusta al valor de tu apunte</span></div>
+      <div class="f"><label for="gTm">Temperatura máx. de la unión</label><input id="gTm" value="1083" inputmode="decimal"><span class="u">°C · ajusta al valor de tu apunte</span></div>
     </div>
     <h3>Barras verticales</h3>
     <div class="form">
@@ -434,6 +454,51 @@ a.ghost { text-decoration: none; color: var(--accent) }
     </div>
   </div>
 
+  <div id="mtBox" hidden style="display:flex;flex-direction:column;gap:14px">
+    <h3>Red de media tensión y protección</h3>
+    <p class="hint">Datos que entrega la distribuidora en el punto de empalme y el fusible del transformador. Con ellos se obtienen las reactancias de la red, la resistencia máxima y la corriente real de falla.</p>
+    <div class="form">
+      <div class="f"><label for="mST">Potencia del transformador ST</label><input id="mST" value="150" inputmode="decimal"><span class="u">kVA</span></div>
+      <div class="f"><label for="mVL">Tensión de línea VL</label><input id="mVL" value="13,2" inputmode="decimal"><span class="u">kV</span></div>
+      <div class="f"><label for="mI3">Cortocircuito trifásico Icc3φ</label><input id="mI3" value="2000" inputmode="decimal"><span class="u">A · informado por la distribuidora</span></div>
+      <div class="f"><label for="mI1">Cortocircuito monofásico Icc1φ</label><input id="mI1" value="1200" inputmode="decimal"><span class="u">A · informado por la distribuidora</span></div>
+      <div class="f"><label for="mIaux">Corriente de falla auxiliar If aux</label><input id="mIaux" value="400" inputmode="decimal"><span class="u">A · entre If mín del fusible e Icc1φ</span></div>
+      <div class="f"><label for="mFus">Fusible</label><input id="mFus" value="10K"><span class="u">nombre comercial</span></div>
+    </div>
+    <div class="cols">
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+        <h3>Curva tiempo–corriente del fusible</h3>
+        <div class="scroll"><table id="fuT"><thead><tr><th>Tiempo (s)</th><th>I mín. fusión (A)</th><th>I despeje (A)</th></tr></thead><tbody><tr><td><input id="fT0" value="300" inputmode="decimal" aria-label="Tiempo 1"></td><td><input id="fM0" value="19,5" inputmode="decimal" aria-label="Corriente mínima de fusión 1"></td><td><input id="fC0" value="23,5" inputmode="decimal" aria-label="Corriente de despeje 1"></td></tr><tr><td><input id="fT1" value="100" inputmode="decimal" aria-label="Tiempo 2"></td><td><input id="fM1" value="20" inputmode="decimal" aria-label="Corriente mínima de fusión 2"></td><td><input id="fC1" value="24" inputmode="decimal" aria-label="Corriente de despeje 2"></td></tr><tr><td><input id="fT2" value="10" inputmode="decimal" aria-label="Tiempo 3"></td><td><input id="fM2" value="25" inputmode="decimal" aria-label="Corriente mínima de fusión 3"></td><td><input id="fC2" value="29,5" inputmode="decimal" aria-label="Corriente de despeje 3"></td></tr><tr><td><input id="fT3" value="1" inputmode="decimal" aria-label="Tiempo 4"></td><td><input id="fM3" value="42,5" inputmode="decimal" aria-label="Corriente mínima de fusión 4"></td><td><input id="fC3" value="52" inputmode="decimal" aria-label="Corriente de despeje 4"></td></tr><tr><td><input id="fT4" value="0,1" inputmode="decimal" aria-label="Tiempo 5"></td><td><input id="fM4" value="129" inputmode="decimal" aria-label="Corriente mínima de fusión 5"></td><td><input id="fC4" value="167" inputmode="decimal" aria-label="Corriente de despeje 5"></td></tr></tbody></table></div>
+      </div>
+      <p class="hint" style="align-self:center">Valores del fusible tipo K de 10 A de la guía (Hubbell, boletín 10-7701). Reemplázalos por los del fusible elegido. El programa interpola en escala log-log para obtener el tiempo de operación.</p>
+    </div>
+  </div>
+
+  <div id="atBox" hidden style="display:flex;flex-direction:column;gap:14px">
+    <h3>Red de alta tensión y protección</h3>
+    <p class="hint">Pliego RPTD N°06: el diseño se calcula con IEEE Std 80-2013 (8.25). El tiempo de falla es el de operación de la protección de respaldo, que no puede ser menor que el tiempo de despeje fijado en la NTSyCS.</p>
+    <div class="form">
+      <div class="f"><label for="aVL">Tensión de línea VL</label><input id="aVL" value="66" inputmode="decimal"><span class="u">kV</span></div>
+      <div class="f"><label for="aI3">Cortocircuito trifásico Icc3φ</label><input id="aI3" value="8000" inputmode="decimal"><span class="u">A</span></div>
+      <div class="f"><label for="aI1">Cortocircuito monofásico Icc1φ</label><input id="aI1" value="6000" inputmode="decimal"><span class="u">A</span></div>
+      <div class="f"><label for="aT">Tiempo de la protección de respaldo ts</label><input id="aT" value="0,5" inputmode="decimal"><span class="u">s</span></div>
+      <div class="f"><label for="aSf">Factor de división de corriente Sf</label><input id="aSf" value="1" inputmode="decimal"><span class="u">IEEE 80 · 1 = toda la corriente vuelve por la malla</span></div>
+      <div class="f"><label for="aDf">Factor de decremento Df</label><select id="aDf"><option value="auto" selected>Según el tiempo (tabla de la guía)</option><option value="man">Manual</option></select></div>
+      <div class="f"><label for="aDfv">Df manual</label><input id="aDfv" value="1" inputmode="decimal" disabled><span class="u">IEEE 80 · depende de X/R y del tiempo</span></div>
+    </div>
+  </div>
+
+  <div id="segBox" hidden style="display:flex;flex-direction:column;gap:14px">
+    <h3>Seguridad de las personas · tensiones de contacto y de paso</h3>
+    <div class="form">
+      <div class="f"><label for="pKg">Peso de la persona</label><select id="pKg"><option value="50" selected>50 kg · 0,116/√t (criterio del curso)</option><option value="70">70 kg · 0,157/√t</option></select></div>
+      <div class="f" id="pTtWrap"><label for="pTt">Tiempo de despeje para las tensiones tolerables</label><input id="pTt" value="0,5" inputmode="decimal"><span class="u">s · el mismo con que se eligió el fusible</span></div>
+      <div class="f"><label for="pGrav">Capa superficial</label><select id="pGrav"><option value="no" selected>Sin capa (ρs = ρ1 del suelo)</option><option value="si">Gravilla o piedra chancada</option></select></div>
+      <div class="f"><label for="pRs">Resistividad de la capa ρs</label><input id="pRs" value="3000" inputmode="decimal" disabled><span class="u">Ω·m</span></div>
+      <div class="f"><label for="pHs">Espesor de la capa hs</label><input id="pHs" value="0,15" inputmode="decimal" disabled><span class="u">m · 10 a 15 cm</span></div>
+    </div>
+  </div>
+
   <details id="verDet" open>
     <summary>Verificación del diseño (guía de Schwarz y RIC N°06)</summary>
     <div class="form" style="padding-top:10px">
@@ -444,9 +509,9 @@ a.ghost { text-decoration: none; color: var(--accent) }
     </div>
   </details>
   <details>
-    <summary>Verificación térmica de la sección (opcional)</summary>
+    <summary id="thSum">Verificación térmica de la sección (opcional)</summary>
     <div class="form" style="padding-top:10px">
-      <div class="f"><label for="gI">Corriente de falla a tierra</label><input id="gI" value="" placeholder="ej. 10" inputmode="decimal"><span class="u">kA</span></div>
+      <div class="f" id="gIwrap"><label for="gI">Corriente de falla a tierra</label><input id="gI" value="" placeholder="ej. 10" inputmode="decimal"><span class="u">kA</span></div>
       <div class="f"><label for="gT">Tiempo de despeje</label><input id="gT" value="0,5" inputmode="decimal"><span class="u">s · máximo 0,5 s (RIC N°06, 8.8)</span></div>
       <div class="f"><label for="gTa">Temperatura ambiente</label><input id="gTa" value="40" inputmode="decimal"><span class="u">°C</span></div>
     </div>
@@ -457,7 +522,6 @@ a.ghost { text-decoration: none; color: var(--accent) }
 <!-- PASO 5 -->
 <section class="step" id="s5">
   <div class="step-h"><span class="n">5</span><h2>Resistencia proyectada de la puesta a tierra</h2></div>
-  <p class="note" id="atMsg" hidden>Alta tensión aún no calcula. Cambia a baja tensión en el paso 4 para ver el resultado.</p>
   <div id="resBox" style="display:flex;flex-direction:column;gap:14px">
   <div class="result">
     <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
@@ -478,8 +542,19 @@ a.ghost { text-decoration: none; color: var(--accent) }
       <div class="btns"><button class="pri" id="copyRep">Copiar informe</button></div>
     </div>
   </div>
+  <div id="mtBlock" class="blk" hidden>
+    <h3 id="mtH">Red, corriente de falla y resistencia máxima</h3>
+    <div class="cols"><dl class="kv" id="mtKv1"></dl><dl class="kv" id="mtKv2"></dl></div>
+  </div>
+  <div id="tcBlock" class="blk" hidden>
+    <h3>Tensiones de contacto y de paso · IEEE Std 80-2013</h3>
+    <div class="tcards" id="tcCards"></div>
+    <div class="cols"><dl class="kv" id="tcKv1"></dl><dl class="kv" id="tcKv2"></dl></div>
+    <div class="formula">Etol,contacto = (1000 + 1,5·Cs·ρs)·k/√t · Etol,paso = (1000 + 6·Cs·ρs)·k/√t · Em = ρeq·Km·Ki·IG/LM · Es = ρeq·Ks·Ki·IG/LS</div>
+    <p class="hint" id="tcNote"></p>
+  </div>
   <div class="ric">
-    <div class="step-h"><h3>Verificación del diseño · guía de Schwarz y Pliego RIC N°06</h3><span class="count" id="ricSum"></span></div>
+    <div class="step-h"><h3 id="ricH">Verificación del diseño · guía de Schwarz y Pliego RIC N°06</h3><span class="count" id="ricSum"></span></div>
     <ul class="checks" id="ricList"></ul>
     <p class="hint">Revisión automática de los requisitos que se pueden comprobar con los datos ingresados. No reemplaza la revisión del proyecto completo ni la declaración ante la SEC.</p>
   </div>
@@ -1023,13 +1098,71 @@ const MG = (() => {
   // Corriente real de falla monofásica (guía): If = 3·VL / [√3·√((3R)² + XΣ²)]
   function fallaIf(VL, X, R) { return 3 * VL / (Math.sqrt(3) * Math.sqrt((3 * R) ** 2 + X * X)); }
 
+
+  // ---------- Media y alta tensión (guías de resistencia máxima y de tensiones de contacto y paso) ----------
+  // Parámetros de la red a partir de los niveles de cortocircuito (VL en V)
+  function red(p) { // p: VL (V), Icc3, Icc1, ST (kVA, opcional)
+    const X1 = p.VL / (Math.sqrt(3) * p.Icc3), X2 = X1;
+    const X0 = 3 * p.VL / (Math.sqrt(3) * p.Icc1) - (X1 + X2);
+    const o = { X1, X2, X0, SX: X0 + X1 + X2 };
+    if (p.ST > 0) o.IA = 1.5 * p.ST / (Math.sqrt(3) * p.VL / 1000);
+    return o;
+  }
+  // Resistencia máxima: Rmáx = (1/3)·√(3·VL²/Ifaux² − ΣX²)
+  function rmax(VL, Ifaux, SX) { const q = 3 * VL * VL / (Ifaux * Ifaux) - SX * SX; return q > 0 ? Math.sqrt(q) / 3 : NaN; }
+  // Tiempo de operación del fusible: interpolación log-log en la tabla tiempo–corriente
+  function fusible(tabla, I, col) { // tabla: [{t, imin, iclr}], col: 'iclr' o 'imin'
+    const pts = tabla.filter(r => r.t > 0 && r[col] > 0).map(r => [r[col], r.t]).sort((a, b) => a[0] - b[0]);
+    if (pts.length < 2 || !(I > 0)) return { estado: 'sin datos' };
+    if (I < pts[0][0]) return { estado: 'no opera', t: Infinity };
+    if (I > pts[pts.length - 1][0]) return { estado: 'menor', t: pts[pts.length - 1][1] };
+    for (let k = 0; k < pts.length - 1; k++) {
+      const [i1, t1] = pts[k], [i2, t2] = pts[k + 1];
+      if (I >= i1 && I <= i2) { const f = (Math.log(I) - Math.log(i1)) / (Math.log(i2) - Math.log(i1)); return { estado: 'ok', t: Math.exp(Math.log(t1) + f * (Math.log(t2) - Math.log(t1))) }; }
+    }
+    return { estado: 'sin datos' };
+  }
+  // Factor de decremento (Colman 2020, tabla 8.1), interpolación lineal
+  const FDT = [[0.01, 1.70], [0.02, 1.62], [0.04, 1.50], [0.08, 1.32], [0.1, 1.25], [0.25, 1.10], [0.5, 1.00]];
+  function fd(t) {
+    if (t <= FDT[0][0]) return FDT[0][1]; if (t >= 0.5) return 1;
+    for (let k = 0; k < FDT.length - 1; k++) { const [a, fa] = FDT[k], [b, fb] = FDT[k + 1]; if (t >= a && t <= b) return fa + (fb - fa) * (t - a) / (b - a); }
+    return 1;
+  }
+  // Constante de Onderdonk para cobre y sección mínima: Smín = K·If·FD·√t / 1973
+  function kCu(Tm, Ta) { return Math.sqrt(33 / LOG10((Tm - Ta) / (234 + Ta) + 1)); }
+  function smin(K, I, FD, t) { return K * I * FD * Math.sqrt(t) / 1973; }
+  // Tensiones tolerables por el cuerpo (IEEE 80-2013), 50 kg: 0,116 · 70 kg: 0,157
+  function cs(rhoS, hs, rho) { return 1 - 0.09 * (1 - rho / rhoS) / (2 * hs + 0.09); }
+  function tolerables(p) { // p: rhoS, Cs, t, kg
+    const k = p.kg === 70 ? 0.157 : 0.116, IB = k / Math.sqrt(p.t);
+    return { IB, Etc: (1000 + 1.5 * p.Cs * p.rhoS) * IB, Etp: (1000 + 6 * p.Cs * p.rhoS) * IB };
+  }
+  // Tensión de malla y de paso (IEEE 80-2013)
+  function tensiones(p) { // p: rhoEq, IG, Lc, a, b, D, h, d, nb (barras), Lb, perim (barras en esquinas/perímetro)
+    const Lx = Math.max(p.a, p.b), Ly = Math.min(p.a, p.b), A = Lx * Ly, Lp = 2 * (Lx + Ly);
+    const na = 2 * p.Lc / Lp, nbF = Math.sqrt(Lp / (4 * Math.sqrt(A))), n = na * nbF;
+    const LR = (p.nb || 0) * (p.Lb || 0), D = p.D, h = p.h, d = p.d;
+    const Kii = LR > 0 && p.perim ? 1 : 1 / Math.pow(2 * n, 2 / n);
+    const Kh = Math.sqrt(1 + h / 1);
+    const arg = D * D / (16 * h * d) + (D + 2 * h) ** 2 / (8 * D * d) - h / (4 * d);
+    const Km = (Math.log(arg) + Kii / Kh * Math.log(8 / (PI * (2 * n - 1)))) / (2 * PI);
+    const Ks = (1 / (2 * h) + 1 / (D + h) + (1 - Math.pow(0.5, n - 2)) / D) / PI;
+    const Ki = 0.644 + 0.148 * n;
+    const LM = LR > 0 && p.perim ? p.Lc + (1.55 + 1.22 * p.Lb / Math.sqrt(Lx * Lx + Ly * Ly)) * LR : p.Lc + LR;
+    const LS = 0.75 * p.Lc + 0.85 * LR;
+    const f = p.rhoEq * Ki * p.IG;
+    const valid = { n: n <= 25, h: h >= 0.25 && h <= 2.5, d: d < 0.25 * h, D: D >= 2.5 };
+    return { Lx, Ly, A, Lp, na, nbF, n, LR, Kii, Kh, Km, Ks, Ki, LM, LS, f, Em: Km * f / LM, Es: Ks * f / LS, valid, inRange: Object.values(valid).every(Boolean) };
+  }
+
   // ---------- Sección mínima (Onderdonk) ----------
   function onderdonk(IkA, t, Ta, Tm) {
     const cmil = IkA * 1000 * Math.sqrt(33 * t / LOG10((Tm - Ta) / (234 + Ta) + 1));
     return { cmil, mm2: cmil * 5.067075e-4 };
   }
 
-  return { K, rhoA, codX, codY, decX, decY, T, G, rhoAmodel, rhoAideal, homologar, ajustar, tipo, burgsdorf, malla, schwarz, laurent, onderdonk, sistema, barra, rhoBarra, fallaIf, buildLibrary, families, familyMembers, curveOf };
+  return { K, rhoA, codX, codY, decX, decY, T, G, rhoAmodel, rhoAideal, homologar, ajustar, tipo, burgsdorf, malla, schwarz, laurent, onderdonk, sistema, barra, rhoBarra, fallaIf, red, rmax, fusible, fd, kCu, smin, cs, tolerables, tensiones, buildLibrary, families, familyMembers, curveOf };
 })();
 
 
@@ -1161,10 +1294,9 @@ function updStepper() {
   else if (st.hom.length) { const c = st.hom[st.homSel]; setStp(2, 'ok', st.src === 'pat' ? `Lám. ${c.lam} · ${c.n === 2 ? '2 capas' : c.name}` : `mejor: Lám. ${st.hom[0].lam} · ${st.hom[0].n === 2 ? '2 capas' : st.hom[0].name}`); }
   else setStp(2, '', '—');
   setStp(3, m ? 'ok' : '', m ? `${m.n} capas · tipo ${MG.tipo(m.rho)}` : '—');
-  if (st.volt === 'at') { setStp(4, 'warn', 'alta tensión'); setStp(5, '', 'sin cálculo'); return; }
   const L = st.last;
   if (!L) { setStp(4, '', '—'); setStp(5, '', '—'); return; }
-  setStp(4, 'ok', L.elec ? `electrodo ${fmt(L.res.Lb, 1)} m` : `malla ${fmt(L.res.M.largo, 0)}×${fmt(L.res.M.ancho, 0)} m${L.res.n ? ` + ${L.res.n} barras` : ''}`);
+  setStp(4, 'ok', ({ bt: 'BT · ', mt: 'MT · ', at: 'AT · ' })[st.volt] + (L.elec ? `electrodo ${fmt(L.res.Lb, 1)} m` : `malla ${fmt(L.res.M.largo, 0)}×${fmt(L.res.M.ancho, 0)} m${L.res.n ? ` + ${L.res.n} barras` : ''}`));
   const nb = L.ric.filter(c => c.s === 'bad').length, nw = L.ric.filter(c => c.s === 'warn').length;
   const v = nb ? 'bad' : nw ? 'warn' : 'ok';
   setStp(5, v, `${fmt(L.R, L.R < 10 ? 2 : 1)} Ω · ${v === 'ok' ? 'cumple' : v === 'warn' ? 'revisar' : 'no cumple'}`);
@@ -1354,18 +1486,29 @@ function renderModel() {
 }
 
 // ---------- Paso 4 y 5 ----------
-const GIDS = ['gA', 'gB', 'gCl', 'gCa', 'gH', 'gSec', 'gSmm', 'gTm', 'gN', 'gLb', 'gRb', 'eLb', 'eRb', 'eT', 'eRm', 'eRho', 'gRmax', 'gVL', 'gX', 'gIf', 'gI', 'gT', 'gTa'];
+const GIDS = ['gA', 'gB', 'gCl', 'gCa', 'gH', 'gSec', 'gSmm', 'gTm', 'gN', 'gLb', 'gRb', 'eLb', 'eRb', 'eT', 'eRm', 'eRho', 'gRmax', 'gVL', 'gX', 'gIf', 'gI', 'gT', 'gTa', 'gMet', 'mST', 'mVL', 'mI3', 'mI1', 'mIaux', 'mFus', 'fT0', 'fM0', 'fC0', 'fT1', 'fM1', 'fC1', 'fT2', 'fM2', 'fC2', 'fT3', 'fM3', 'fC3', 'fT4', 'fM4', 'fC4', 'aVL', 'aI3', 'aI1', 'aT', 'aSf', 'aDf', 'aDfv', 'pKg', 'pTt', 'pGrav', 'pRs', 'pHs'];
 function gState() { const o = {}; GIDS.forEach(k => o[k] = $(k).value); o.joint = st.joint; o.volt = st.volt; o.kind = st.kind; return o; }
-function restoreG(o) { GIDS.forEach(k => { if (o[k] != null && $(k)) $(k).value = o[k]; }); setJoint(o.joint || 'soldada', true); setSeg('gV', o.volt || 'bt'); setSeg('gK', o.kind || 'malla'); updSec(); updE(); updCdp(); renderAll(); }
-const JOINT = { soldada: { tm: '450', txt: 'soldadas (exotérmica)', note: 'Unión bajo tierra permitida por RIC N°06 (7.11)' }, compresion: { tm: '250', txt: 'por compresión', note: 'Conector apto para enterrar, ensayado según IEEE 837 (RIC N°06, 7.11 c)' }, apernada: { tm: '250', txt: 'apernadas', note: 'Bajo tierra no es inspeccionable: RIC N°06 (7.11) exige soldadura de alto punto de fusión o conector apto' } };
+function restoreG(o) { GIDS.forEach(k => { if (o[k] != null && $(k)) $(k).value = o[k]; }); setJoint(o.joint || 'soldada', true); setSeg('gV', o.volt || 'bt'); setSeg('gK', o.kind || 'malla'); updSec(); updE(); updHV(); updCdp(); renderAll(); }
+const JOINT = { soldada: { tm: '1083', txt: 'soldadas (exotérmica)', note: 'Unión bajo tierra permitida por RIC N°06 (7.11)' }, compresion: { tm: '250', txt: 'por compresión', note: 'Conector apto para enterrar, ensayado según IEEE 837 (RIC N°06, 7.11 c)' }, apernada: { tm: '250', txt: 'apernadas', note: 'Bajo tierra no es inspeccionable: RIC N°06 (7.11) exige soldadura de alto punto de fusión o conector apto' } };
 function setJoint(v, keepTm) { if (!JOINT[v]) v = 'soldada'; st.joint = v; [...$('gJ').children].forEach(b => b.classList.toggle('on', b.dataset.v === v)); if (!keepTm) $('gTm').value = JOINT[v].tm; $('gJnote').textContent = JOINT[v].note; }
+const LVNOTE = {
+  bt: 'Baja tensión (hasta 1 kV): instalaciones de consumo, Pliego RIC N°06. Se calcula una malla o un electrodo y la resistencia debe ser de 20 Ω como máximo. Las tensiones de paso y de contacto no se exigen en este nivel.',
+  mt: 'Media tensión (sobre 1 kV y hasta 23 kV): la resistencia máxima sale de la red y del fusible del transformador, con el límite de 20 Ω. Se verifican la corriente real de falla, la sección mínima del conductor y las tensiones de contacto y de paso (IEEE Std 80-2013).',
+  at: 'Alta tensión (sobre 23 kV y hasta 230 kV): Pliego RPTD N°06. Tensiones de paso y de contacto según IEEE Std 80-2013 (8.25), resistencia de 20 Ω como máximo (8.27), cobre de 25 mm² como mínimo (8.14) y uniones exotérmicas o conector apto (8.17). Sobre 230 kV es extra alta tensión y queda fuera del alcance.'
+};
 function setSeg(id, v) {
   [...$(id).children].forEach(b => b.classList.toggle('on', b.dataset.v === v));
   if (id === 'gV') st.volt = v; else st.kind = v;
-  const at = st.volt === 'at';
-  $('atNote').hidden = !at; $('gKwrap').hidden = at;
-  $('mallaBox').hidden = at || st.kind !== 'malla'; $('elecBox').hidden = at || st.kind !== 'electrodo';
+  const lv = st.volt, bt = lv === 'bt', elec = bt && st.kind === 'electrodo';
+  $('lvNote').textContent = LVNOTE[lv] || '';
+  $('gKwrap').hidden = !bt; $('gMetWrap').hidden = bt;
+  $('mallaBox').hidden = elec; $('elecBox').hidden = !elec;
+  $('mtBox').hidden = lv !== 'mt'; $('atBox').hidden = lv !== 'at'; $('segBox').hidden = bt;
+  $('pTtWrap').hidden = lv === 'at'; $('verDet').hidden = !bt; $('gIwrap').hidden = !bt;
+  $('thSum').textContent = bt ? 'Verificación térmica de la sección (opcional)' : 'Datos para la sección mínima (temperatura ambiente)';
 }
+function updHV() { const g = $('pGrav').value === 'si'; $('pRs').disabled = !g; $('pHs').disabled = !g; $('aDfv').disabled = $('aDf').value !== 'man'; }
+$('pGrav').addEventListener('change', updHV); $('aDf').addEventListener('change', updHV);
 $('gJ').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setJoint(b.dataset.v); renderAll(); save(); });
 ['gV', 'gK'].forEach(id => $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setSeg(id, b.dataset.v); renderResult(); save(); }));
 function updSec() { const v = $('gSec').value; $('gSmm').disabled = v !== 'custom'; if (v !== 'custom') $('gSmm').value = v.replace('.', ','); const S = num($('gSmm').value); $('gD').value = S > 0 ? fmt(Math.sqrt(4 * S / Math.PI), 2) : '—'; }
@@ -1387,12 +1530,11 @@ function rodNodes(M, n) { // posiciones de barras: esquinas primero y luego repa
 }
 const lab5 = { ok: 'cumple', warn: 'revisar', bad: 'no cumple', na: 'pendiente', nap: 'no aplica' };
 function renderResult() {
-  const at = st.volt === 'at';
-  $('atMsg').hidden = !at; $('resBox').hidden = at;
-  if (at) { st.last = null; updStepper(); return; }
-  const m = current(), elec = st.kind === 'electrodo';
+  const lvl = st.volt, m = current(), elec = lvl === 'bt' && st.kind === 'electrodo';
+  $('mtBlock').hidden = lvl !== 'mt'; $('tcBlock').hidden = lvl === 'bt';
+  $('ricH').textContent = lvl === 'at' ? 'Verificación del diseño · Pliego RPTD N°06 e IEEE Std 80-2013' : lvl === 'mt' ? 'Verificación del diseño · guías del curso, Pliego RIC N°06 e IEEE Std 80-2013' : 'Verificación del diseño · guía de Schwarz y Pliego RIC N°06';
   $('byBlock').hidden = elec;
-  const clear = msg => { $('rOut').innerHTML = '—'; $('rVer').innerHTML = ''; $('rSub').textContent = msg; ['byKv', 'swKv', 'plan', 'secBox', 'ricList', 'swF'].forEach(k => $(k).innerHTML = ''); $('byT').tBodies[0].innerHTML = ''; $('ricSum').textContent = ''; st.last = null; };
+  const clear = msg => { $('rOut').innerHTML = '—'; $('rVer').innerHTML = ''; $('rSub').textContent = msg; ['byKv', 'swKv', 'plan', 'secBox', 'ricList', 'swF', 'mtKv1', 'mtKv2', 'tcKv1', 'tcKv2', 'tcCards', 'tcNote'].forEach(k => $(k).innerHTML = ''); updStepper(); $('byT').tBodies[0].innerHTML = ''; $('ricSum').textContent = ''; st.last = null; };
   if (!m) return clear('Falta el modelo de suelo');
   const I = num($('gI').value), t = num($('gT').value), Ta = num($('gTa').value), Tm = num($('gTm').value), Smm = num($('gSmm').value);
   const Rmax = num($('gRmax').value), Rdis = Rmax > 0 ? Math.min(Rmax, 20) : 20;
@@ -1405,12 +1547,14 @@ function renderResult() {
     const M = MG.malla(g), by = MG.burgsdorf(m.rho, m.h, M.S, g.h);
     const S = MG.sistema({ rhoEq: by.rhoEq, a: M.largo, b: M.ancho, Lc: M.Lt, h: g.h, d: g.d, n, Lb, rb });
     R = S.RT; res = { g, M, by, S, n, Lb, rb };
+    if (lvl !== 'bt' && $('gMet').value === 'lau') { res.lau = MG.laurent(by.rhoEq, M); R = res.lau; }
     $('byT').tBodies[0].innerHTML = by.rows.map(r => `<tr><td>${r.i}</td><td>${isFinite(r.z) ? fmt(r.z) : '∞'}</td><td>${isFinite(r.z) ? fmt(r.v2, 3) : '0'}</td><td>${fmt(r.F, 4)}</td><td>${fmtS(r.rho)}</td></tr>`).join('');
     $('byKv').innerHTML = `<dt>Área S</dt><dd>${fmt(M.S, 1)} m²</dd><dt>Radio equivalente r</dt><dd>${fmt(by.r, 3)} m</dd><dt>b (profundidad)</dt><dd>${fmt(g.h, 2)} m</dd><dt>r0²</dt><dd>${fmt(by.r02, 3)} m²</dd><dt>q0²</dt><dd>${fmt(by.q02, 3)} m²</dd><dt><b>ρ equivalente</b></dt><dd><b>${fmt(by.rhoEq, 2)} Ω·m</b></dd>`;
     const bars = S.R2 != null;
     $('rLab').textContent = bars ? `Schwarz · resistencia total (malla + ${n} barras)` : 'Schwarz · resistencia de la malla';
+    if (res.lau != null) $('rLab').textContent = 'Laurent · resistencia de la malla';
     showR(R);
-    $('rSub').textContent = `ρeq ${fmt(by.rhoEq, 1)} Ω·m · malla ${fmt(M.largo, 1)} × ${fmt(M.ancho, 1)} m` + (bars ? ` · solo malla R₁ = ${fmt(S.R1, 2)} Ω` : '');
+    $('rSub').textContent = `ρeq ${fmt(by.rhoEq, 1)} Ω·m · malla ${fmt(M.largo, 1)} × ${fmt(M.ancho, 1)} m` + (res.lau != null ? ` · Schwarz RT = ${fmt(S.RT, 2)} Ω como referencia` : bars ? ` · solo malla R₁ = ${fmt(S.R1, 2)} Ω` : '');
     $('swH').textContent = bars ? 'Schwarz · malla, barras, mutua y total' : 'Schwarz · resistencia de la malla';
     $('swF').innerHTML = `R₁ = ρeq/(π·Lc) · [ln(2·Lc/a′) + K₁·Lc/√A − K₂]` + (bars ? `<br>R₂ = ρeq/(2π·n·Lb) · [ln(4·Lb/rb) − 1 + 2·K₁·(Lb/√A)·(√n − 1)²]<br>Rm = ρeq/(π·Lc) · [ln(2·Lc/Lb) + K₁·Lc/√A − K₂ + 1]<br>RT = (R₁·R₂ − Rm²) / (R₁ + R₂ − 2·Rm)` : '');
     $('swKv').innerHTML = `<dt>A · √A</dt><dd>${fmt(S.A, 1)} m² · ${fmt(S.sA, 3)} m</dd><dt>x = a/b</dt><dd>${fmt(S.x, 3)}</dd><dt>h/√A</dt><dd>${fmt(S.hRel, 4)} <span class="chip ${S.valid ? 'ok' : 'warn'}">${S.valid ? 'en rango' : 'fuera de rango'}</span></dd>`
@@ -1441,21 +1585,101 @@ function renderResult() {
     $('plan').innerHTML = '';
   }
   let sb = '';
-  if (!elec && I > 0 && t > 0 && Tm > Ta) { const o = MG.onderdonk(I, t, Ta, Tm), ok = Smm >= o.mm2; sb = `<dl class="kv"><dt>Sección mínima (Onderdonk, ${fmt(Tm, 0)} °C)</dt><dd>${fmt(o.mm2, 1)} mm²</dd><dt>Sección elegida</dt><dd>${fmt(Smm, 2)} mm² <span class="chip ${ok ? 'ok' : 'bad'}">${ok ? 'cumple' : 'no cumple'}</span></dd></dl>`; }
+  const hv = lvl === 'bt' ? null : calcHV(lvl, m, R, res, Tm, Ta, Smm);
+  if (hv && hv.err) return clear(hv.err);
+  if (lvl === 'bt' && !elec && I > 0 && t > 0 && Tm > Ta) { const o = MG.onderdonk(I, t, Ta, Tm), ok = Smm >= o.mm2; sb = `<dl class="kv"><dt>Sección mínima (Onderdonk, ${fmt(Tm, 0)} °C)</dt><dd>${fmt(o.mm2, 1)} mm²</dd><dt>Sección elegida</dt><dd>${fmt(Smm, 2)} mm² <span class="chip ${ok ? 'ok' : 'bad'}">${ok ? 'cumple' : 'no cumple'}</span></dd></dl>`; }
   let Ireal = NaN, IrealM = NaN;
-  if (VL > 0 && X >= 0 && isFinite(X)) { Ireal = MG.fallaIf(VL * 1000, X, R); if (res.S && res.S.R2 != null) IrealM = MG.fallaIf(VL * 1000, X, res.S.R1); sb += `<dl class="kv"><dt>Corriente real de falla If1φ</dt><dd>${fmt(Ireal, 0)} A</dd>${isFinite(IrealM) ? `<dt>Solo con la malla</dt><dd>${fmt(IrealM, 0)} A</dd>` : ''}</dl>`; }
+  if (lvl === 'bt' && VL > 0 && X >= 0 && isFinite(X)) { Ireal = MG.fallaIf(VL * 1000, X, R); if (res.S && res.S.R2 != null) IrealM = MG.fallaIf(VL * 1000, X, res.S.R1); sb += `<dl class="kv"><dt>Corriente real de falla If1φ</dt><dd>${fmt(Ireal, 0)} A</dd>${isFinite(IrealM) ? `<dt>Solo con la malla</dt><dd>${fmt(IrealM, 0)} A</dd>` : ''}</dl>`; }
   $('secBox').innerHTML = sb;
-  const ric = ricChecks({ elec, res, R, Rdis, Rmax, Ireal, If, I, t, Ta, Tm, Smm });
+  if (hv) renderHV(hv, R);
+  const ric = ricChecks({ lvl, hv, elec, res, R, Rdis: hv ? hv.Rdis : Rdis, Rmax, Ireal, If, I, t, Ta, Tm, Smm });
   const ricKey = ric.map(c => c.s + c.t).join('|'), ricChanged = ricKey !== st.ricKey; st.ricKey = ricKey;
   $('ricList').classList.toggle('stagger', ricChanged);
   $('ricList').innerHTML = ric.map(c => `<li><span class="chip ${c.s === 'na' || c.s === 'nap' ? 'acc' : c.s}">${lab5[c.s]}</span><div><b>${c.t}</b><span class="d">${c.d}</span></div></li>`).join('');
   $('ricSum').textContent = `${ric.filter(c => c.s === 'ok').length} cumplen · ${ric.filter(c => c.s === 'warn').length} a revisar · ${ric.filter(c => c.s === 'bad').length} no cumplen`;
-  st.last = { m, R, Rdis, Ireal, res, elec, ric };
+  st.last = { m, R, Rdis: hv ? hv.Rdis : Rdis, Ireal: hv ? hv.If : Ireal, res, elec, ric, hv, lvl };
   const nb = ric.filter(c => c.s === 'bad').length, nw = ric.filter(c => c.s === 'warn').length, vv = nb ? 'bad' : nw ? 'warn' : 'ok';
   $('rVer').innerHTML = `<span class="big-chip ${vv}">${vv === 'ok' ? 'Cumple' : vv === 'warn' ? 'Cumple, con puntos a revisar' : 'No cumple'}</span><span class="vt">${nb ? nb + ' no cumplen · ' : ''}${nw ? nw + ' a revisar · ' : ''}<a href="#" data-go="ricList">ver verificación</a></span>`;
   updStepper();
 }
-function ricChecks({ elec, res, R, Rdis, Rmax, Ireal, If, I, t, Ta, Tm, Smm }) {
+
+function fuseTable() { const t = []; for (let k = 0; k < 5; k++) t.push({ t: num($('fT' + k).value), imin: num($('fM' + k).value), iclr: num($('fC' + k).value) }); return t; }
+function calcHV(lvl, m, R, res, Tm, Ta, Smm) {
+  const mt = lvl === 'mt', g = res.g, M = res.M;
+  const VL = num($(mt ? 'mVL' : 'aVL').value) * 1000, I3 = num($(mt ? 'mI3' : 'aI3').value), I1 = num($(mt ? 'mI1' : 'aI1').value);
+  if (!(VL > 0 && I3 > 0 && I1 > 0)) return { err: 'Completa los datos de la red en el paso 4' };
+  const rd = MG.red({ VL, Icc3: I3, Icc1: I1, ST: mt ? num($('mST').value) : 0 });
+  const If = MG.fallaIf(VL, rd.SX, R), o = { lvl, VL, I3, I1, rd, If, R };
+  if (mt) {
+    const tab = fuseTable(), Ifaux = num($('mIaux').value);
+    o.tab = tab; o.Ifaux = Ifaux; o.fus = $('mFus').value;
+    o.Ifmin = Math.min(...tab.filter(r => r.imin > 0).map(r => r.imin));
+    o.Rmax = Ifaux > 0 ? MG.rmax(VL, Ifaux, rd.SX) : NaN;
+    o.Rdis = isFinite(o.Rmax) ? Math.min(o.Rmax, 20) : 20;
+    o.t2 = MG.fusible(tab, Ifaux, 'iclr'); o.tr = MG.fusible(tab, If, 'iclr');
+    o.tTerm = o.tr.estado === 'ok' || o.tr.estado === 'menor' ? o.tr.t : NaN;
+    o.tTol = num($('pTt').value); o.Sf = 1; o.Df = 1;
+  } else {
+    o.Rdis = 20; o.tTerm = num($('aT').value); o.tTol = o.tTerm;
+    o.Sf = num($('aSf').value) > 0 ? num($('aSf').value) : 1;
+    o.Df = $('aDf').value === 'man' ? (num($('aDfv').value) || 1) : MG.fd(o.tTerm);
+  }
+  o.IG = o.Sf * o.Df * If; o.GPR = o.IG * R;
+  // sección mínima (Onderdonk con factor de decremento)
+  o.K = MG.kCu(Tm, Ta);
+  if (isFinite(o.tTerm) && o.tTerm > 0) { o.FD = MG.fd(o.tTerm); o.Smin = MG.smin(o.K, If, o.FD, o.tTerm); }
+  // tensiones tolerables
+  const grav = $('pGrav').value === 'si', rho1 = m.rho[0];
+  o.rho1 = rho1; o.grav = grav; o.kg = +$('pKg').value;
+  o.rhoS = grav ? num($('pRs').value) : rho1; o.hs = grav ? num($('pHs').value) : NaN;
+  o.Cs = grav && o.rhoS > 0 && o.hs > 0 ? MG.cs(o.rhoS, o.hs, rho1) : 1;
+  if (!(o.tTol > 0)) return { err: 'Ingresa el tiempo de despeje para las tensiones tolerables' };
+  o.tol = MG.tolerables({ rhoS: o.rhoS, Cs: o.Cs, t: o.tTol, kg: o.kg });
+  // tensiones de la malla
+  o.D = Math.max(num($('gCl').value), num($('gCa').value));
+  o.T = MG.tensiones({ rhoEq: res.by.rhoEq, IG: o.IG, Lc: M.Lt, a: M.largo, b: M.ancho, D: o.D, h: g.h, d: g.d, nb: res.n, Lb: res.Lb, perim: res.n > 0 });
+  o.okC = o.GPR <= o.tol.Etc || o.T.Em <= o.tol.Etc; o.okP = o.T.Es <= o.tol.Etp;
+  return o;
+}
+function renderHV(o, R) {
+  const r = o.rd, A = (x, d = 1) => `${fmt(x, d)} A`;
+  if (o.lvl === 'mt') {
+    $('mtH').textContent = 'Red, fusible, corriente de falla y resistencia máxima';
+    const tt = e => e.estado === 'menor' ? `< ${fmtS(e.t)} s` : e.estado === 'ok' ? `${fmtS(e.t)} s` : e.estado === 'no opera' ? 'no opera' : '—';
+    $('mtKv1').innerHTML = `<dt>Fusible de arranque IA = 1,5·ST/(√3·VL)</dt><dd>${A(r.IA, 2)} → ${o.fus || '—'}</dd><dt>X₁ = X₂ = VL/(√3·Icc3φ)</dt><dd>${fmt(r.X1, 3)} Ω</dd><dt>X₀ = 3VL/(√3·Icc1φ) − (X₁ + X₂)</dt><dd>${fmt(r.X0, 3)} Ω</dd><dt>ΣX = X₀ + X₁ + X₂</dt><dd>${fmt(r.SX, 3)} Ω</dd><dt>If mín del fusible</dt><dd>${A(o.Ifmin)}</dd><dt>If aux · tiempo t₂</dt><dd>${A(o.Ifaux, 0)} · ${tt(o.t2)}</dd>`;
+    $('mtKv2').innerHTML = `<dt>Rmáx = ⅓·√(3VL²/If aux² − ΣX²)</dt><dd>${isFinite(o.Rmax) ? fmt(o.Rmax, 2) + ' Ω' : '—'}</dd><dt><b>Rdiseño</b> (menor entre Rmáx y 20 Ω)</dt><dd><b>${fmt(o.Rdis, 2)} Ω</b></dd><dt>R proyectada</dt><dd>${fmt(R, 2)} Ω</dd><dt><b>If1φ real</b> = 3VL/[√3·√((3R)² + ΣX²)]</dt><dd><b>${A(o.If)}</b></dd><dt>Tiempo real de operación</dt><dd>${tt(o.tr)}</dd><dt>Smín = K·If·FD·√t/1973</dt><dd>${isFinite(o.Smin) ? fmt(o.Smin, 2) + ' mm²' : '—'} (K ${fmt(o.K, 2)} · FD ${isFinite(o.FD) ? fmt(o.FD, 2) : '—'})</dd>`;
+  }
+  const T = o.T, tol = o.tol;
+  const card = (name, E, Et, ok, extra) => { const pct = Math.min(100, E / Et * 100); return `<div class="tcard ${ok ? 'ok' : 'bad'}"><div class="tt"><b>${name}</b><span class="chip ${ok ? 'ok' : 'bad'}">${ok ? 'cumple' : 'no cumple'}</span></div><div class="nums"><span>calculada<strong>${fmt(E, 0)} V</strong></span><span>tolerable<strong>${fmt(Et, 0)} V</strong></span></div><div class="meter" role="img" aria-label="${fmt(pct, 0)} % de la tolerable"><i style="width:${pct}%"></i></div><span class="u">${extra}</span></div>`; };
+  $('tcCards').innerHTML = card('Contacto (tensión de malla Em)', T.Em, tol.Etc, o.okC, o.GPR <= tol.Etc ? 'GPR menor que la tolerable: cumple sin más cálculo' : `${fmt(T.Em / tol.Etc * 100, 0)} % de la tolerable`)
+    + card('Paso (Es)', T.Es, tol.Etp, o.okP, `${fmt(T.Es / tol.Etp * 100, 0)} % de la tolerable`);
+  $('tcKv1').innerHTML = `<dt>Corriente a la malla IG${o.lvl === 'at' ? ' = Sf·Df·If' : ' = If1φ real'}</dt><dd>${A(o.IG)}</dd>${o.lvl === 'at' ? `<dt>If · Sf · Df</dt><dd>${A(o.If)} · ${fmt(o.Sf, 2)} · ${fmt(o.Df, 2)}</dd>` : ''}<dt>GPR = IG·R</dt><dd>${fmt(o.GPR, 0)} V</dd><dt>Persona · t</dt><dd>${o.kg} kg · ${fmtS(o.tTol)} s</dd><dt>IB = ${o.kg === 70 ? '0,157' : '0,116'}/√t</dt><dd>${fmt(tol.IB, 5)} A</dd><dt>ρs ${o.grav ? '(gravilla)' : '(ρ₁ del suelo)'} · Cs</dt><dd>${fmt(o.rhoS, 1)} Ω·m · ${fmt(o.Cs, 4)}</dd><dt>Contacto tolerable</dt><dd>${fmt(tol.Etc, 1)} V</dd><dt>Paso tolerable</dt><dd>${fmt(tol.Etp, 1)} V</dd>`;
+  $('tcKv2').innerHTML = `<dt>n = na·nb</dt><dd>${fmt(T.n, 3)} (${fmt(T.na, 3)} · ${fmt(T.nbF, 3)})</dd><dt>D (retícula) · h · d</dt><dd>${fmt(o.D, 2)} m · ${fmt(res4(o).h, 2)} m · ${fmt(res4(o).d * 1000, 2)} mm</dd><dt>Kii · Kh</dt><dd>${fmt(T.Kii, 4)} · ${fmt(T.Kh, 4)}</dd><dt>Km · Ks · Ki</dt><dd>${fmt(T.Km, 4)} · ${fmt(T.Ks, 4)} · ${fmt(T.Ki, 3)}</dd><dt>LR · LM · LS</dt><dd>${fmt(T.LR, 1)} · ${fmt(T.LM, 2)} · ${fmt(T.LS, 1)} m</dd><dt>ρeq·Ki·IG</dt><dd>${fmt(T.f, 0)} V·m</dd><dt>Rango IEEE 80-2013</dt><dd><span class="chip ${T.inRange ? 'ok' : 'warn'}">${T.inRange ? 'dentro' : 'fuera: estimación'}</span></dd>`;
+  const out = [];
+  if (!T.valid.D) out.push('retícula D < 2,5 m'); if (!T.valid.n) out.push('n > 25'); if (!T.valid.h) out.push('h fuera de 0,25 a 2,5 m'); if (!T.valid.d) out.push('d ≥ 0,25·h');
+  $('tcNote').textContent = (out.length ? `Fuera del rango de IEEE 80-2013 (${out.join(', ')}): el resultado es una estimación y el informe debe decirlo. ` : '') + (Math.abs(num($('gCl').value) - num($('gCa').value)) > 1e-9 ? 'Con retículas distintas en cada dirección se usa la mayor como D (lado seguro). ' : '') + (!(o.okC && o.okP) ? 'Medidas de mejora: capa de gravilla, mayor superficie de malla, barras en esquinas y perímetro o anillo perimetral.' : '');
+}
+function res4(o) { return { h: num($('gH').value), d: Math.sqrt(4 * num($('gSmm').value) / Math.PI) / 1000 }; }
+function hvChecks(o, R) {
+  const c = [], mt = o.lvl === 'mt', T = o.T;
+  if (mt) {
+    c.push(o.Ifaux > o.Ifmin && o.Ifaux < o.I1 ? { s: 'ok', t: `Corriente auxiliar: ${fmtS(o.Ifmin)} A < If aux ${fmtS(o.Ifaux)} A < Icc1φ ${fmtS(o.I1)} A`, d: 'Guía de resistencia máxima, paso 3.' } : { s: 'bad', t: `Corriente auxiliar fuera de rango: If aux ${fmtS(o.Ifaux)} A`, d: 'Debe quedar entre la corriente mínima de fusión del fusible y la corriente de cortocircuito monofásica.' });
+    c.push(R <= o.Rdis ? { s: 'ok', t: `Resistencia: ${fmt(R, 2)} Ω ≤ Rdiseño ${fmt(o.Rdis, 2)} Ω`, d: `Menor entre Rmáx (${isFinite(o.Rmax) ? fmt(o.Rmax, 2) + ' Ω' : '—'}) y 20 Ω de la normativa (RIC N°06).` } : { s: 'bad', t: `Resistencia: ${fmt(R, 2)} Ω > Rdiseño ${fmt(o.Rdis, 2)} Ω`, d: 'Agrandar la malla: el término del área es el que más pesa. Luego barras más largas o más barras en el perímetro.' });
+    const opera = o.tr.estado === 'ok' || o.tr.estado === 'menor';
+    c.push(opera && o.If > o.Ifaux ? { s: 'ok', t: `Corriente real de falla: ${fmt(o.If, 1)} A > If aux ${fmtS(o.Ifaux)} A`, d: `El fusible opera en ${o.tr.estado === 'menor' ? 'menos de ' : ''}${fmtS(o.tr.t)} s.` } : { s: 'bad', t: `Corriente real de falla: ${fmt(o.If, 1)} A`, d: opera ? 'Es menor que la corriente auxiliar: el fusible demora más que lo exigido.' : 'El fusible no opera con esta corriente según su curva.' });
+    if (opera) c.push(o.tr.t <= 0.5 ? { s: 'ok', t: `Tiempo de despeje: ${o.tr.estado === 'menor' ? '< ' : ''}${fmtS(o.tr.t)} s ≤ 0,5 s`, d: 'RIC N°06, 8.8: el tiempo de exposición nunca puede superar 0,5 s.' } : { s: 'bad', t: `Tiempo de despeje: ${fmtS(o.tr.t)} s > 0,5 s`, d: 'RIC N°06, 8.8: nunca superior a 0,5 s. Hay que bajar la resistencia o cambiar la protección.' });
+  } else {
+    c.push(R <= 20 ? { s: 'ok', t: `Resistencia: ${fmt(R, 2)} Ω ≤ 20 Ω`, d: 'RPTD N°06, 8.27: la puesta a tierra no puede superar 20 Ω.' } : { s: 'bad', t: `Resistencia: ${fmt(R, 2)} Ω > 20 Ω`, d: 'RPTD N°06, 8.27: máximo 20 Ω.' });
+    c.push({ s: 'na', t: `Tiempo de falla ts = ${fmtS(o.tTerm)} s`, d: 'RPTD N°06: debe ser el tiempo de la protección de respaldo y no menor que el tiempo de despeje de la NTSyCS. Confírmalo con el estudio de protecciones.' });
+  }
+  if (isFinite(o.Smin)) { const need = Math.max(o.Smin, 25), Smm = num($('gSmm').value); c.push(Smm >= need ? { s: 'ok', t: `Sección: ${fmt(Smm, 2)} mm² ≥ ${fmt(need, 2)} mm²`, d: `Térmica ${fmt(o.Smin, 2)} mm² (K ${fmt(o.K, 2)}, FD ${fmt(o.FD, 2)}, t ${fmtS(o.tTerm)} s) frente al mínimo normativo de 25 mm²: manda el mayor.` } : { s: 'bad', t: `Sección: ${fmt(Smm, 2)} mm² < ${fmt(need, 2)} mm²`, d: 'Aumentar la sección del conductor.' }); }
+  c.push(o.okC ? { s: 'ok', t: `Tensión de contacto: ${fmt(T.Em, 0)} V ≤ ${fmt(o.tol.Etc, 0)} V`, d: `IEEE Std 80-2013${o.lvl === 'at' ? ' (RPTD N°06, 8.25)' : ''}, persona de ${o.kg} kg${o.grav ? ', con capa de gravilla (debe quedar especificada en planos e informe)' : ''}.` } : { s: 'bad', t: `Tensión de contacto: ${fmt(T.Em, 0)} V > ${fmt(o.tol.Etc, 0)} V`, d: 'No protege a las personas. Primero agrega gravilla; si no basta, agranda la malla o densifica la retícula (D ≥ 2,5 m).' });
+  c.push(o.okP ? { s: 'ok', t: `Tensión de paso: ${fmt(T.Es, 0)} V ≤ ${fmt(o.tol.Etp, 0)} V`, d: `IEEE Std 80-2013, persona de ${o.kg} kg.` } : { s: 'bad', t: `Tensión de paso: ${fmt(T.Es, 0)} V > ${fmt(o.tol.Etp, 0)} V`, d: 'Agrega gravilla, agranda la malla o instala un anillo perimetral.' });
+  c.push(T.inRange ? { s: 'ok', t: 'Rango de validez de IEEE 80-2013', d: 'n ≤ 25, 0,25 ≤ h ≤ 2,5 m, d < 0,25·h y D ≥ 2,5 m.' } : { s: 'warn', t: 'Fuera del rango de IEEE 80-2013', d: 'Las tensiones calculadas son una estimación; el informe debe decirlo.' });
+  return c;
+}
+function ricChecks({ lvl, hv, elec, res, R, Rdis, Rmax, Ireal, If, I, t, Ta, Tm, Smm }) {
+  const at = lvl === 'at', P = at ? 'RPTD N°06' : 'RIC N°06';
   const out = [], D = data(), Lmax = D.length ? Math.max(...D.map(d => d.L)) : 0;
   out.push(D.length >= 12 && D.length <= 20 ? { s: 'ok', t: `Lecturas del sondeo: ${D.length}`, d: 'Mínimo 12 y máximo 20 lecturas.' } : { s: 'warn', t: `Lecturas del sondeo: ${D.length}`, d: D.length < 12 ? 'Faltan lecturas: el mínimo es 12.' : 'Sobran lecturas: el máximo es 20. Desmarca «Usar» en las que no correspondan.' });
   out.push(Lmax >= 50 ? { s: 'ok', t: `Sondeo de resistividad: AB/2 máx. = ${fmtS(Lmax)} m`, d: 'Anexo 6.6: alas de hasta 100 m; 50 m es aceptable si no se puede llegar a 100 m.' }
@@ -1463,28 +1687,31 @@ function ricChecks({ elec, res, R, Rdis, Rmax, Ireal, If, I, t, Ta, Tm, Smm }) {
   out.push({ s: 'ok', t: 'Método de medición: Schlumberger', d: 'Anexo 6.6: se acepta Schlumberger o Wenner, uno a la vez.' });
   if (!elec) {
     const { g, S, n, Lb, M } = res;
-    out.push(Smm >= 25 ? { s: 'ok', t: `Sección del conductor: ${fmt(Smm, 2)} mm²`, d: 'Sección 8.7: mínimo 25 mm² para conductores desnudos usados como electrodo (cobre nuevo, 8.9).' } : { s: 'bad', t: `Sección del conductor: ${fmt(Smm, 2)} mm²`, d: 'Sección 8.7: el mínimo es 25 mm².' });
-    out.push(g.h >= 0.5 ? { s: 'ok', t: `Profundidad de la malla: ${fmt(g.h, 2)} m`, d: 'Sección 8.11: mínimo 0,5 m.' } : { s: 'bad', t: `Profundidad de la malla: ${fmt(g.h, 2)} m`, d: 'Sección 8.11: la malla debe enterrarse a 0,5 m como mínimo.' });
+    out.push(Smm >= 25 ? { s: 'ok', t: `Sección del conductor: ${fmt(Smm, 2)} mm²`, d: at ? 'RPTD N°06, 8.14: cobre de 25 mm² como mínimo.' : 'RIC N°06, 8.7: mínimo 25 mm² para conductores desnudos usados como electrodo (cobre nuevo, 8.9).' } : { s: 'bad', t: `Sección del conductor: ${fmt(Smm, 2)} mm²`, d: `${P}: el mínimo es 25 mm².` });
+    if (!at) out.push(g.h >= 0.5 ? { s: 'ok', t: `Profundidad de la malla: ${fmt(g.h, 2)} m`, d: 'Sección 8.11: mínimo 0,5 m.' } : { s: 'bad', t: `Profundidad de la malla: ${fmt(g.h, 2)} m`, d: 'Sección 8.11: la malla debe enterrarse a 0,5 m como mínimo.' });
     out.push(S.valid ? { s: 'ok', t: `Rango de Schwarz: h/√A = ${fmt(S.hRel, 3)} ≤ 0,167`, d: 'Guía de Schwarz: K₁ y K₂ son válidos.' } : { s: 'warn', t: `Rango de Schwarz: h/√A = ${fmt(S.hRel, 3)} > 0,167`, d: 'Guía de Schwarz: la malla es pequeña o profunda; el resultado es una estimación y el informe debe decirlo.' });
     if (S.R2 != null) out.push(S.senseOk ? { s: 'ok', t: `Control de sentido: ${fmt(S.Rpar, 2)} < ${fmt(S.RT, 2)} < ${fmt(Math.min(S.R1, S.R2), 2)} Ω`, d: 'Guía de Schwarz: RT queda entre el paralelo simple y la menor de R₁ y R₂.' } : { s: 'bad', t: 'Control de sentido de RT', d: 'RT quedó fuera del intervalo esperado: revisar Rm y los datos de las barras.' });
   }
-  out.push(st.joint === 'apernada' && !elec ? { s: 'bad', t: 'Uniones apernadas bajo tierra', d: 'Sección 7.11: las uniones enterradas deben ser soldadura exotérmica o conector apto para enterrar (IEEE 837).' }
+  out.push(st.joint === 'apernada' && !elec ? { s: 'bad', t: 'Uniones apernadas bajo tierra', d: at ? 'RPTD N°06, 8.17: las uniones enterradas deben ser soldadura exotérmica o conector apto para enterrar (IEEE 837).' : 'Sección 7.11: las uniones enterradas deben ser soldadura exotérmica o conector apto para enterrar (IEEE 837).' }
     : st.joint === 'compresion' && !elec ? { s: 'warn', t: 'Uniones por compresión', d: 'Sección 7.11 c: válidas solo con conectores aptos para enterrar, ensayados según IEEE 837. Las no inspeccionables exigen soldadura de alto punto de fusión.' }
     : { s: 'ok', t: elec ? 'Unión barra-conductor' : 'Uniones con soldadura exotérmica', d: elec ? 'Sección 7.11: usar soldadura exotérmica o conector apto para enterrar.' : 'Sección 7.11: soldadura de alto punto de fusión, permitida en uniones enterradas.' });
-  if (t > 0) out.push(t <= 0.5 ? { s: 'ok', t: `Tiempo de exposición a la falla: ${fmt(t, 2)} s`, d: 'Sección 8.8: nunca superior a 0,5 s.' } : { s: 'bad', t: `Tiempo de exposición a la falla: ${fmt(t, 2)} s`, d: 'Sección 8.8: el tiempo de exposición nunca puede superar 0,5 s.' });
-  if (!elec) { if (I > 0 && t > 0 && Tm > Ta) { const o = MG.onderdonk(I, t, Ta, Tm); out.push(Smm >= o.mm2 ? { s: 'ok', t: `Sección por corriente de falla: ${fmt(o.mm2, 1)} mm² mínimo`, d: 'Sección 8.8: el conductor soporta la corriente de falla.' } : { s: 'bad', t: `Sección por corriente de falla: ${fmt(o.mm2, 1)} mm² mínimo`, d: 'Sección 8.8: la sección elegida no soporta la corriente de falla ingresada.' }); }
+  if (lvl === 'bt' && t > 0) out.push(t <= 0.5 ? { s: 'ok', t: `Tiempo de exposición a la falla: ${fmt(t, 2)} s`, d: 'Sección 8.8: nunca superior a 0,5 s.' } : { s: 'bad', t: `Tiempo de exposición a la falla: ${fmt(t, 2)} s`, d: 'Sección 8.8: el tiempo de exposición nunca puede superar 0,5 s.' });
+  if (lvl === 'bt' && !elec) { if (I > 0 && t > 0 && Tm > Ta) { const o = MG.onderdonk(I, t, Ta, Tm); out.push(Smm >= o.mm2 ? { s: 'ok', t: `Sección por corriente de falla: ${fmt(o.mm2, 1)} mm² mínimo`, d: 'Sección 8.8: el conductor soporta la corriente de falla.' } : { s: 'bad', t: `Sección por corriente de falla: ${fmt(o.mm2, 1)} mm² mínimo`, d: 'Sección 8.8: la sección elegida no soporta la corriente de falla ingresada.' }); }
     else out.push({ s: 'na', t: 'Sección por corriente de falla', d: 'Sección 8.8: ingresa la corriente de falla para verificarla.' }); }
-  out.push(R <= Rdis ? { s: 'ok', t: `Resistencia: ${fmt(R, 2)} Ω ≤ Rdiseño ${fmtS(Rdis)} Ω`, d: `Guía y RIC N°06 (6.1): Rdiseño es el menor entre Rmáx${Rmax > 0 ? ` (${fmtS(Rmax)} Ω)` : ''} y 20 Ω.` } : { s: 'bad', t: `Resistencia: ${fmt(R, 2)} Ω > Rdiseño ${fmtS(Rdis)} Ω`, d: 'No cumple. Lo más eficaz es aumentar la superficie de la malla; luego, barras más largas que alcancen una capa más conductora.' });
-  if (isFinite(Ireal) && If > 0) out.push(Ireal > If ? { s: 'ok', t: `Corriente real de falla: ${fmt(Ireal, 0)} A > If ${fmtS(If)} A`, d: 'Guía de Schwarz, paso 5: el fusible despeja dentro del tiempo de despeje.' } : { s: 'bad', t: `Corriente real de falla: ${fmt(Ireal, 0)} A ≤ If ${fmtS(If)} A`, d: 'Guía de Schwarz, paso 5: la corriente no alcanza a fundir el fusible a tiempo. Hay que bajar la resistencia.' });
+  if (hv) hvChecks(hv, R).forEach(c => out.push(c));
+  else out.push(R <= Rdis ? { s: 'ok', t: `Resistencia: ${fmt(R, 2)} Ω ≤ Rdiseño ${fmtS(Rdis)} Ω`, d: `Guía y RIC N°06 (6.1): Rdiseño es el menor entre Rmáx${Rmax > 0 ? ` (${fmtS(Rmax)} Ω)` : ''} y 20 Ω.` } : { s: 'bad', t: `Resistencia: ${fmt(R, 2)} Ω > Rdiseño ${fmtS(Rdis)} Ω`, d: 'No cumple. Lo más eficaz es aumentar la superficie de la malla; luego, barras más largas que alcancen una capa más conductora.' });
+  if (hv) {}
+  else if (isFinite(Ireal) && If > 0) out.push(Ireal > If ? { s: 'ok', t: `Corriente real de falla: ${fmt(Ireal, 0)} A > If ${fmtS(If)} A`, d: 'Guía de Schwarz, paso 5: el fusible despeja dentro del tiempo de despeje.' } : { s: 'bad', t: `Corriente real de falla: ${fmt(Ireal, 0)} A ≤ If ${fmtS(If)} A`, d: 'Guía de Schwarz, paso 5: la corriente no alcanza a fundir el fusible a tiempo. Hay que bajar la resistencia.' });
   else out.push({ s: 'na', t: 'Corriente real de falla', d: 'Guía de Schwarz, paso 5: ingresa VL, XΣ e If en el paso 4 para verificar que el fusible despeje.' });
-  out.push({ s: 'nap', t: 'Tensiones de paso y de contacto', d: 'Se verifican en media y alta tensión. Este cálculo es de baja tensión.' });
+  if (!hv) out.push({ s: 'nap', t: 'Tensiones de paso y de contacto', d: 'Se verifican en media y alta tensión. Este cálculo es de baja tensión.' });
   const dg = elec ? res.Lb : Math.hypot(res.M.largo, res.M.ancho);
   out.push({ s: 'na', t: `Medición de verificación al construir: electrodo de corriente a ≥ ${fmt(6 * dg, 0)} m, potencial a ≈ ${fmt(0.62 * 6 * dg, 0)} m`, d: `Anexo 6.3: caída de potencial con 6 veces la ${elec ? 'longitud del electrodo' : 'diagonal mayor'} (${fmt(dg, 1)} m), potencial al 62 %, repetir en dirección perpendicular.` });
   return out;
 }
 $('copyRep').onclick = () => {
   if (!st.last) return; const { m, R, Rdis, Ireal, res, elec, ric } = st.last; const D = data();
-  let t = `INFORME PUESTA A TIERRA · BAJA TENSIÓN · ${elec ? 'ELECTRODO' : 'MALLA'}\n\nMediciones Schlumberger (${D.length} lecturas)\nL(m)\ts(m)\tV/I(Ohm)\trho_a(Ohm m)\n` + D.map(d => [d.L, d.s, d.vi, d.rho.toFixed(1)].join('\t')).join('\n').replace(/\./g, ',');
+  const hv = st.last.hv, lvn = { bt: 'BAJA TENSIÓN', mt: 'MEDIA TENSIÓN', at: 'ALTA TENSIÓN' }[st.last.lvl];
+  let t = `INFORME PUESTA A TIERRA · ${lvn} · ${elec ? 'ELECTRODO' : 'MALLA'}\n\nMediciones Schlumberger (${D.length} lecturas)\nL(m)\ts(m)\tV/I(Ohm)\trho_a(Ohm m)\n` + D.map(d => [d.L, d.s, d.vi, d.rho.toFixed(1)].join('\t')).join('\n').replace(/\./g, ',');
   t += `\n\nModelo de suelo (${$('modSrc').textContent}, tipo ${MG.tipo(m.rho)}, error ${fmt(modelRms(m), 1)} %)\n`;
   let z = 0; m.rho.forEach((r, i) => { const h = m.h[i]; t += `Capa ${i + 1}: ${fmt(z)} a ${h ? fmt(z += h) : 'inf.'} m, rho = ${fmtS(r)} Ohm m\n`; });
   if (!elec) {
@@ -1494,6 +1721,14 @@ $('copyRep').onclick = () => {
     t += `\nSchwarz: a' = ${fmt(S.ap, 4)} m, K1 = ${fmt(S.K1, 4)}, K2 = ${fmt(S.K2, 4)}\n  R1 (malla) = ${fmt(S.R1, 2)} Ohm\n`;
     if (S.R2 != null) t += `  R2 (${n} barras x ${fmt(Lb, 2)} m, rb = ${fmt(rb * 1000, 2)} mm) = ${fmt(S.R2, 2)} Ohm\n  Rm (mutua) = ${fmt(S.Rm, 2)} Ohm\n  RT (total) = ${fmt(S.RT, 2)} Ohm\n`;
   } else t += `\nElectrodo: barra de ${fmt(res.Lb, 2)} m, rb = ${fmt(res.rb * 1000, 2)} mm, cabeza a ${fmt(res.tH, 2)} m\n  rho = ${fmt(res.rho, 2)} Ohm m (${res.man ? 'manual' : 'capas que atraviesa'})\n  R = ${fmt(R, 2)} Ohm\n`;
+  if (res.lau != null) t += `  Laurent (adoptada) = ${fmt(res.lau, 2)} Ohm\n`;
+  if (hv) {
+    t += `\nRED: VL = ${fmt(hv.VL / 1000, 1)} kV, Icc3 = ${fmtS(hv.I3)} A, Icc1 = ${fmtS(hv.I1)} A\n  X1 = X2 = ${fmt(hv.rd.X1, 3)} Ohm, X0 = ${fmt(hv.rd.X0, 3)} Ohm, suma X = ${fmt(hv.rd.SX, 3)} Ohm\n`;
+    if (hv.lvl === 'mt') t += `  Fusible de arranque IA = ${fmt(hv.rd.IA, 2)} A (${hv.fus}); If aux = ${fmtS(hv.Ifaux)} A; Rmax = ${isFinite(hv.Rmax) ? fmt(hv.Rmax, 2) : '-'} Ohm\n  If1fi real = ${fmt(hv.If, 1)} A; tiempo de operación ${hv.tr.estado === 'menor' ? '< ' : ''}${isFinite(hv.tr.t) ? fmtS(hv.tr.t) : '-'} s\n`;
+    else t += `  If = ${fmt(hv.If, 1)} A; Sf = ${fmt(hv.Sf, 2)}; Df = ${fmt(hv.Df, 2)}; ts = ${fmtS(hv.tTerm)} s\n`;
+    if (isFinite(hv.Smin)) t += `  Smin térmica = ${fmt(hv.Smin, 2)} mm2 (K ${fmt(hv.K, 2)}, FD ${fmt(hv.FD, 2)}); mínimo normativo 25 mm2\n`;
+    t += `\nTENSIONES (IEEE 80-2013, ${hv.kg} kg, t = ${fmtS(hv.tTol)} s${hv.grav ? `, gravilla ${fmtS(hv.rhoS)} Ohm m x ${fmtS(hv.hs)} m, Cs = ${fmt(hv.Cs, 4)}` : ''})\n  IG = ${fmt(hv.IG, 1)} A, GPR = ${fmt(hv.GPR, 0)} V\n  n = ${fmt(hv.T.n, 3)}, Km = ${fmt(hv.T.Km, 4)}, Ks = ${fmt(hv.T.Ks, 4)}, Ki = ${fmt(hv.T.Ki, 3)}, LM = ${fmt(hv.T.LM, 2)} m, LS = ${fmt(hv.T.LS, 1)} m\n  Contacto: Em = ${fmt(hv.T.Em, 0)} V / tolerable ${fmt(hv.tol.Etc, 1)} V\n  Paso: Es = ${fmt(hv.T.Es, 0)} V / tolerable ${fmt(hv.tol.Etp, 1)} V\n`;
+  }
   t += `\nRESISTENCIA PROYECTADA = ${fmt(R, 2)} Ohm (Rdiseño ${fmtS(Rdis)} Ohm)\n` + (isFinite(Ireal) ? `Corriente real de falla If1fi = ${fmt(Ireal, 0)} A\n` : '');
   const L = { ok: 'CUMPLE', warn: 'REVISAR', bad: 'NO CUMPLE', na: 'PENDIENTE', nap: 'NO APLICA' };
   t += `\nVERIFICACIÓN\n` + ric.map(c => `[${L[c.s]}] ${c.t}`).join('\n') + '\n';
@@ -1501,7 +1736,7 @@ $('copyRep').onclick = () => {
 };
 
 function renderAll() { renderFit(); renderHom(); renderModel(); plot(); renderResult(); updStepper(); }
-setSeg('gV', st.volt); setSeg('gK', st.kind); updSec(); updE(); updCdp();
+setSeg('gV', st.volt); setSeg('gK', st.kind); updSec(); updE(); updHV(); updCdp();
 renderTable(); plot(); renderResult(); route();
 setTimeout(run, 60);
 })();

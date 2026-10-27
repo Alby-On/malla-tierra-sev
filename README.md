@@ -18,8 +18,8 @@ Abre `index.html` en el navegador (no necesita instalación ni internet, salvo l
 1. **Mediciones**: ingresa de 12 a 20 lecturas (mínimo 12, máximo 20) (L = AB/2, s = MN completo, V/I). Se calculan K, ρa y las coordenadas X/Y en mm para AutoCAD. Se puede pegar desde Excel.
 2. **Homologación**: la curva de campo se compara con todas las familias de las láminas Orellana-Mooney (lámina 1 de 2 capas; H-1 a H-25, K-1 a K-25, Q-1 a Q-13, A-1 a A-13; y las familias de 4 capas HK, HA, KH, KQ, QH, QQ, AK, AA), unas 1.500 curvas en total, y se ubica la cruz de campo (Ec, ρc en mm). Luego se ajusta el modelo para 2, 3 y 4 capas. Incluye un modo manual: eliges lámina, familia y curva, ingresas las cotas de AutoCAD y el programa dibuja la familia completa sobre tus datos.
 3. **Modelo de suelo**: capas, espesores y resistividades.
-4. **Diseño**: nivel de tensión (baja tensión; alta tensión aparece pero aún no calcula). En baja tensión se elige **malla a tierra** (largo, ancho, cuadrícula, profundidad, sección, unión y barras verticales) o **electrodo** de barra.
-5. **Resultado**: resistividad equivalente (Burgsdorf-Yakobs); con Schwarz, la resistencia de la malla R₁, de las barras R₂, la mutua Rm y la total RT; verificación del diseño (Rdiseño = menor entre Rmáx y 20 Ω, corriente real de falla frente al fusible, rango h/√A ≤ 0,167) y sección por Onderdonk.
+4. **Diseño**: nivel de tensión según la SEC (RPTD N°02, sección 4): **baja** (hasta 1 kV), **media** (sobre 1 y hasta 23 kV) y **alta** (sobre 23 y hasta 230 kV). En baja tensión se elige **malla a tierra** o **electrodo** de barra. En media tensión se ingresan la red (ST, VL, Icc3φ, Icc1φ), la corriente auxiliar y la curva del fusible. En alta tensión, la red, el tiempo de la protección de respaldo y los factores Sf y Df. En media y alta tensión se ingresan además el peso de la persona y la capa de gravilla.
+5. **Resultado**: resistividad equivalente (Burgsdorf-Yakobs); con Schwarz, la resistencia de la malla R₁, de las barras R₂, la mutua Rm y la total RT; verificación del diseño por nivel. En media y alta tensión: reactancias de la red, resistencia máxima, corriente real de falla, tiempo de operación del fusible, sección mínima y tensiones de contacto y de paso (IEEE Std 80-2013).
 
 ## Módulo de 62,5 mm por década y reescalado de las láminas
 
@@ -43,7 +43,12 @@ Las curvas que dibuja el programa se calculan directamente a 62,5 mm por década
 - Mutua: Rm = ρeq/(π·Lc) · [ln(2·Lc/Lb) + K₁·Lc/√A − K₂ + 1]
 - Total: RT = (R₁·R₂ − Rm²) / (R₁ + R₂ − 2·Rm)
 - Electrodo (barra sola): R = ρ/(2π·Lb) · [ln(4·Lb/rb) − 1], con ρ ponderada de las capas que atraviesa la barra (o manual)
-- Corriente real de falla: If1φ = 3·VL / [√3·√((3·RT)² + XΣ²)]
+- Corriente real de falla: If1φ = 3·VL / [√3·√((3·RT)² + ΣX²)]
+- Red: X₁ = X₂ = VL/(√3·Icc3φ); X₀ = 3·VL/(√3·Icc1φ) − (X₁ + X₂); fusible de arranque IA = 1,5·ST/(√3·VL)
+- Resistencia máxima (MT): Rmáx = ⅓·√(3·VL²/If aux² − ΣX²); Rdiseño = menor entre Rmáx y 20 Ω
+- Sección mínima: Smín = K·If·FD·√t/1973, K = √(33/log10((Tm − Ta)/(234 + Ta) + 1)); exotérmica 1083 °C (K 6,96), apernada 250 °C (K 11,56)
+- Tolerables: Ec = (1000 + 1,5·Cs·ρs)·k/√t; Ep = (1000 + 6·Cs·ρs)·k/√t; k = 0,116 (50 kg) o 0,157 (70 kg); Cs = 1 − 0,09·(1 − ρ/ρs)/(2hs + 0,09)
+- IEEE 80-2013: n = na·nb; Km, Ks, Ki = 0,644 + 0,148·n; LM, LS; Em = ρeq·Km·Ki·IG/LM; Es = ρeq·Ks·Ki·IG/LS
 
 Las curvas teóricas se calculan con la transformada de resistividad de Pekeris y un filtro digital de Hankel (Key, 201 puntos).
 
@@ -62,7 +67,16 @@ Al final del paso 5 el programa revisa los requisitos del pliego que se pueden c
 | Resistencia de servicio de 20 Ω como máximo, o de protección R ≤ Vs / I0 | 6.1, 7.3 |
 | Distancias para la medición de verificación por caída de potencial (6 × diagonal, 62 %) | Anexo 6.3 |
 
-Las tensiones de paso y de contacto se verifican en media y alta tensión; esta versión es de baja tensión.
+En media y alta tensión se agregan:
+
+| Requisito | Referencia |
+|---|---|
+| Resistencia ≤ Rdiseño (menor entre Rmáx y 20 Ω) en MT | Guía de resistencia máxima, RIC N°06 |
+| Resistencia ≤ 20 Ω en AT | RPTD N°06, 8.27 |
+| Corriente real de falla mayor que If aux y despeje ≤ 0,5 s | Guía, RIC N°06 8.8 |
+| Sección ≥ mayor entre la térmica y 25 mm² | Guía, RIC N°06 8.7 / RPTD N°06 8.14 |
+| Tensiones de contacto y de paso ≤ tolerables (50 o 70 kg, con o sin gravilla) | IEEE Std 80-2013, RPTD N°06 8.25 |
+| Rango de validez de IEEE 80-2013 | n ≤ 25, 0,25 ≤ h ≤ 2,5 m, d < 0,25·h, D ≥ 2,5 m |
 
 ## Estructura
 
@@ -75,14 +89,16 @@ src/filt.json              coeficientes del filtro de Hankel
 src/catalog.json           familias de las láminas Orellana-Mooney (lámina, nombre, razones)
 src/test-ejemplo-6-1.js    prueba con el ejemplo 6.1 de la guía SEV (node src/test-ejemplo-6-1.js)
 src/test-guia-schwarz.js   prueba con los ejemplos 9.1 y 9.2 de la guía de Schwarz
+src/test-guias-mt.js       prueba con las guías de resistencia máxima en MT y de tensiones de contacto y paso
 ```
 
 Después de modificar `src/`, ejecutar `python3 build.py`.
 
 ## Supuestos a revisar
 
-- Temperatura máxima de la unión por defecto: 450 °C soldada, 250 °C compresión y apernada (editable).
+- Temperatura máxima de la unión por defecto: 1083 °C soldada exotérmica, 250 °C compresión y apernada, como en la guía (editable).
 - Electrodo: la resistividad ponderada de las capas que atraviesa la barra es un criterio del programa; se puede reemplazar por un valor manual.
-- Alta tensión: pendiente de las variables adicionales que entregará el ingeniero.
+- Alta tensión: usa IEEE 80-2013 con Sf y Df ingresados (Df automático con la tabla de la guía); confirmar con el ingeniero la variable adicional que pidió.
+- Con retículas distintas en cada dirección, las tensiones usan la mayor como D (lado seguro).
 - La lámina 36 (A-4 y A-5) no viene en el PDF usado, así que esas familias no están en el catálogo.
 - En las familias de 4 capas se usan las 20 combinaciones E2-E3 de las láminas (A a T: E2 = 1, 2, 3, 5 y E3 = 1, 3, 5, 10, 25).

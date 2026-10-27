@@ -291,12 +291,70 @@ const MG = (() => {
   // Corriente real de falla monofásica (guía): If = 3·VL / [√3·√((3R)² + XΣ²)]
   function fallaIf(VL, X, R) { return 3 * VL / (Math.sqrt(3) * Math.sqrt((3 * R) ** 2 + X * X)); }
 
+
+  // ---------- Media y alta tensión (guías de resistencia máxima y de tensiones de contacto y paso) ----------
+  // Parámetros de la red a partir de los niveles de cortocircuito (VL en V)
+  function red(p) { // p: VL (V), Icc3, Icc1, ST (kVA, opcional)
+    const X1 = p.VL / (Math.sqrt(3) * p.Icc3), X2 = X1;
+    const X0 = 3 * p.VL / (Math.sqrt(3) * p.Icc1) - (X1 + X2);
+    const o = { X1, X2, X0, SX: X0 + X1 + X2 };
+    if (p.ST > 0) o.IA = 1.5 * p.ST / (Math.sqrt(3) * p.VL / 1000);
+    return o;
+  }
+  // Resistencia máxima: Rmáx = (1/3)·√(3·VL²/Ifaux² − ΣX²)
+  function rmax(VL, Ifaux, SX) { const q = 3 * VL * VL / (Ifaux * Ifaux) - SX * SX; return q > 0 ? Math.sqrt(q) / 3 : NaN; }
+  // Tiempo de operación del fusible: interpolación log-log en la tabla tiempo–corriente
+  function fusible(tabla, I, col) { // tabla: [{t, imin, iclr}], col: 'iclr' o 'imin'
+    const pts = tabla.filter(r => r.t > 0 && r[col] > 0).map(r => [r[col], r.t]).sort((a, b) => a[0] - b[0]);
+    if (pts.length < 2 || !(I > 0)) return { estado: 'sin datos' };
+    if (I < pts[0][0]) return { estado: 'no opera', t: Infinity };
+    if (I > pts[pts.length - 1][0]) return { estado: 'menor', t: pts[pts.length - 1][1] };
+    for (let k = 0; k < pts.length - 1; k++) {
+      const [i1, t1] = pts[k], [i2, t2] = pts[k + 1];
+      if (I >= i1 && I <= i2) { const f = (Math.log(I) - Math.log(i1)) / (Math.log(i2) - Math.log(i1)); return { estado: 'ok', t: Math.exp(Math.log(t1) + f * (Math.log(t2) - Math.log(t1))) }; }
+    }
+    return { estado: 'sin datos' };
+  }
+  // Factor de decremento (Colman 2020, tabla 8.1), interpolación lineal
+  const FDT = [[0.01, 1.70], [0.02, 1.62], [0.04, 1.50], [0.08, 1.32], [0.1, 1.25], [0.25, 1.10], [0.5, 1.00]];
+  function fd(t) {
+    if (t <= FDT[0][0]) return FDT[0][1]; if (t >= 0.5) return 1;
+    for (let k = 0; k < FDT.length - 1; k++) { const [a, fa] = FDT[k], [b, fb] = FDT[k + 1]; if (t >= a && t <= b) return fa + (fb - fa) * (t - a) / (b - a); }
+    return 1;
+  }
+  // Constante de Onderdonk para cobre y sección mínima: Smín = K·If·FD·√t / 1973
+  function kCu(Tm, Ta) { return Math.sqrt(33 / LOG10((Tm - Ta) / (234 + Ta) + 1)); }
+  function smin(K, I, FD, t) { return K * I * FD * Math.sqrt(t) / 1973; }
+  // Tensiones tolerables por el cuerpo (IEEE 80-2013), 50 kg: 0,116 · 70 kg: 0,157
+  function cs(rhoS, hs, rho) { return 1 - 0.09 * (1 - rho / rhoS) / (2 * hs + 0.09); }
+  function tolerables(p) { // p: rhoS, Cs, t, kg
+    const k = p.kg === 70 ? 0.157 : 0.116, IB = k / Math.sqrt(p.t);
+    return { IB, Etc: (1000 + 1.5 * p.Cs * p.rhoS) * IB, Etp: (1000 + 6 * p.Cs * p.rhoS) * IB };
+  }
+  // Tensión de malla y de paso (IEEE 80-2013)
+  function tensiones(p) { // p: rhoEq, IG, Lc, a, b, D, h, d, nb (barras), Lb, perim (barras en esquinas/perímetro)
+    const Lx = Math.max(p.a, p.b), Ly = Math.min(p.a, p.b), A = Lx * Ly, Lp = 2 * (Lx + Ly);
+    const na = 2 * p.Lc / Lp, nbF = Math.sqrt(Lp / (4 * Math.sqrt(A))), n = na * nbF;
+    const LR = (p.nb || 0) * (p.Lb || 0), D = p.D, h = p.h, d = p.d;
+    const Kii = LR > 0 && p.perim ? 1 : 1 / Math.pow(2 * n, 2 / n);
+    const Kh = Math.sqrt(1 + h / 1);
+    const arg = D * D / (16 * h * d) + (D + 2 * h) ** 2 / (8 * D * d) - h / (4 * d);
+    const Km = (Math.log(arg) + Kii / Kh * Math.log(8 / (PI * (2 * n - 1)))) / (2 * PI);
+    const Ks = (1 / (2 * h) + 1 / (D + h) + (1 - Math.pow(0.5, n - 2)) / D) / PI;
+    const Ki = 0.644 + 0.148 * n;
+    const LM = LR > 0 && p.perim ? p.Lc + (1.55 + 1.22 * p.Lb / Math.sqrt(Lx * Lx + Ly * Ly)) * LR : p.Lc + LR;
+    const LS = 0.75 * p.Lc + 0.85 * LR;
+    const f = p.rhoEq * Ki * p.IG;
+    const valid = { n: n <= 25, h: h >= 0.25 && h <= 2.5, d: d < 0.25 * h, D: D >= 2.5 };
+    return { Lx, Ly, A, Lp, na, nbF, n, LR, Kii, Kh, Km, Ks, Ki, LM, LS, f, Em: Km * f / LM, Es: Ks * f / LS, valid, inRange: Object.values(valid).every(Boolean) };
+  }
+
   // ---------- Sección mínima (Onderdonk) ----------
   function onderdonk(IkA, t, Ta, Tm) {
     const cmil = IkA * 1000 * Math.sqrt(33 * t / LOG10((Tm - Ta) / (234 + Ta) + 1));
     return { cmil, mm2: cmil * 5.067075e-4 };
   }
 
-  return { K, rhoA, codX, codY, decX, decY, T, G, rhoAmodel, rhoAideal, homologar, ajustar, tipo, burgsdorf, malla, schwarz, laurent, onderdonk, sistema, barra, rhoBarra, fallaIf, buildLibrary, families, familyMembers, curveOf };
+  return { K, rhoA, codX, codY, decX, decY, T, G, rhoAmodel, rhoAideal, homologar, ajustar, tipo, burgsdorf, malla, schwarz, laurent, onderdonk, sistema, barra, rhoBarra, fallaIf, red, rmax, fusible, fd, kCu, smin, cs, tolerables, tensiones, buildLibrary, families, familyMembers, curveOf };
 })();
 if (typeof module !== 'undefined') module.exports = MG;

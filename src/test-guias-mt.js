@@ -1,0 +1,23 @@
+// Prueba con las guías "Resistencia máxima de puesta a tierra en MT" y "Tensiones de contacto y de paso"
+global.FILT = require('./filt.json'); global.CAT = require('./catalog.json');
+const MG = require('./engine.js');
+let ok = true;
+const chk = (n, v, e, tol) => { const p = Math.abs(v - e) <= tol; ok = ok && p; console.log(`${p ? 'OK ' : 'DIF'} ${n}: ${v.toFixed(4)} (guía ${e})`); };
+const r = MG.red({ VL: 13200, Icc3: 2000, Icc1: 1200, ST: 150 });
+chk('IA', r.IA, 9.84, 0.01); chk('X1', r.X1, 3.811, 0.001); chk('X0', r.X0, 11.432, 0.001); chk('ΣX', r.SX, 19.053, 0.001);
+chk('Rmáx (400 A)', MG.rmax(13200, 400, r.SX), 17.96, 0.01); chk('Rmáx (167 A)', MG.rmax(13200, 167, r.SX), 45.19, 0.01);
+const lau = (rho, A, L) => rho / 4 * Math.sqrt(Math.PI / A) + rho / L;
+chk('Laurent 10x10', lau(300, 100, 100), 16.29, 0.01);
+chk('If1φ real', MG.fallaIf(13200, r.SX, lau(300, 100, 100)), 435.8, 0.1);
+chk('K exotérmica', MG.kCu(1083, 40), 6.96, 0.01); chk('K apernada', MG.kCu(250, 40), 11.56, 0.01);
+chk('Smín', MG.smin(6.96, 435.8, MG.fd(0.1), 0.1), 0.61, 0.01);
+const d = 0.00564;
+let IG = MG.fallaIf(23000, 21.078, 9.031); chk('6.1 IG', IG, 1160.5, 0.1);
+let tol = MG.tolerables({ rhoS: 608.36, Cs: 1, t: 0.5, kg: 50 }); chk('6.1 Etc', tol.Etc, 313.7, 0.1); chk('6.1 Etp', tol.Etp, 762.9, 0.1);
+let T = MG.tensiones({ rhoEq: 97.09, IG, Lc: 12, a: 2, b: 2, D: 1, h: 1, d, nb: 4, Lb: 3, perim: true });
+chk('6.1 Km', T.Km, 0.7379, 0.0001); chk('6.1 Ks', T.Ks, 0.4775, 0.0001); chk('6.1 Em', T.Em, 1961, 1); chk('6.1 Es', T.Es, 3049, 1);
+const Cs = MG.cs(3000, 0.15, 608.36); chk('Cs', Cs, 0.8160, 0.0001);
+tol = MG.tolerables({ rhoS: 3000, Cs, t: 0.5, kg: 50 }); chk('Etc gravilla', tol.Etc, 766.5, 0.1); chk('Etp gravilla', tol.Etp, 2573.7, 0.1);
+IG = MG.fallaIf(23000, 21.078, 2.1225); T = MG.tensiones({ rhoEq: 46.52, IG, Lc: 100, a: 10, b: 10, D: 2.5, h: 1, d, nb: 4, Lb: 3, perim: true });
+chk('6.2 IG', IG, 1809.2, 0.1); chk('6.2 Em', T.Em, 674, 1); chk('6.2 Es', T.Es, 494, 1); console.log('6.2 en rango:', T.inRange);
+process.exit(ok ? 0 : 1);
