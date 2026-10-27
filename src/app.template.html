@@ -125,6 +125,24 @@ td .flag { color: var(--warn); font-weight: 600; cursor: help }
 .tab.on { background: var(--paper); border-color: var(--ink); border-bottom: 1.5px solid var(--paper); color: var(--ink) }
 .tab:not(.on):hover { border-color: var(--muted) }
 .pan { display: flex; flex-direction: column; gap: 14px }
+.mainnav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; flex-wrap: wrap; gap: 4px; background: var(--bg); padding-block: 8px; border-bottom: 1px solid var(--line); margin-top: -8px }
+.mainnav a { font-family: var(--f-display); font-weight: 600; font-size: 16px; text-decoration: none; color: var(--muted); padding: 7px 14px; border-radius: 4px; border: 1px solid transparent }
+.mainnav a:hover { color: var(--ink); border-color: var(--line) }
+.mainnav a[aria-current="page"] { color: var(--paper); background: var(--ink) }
+.mainnav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg) }
+.view { display: flex; flex-direction: column; gap: 20px }
+.quick { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; background: var(--accent-soft); border-radius: 6px; padding: 12px 16px; font-size: 14px }
+.quick .qt { font-family: var(--f-display); font-weight: 700; font-size: 15px; text-transform: uppercase; letter-spacing: .06em; color: var(--accent) }
+.quick ol { margin: 0; padding-left: 20px; display: flex; flex-wrap: wrap; gap: 4px 22px; flex: 1 1 520px; min-width: 0 }
+.quick li b { font-weight: 600 }
+.quick a { color: var(--accent) }
+.quick .qmore { font-weight: 600; white-space: nowrap }
+.howto { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px 24px }
+.howto > div { display: flex; flex-direction: column; gap: 6px; min-width: 0 }
+.howto .hn { font-family: var(--f-mono); font-size: 12px; color: var(--paper); background: var(--ink); padding: 2px 7px; border-radius: 3px; align-self: flex-start }
+.howto p { margin: 0; font-size: 14px; line-height: 1.55; color: var(--ink) }
+.howto a { color: var(--accent) }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); padding: 8px 14px; border-radius: 4px; font-size: 14px }
 @media (prefers-reduced-motion: no-preference) { .opt, .row { transition: border-color .12s, background .12s } }
 </style>
@@ -138,220 +156,24 @@ td .flag { color: var(--warn); font-weight: 600; cursor: help }
   <div class="flow">Schlumberger → log-log 62,5 mm/déc → Orellana-Mooney → Burgsdorf-Yakobs → Schwarz</div>
 </header>
 
-<section class="intro" aria-labelledby="introT">
-  <h2 id="introT" hidden>Presentación</h2>
-  <p class="lead">Este software calcula la <b>resistencia proyectada de un sistema de puesta a tierra</b> antes de construirlo. Parte de un sondeo eléctrico vertical con el método Schlumberger, obtiene el modelo de capas del terreno comparando la curva de campo con las curvas patrón de Orellana-Mooney, reduce ese terreno a una resistividad equivalente con Burgsdorf-Yakobs y calcula la resistencia de la malla, las barras y el sistema completo con Schwarz. Sigue el mismo procedimiento del curso, con la hoja bilogarítmica de 62,5 mm por década.</p>
-  <div class="intro-grid">
-    <div>
-      <h3>Qué hace</h3>
-      <ul>
-        <li>Calcula K y ρa de cada lectura y sus coordenadas X/Y en mm para AutoCAD.</li>
-        <li>Grafica la curva de campo en escala log-log.</li>
-        <li>Busca entre unas 1.500 curvas patrón (2, 3 y 4 capas) la que mejor calza y entrega la cruz de campo.</li>
-        <li>En baja tensión, calcula una <b>malla a tierra</b> (con o sin barras: R₁, R₂, Rm y RT de Schwarz) o un <b>electrodo</b> de barra.</li>
-        <li>Verifica la resistencia de diseño, la corriente real de falla y la sección mínima del conductor.</li>
-      </ul>
-    </div>
-    <div>
-      <h3>Cómo se usa</h3>
-      <ol>
-        <li>Ingresa o pega las lecturas de terreno (paso 1).</li>
-        <li>Revisa las curvas patrón propuestas o ingresa tu homologación de AutoCAD (paso 2).</li>
-        <li>Confirma el modelo de suelo (paso 3).</li>
-        <li>Ingresa las dimensiones de la malla (paso 4).</li>
-        <li>Lee la resistencia proyectada y copia el informe (paso 5).</li>
-      </ol>
-    </div>
-    <div>
-      <h3>Consideraciones</h3>
-      <ul>
-        <li><b>s es MN completo</b>, no MN/2, y L debe ser mayor que s/2.</li>
-        <li>Usa <b>mínimo 12 lecturas</b> (recomendado 12 a 16). El pliego RIC N°06 (Anexo 6.6) pide alas de hasta <b>100 m</b> (50 m aceptable). Si no hay espacio, el programa acepta un sondeo reducido y lo marca para que lo justifiques en el informe.</li>
-        <li>Las lecturas con L menor que 2,5·s (MN mayor que AB/5) se marcan con <b>!</b>: no cumplen la condición Schlumberger y las curvas patrón no las representan bien.</li>
-        <li>Las láminas impresas o escaneadas suelen venir a 62,8 mm por década: reescálalas a 62,5 antes de superponerlas.</li>
-        <li>Varias curvas patrón pueden calzar casi igual (equivalencia). Elige la que tenga sentido geológico y compárala con el ajuste fino.</li>
-        <li>Esta versión es para <b>baja tensión</b>. La opción de alta tensión ya aparece, pero aún no calcula. Las tensiones de paso y de contacto se verifican en media y alta tensión.</li>
-        <li>Al final del paso 5 se verifica el diseño: resistencia de diseño (menor entre Rmáx y 20 Ω), corriente real de falla frente al fusible, rango de Schwarz y requisitos del pliego RIC N°06.</li>
-      </ul>
-    </div>
-  </div>
-  <p class="disc">El resultado es un valor proyectado. La resistencia real de la puesta a tierra se debe verificar midiéndola una vez construida la malla. Esta herramienta apoya el cálculo, pero no reemplaza el criterio del proyectista ni la normativa eléctrica vigente.</p>
-</section>
+<nav class="mainnav" aria-label="Menú principal">
+  <a href="#principal" data-v="principal">Principal</a>
+  <a href="#metodos" data-v="metodos">Métodos de medición</a>
+  <a href="#instrucciones" data-v="instrucciones">Instrucciones</a>
+</nav>
 
-<!-- PASO 0 -->
-<section class="step" id="s0">
-  <div class="step-h"><span class="n">0</span><h2>Cómo medir en terreno</h2></div>
-  <p class="hint">Elige el método para ver cómo se realiza la medición. Una medición bien hecha evita repetir el trabajo en terreno.</p>
-  <div class="tabs" role="tablist" aria-label="Métodos de medición">
-    <button class="tab on" role="tab" id="tab-sch" aria-selected="true" aria-controls="pan-sch" data-t="sch"><span class="tk">Resistividad</span>Schlumberger</button>
-    <button class="tab" role="tab" id="tab-wen" aria-selected="false" aria-controls="pan-wen" data-t="wen"><span class="tk">Resistividad</span>Wenner</button>
-    <button class="tab" role="tab" id="tab-cdp" aria-selected="false" aria-controls="pan-cdp" data-t="cdp"><span class="tk">Puesta a tierra construida</span>Caída de potencial</button>
-  </div>
-
-  <div class="pan" role="tabpanel" id="pan-sch" aria-labelledby="tab-sch">
-    <p class="hint">Es el método que usa este programa en los pasos 1 a 3. Mide la resistividad aparente del terreno a profundidades crecientes para obtener el modelo de capas.</p>
-    <div class="cols">
-    <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
-      <div class="chart" style="padding:10px">
-        <svg viewBox="0 0 520 150" role="img" aria-label="Disposición de electrodos Schlumberger">
-          <line x1="10" y1="80" x2="510" y2="80" stroke="var(--ink)" stroke-width="1.5"/>
-          <g font-family="var(--f-mono)" font-size="13" fill="var(--ink)" text-anchor="middle">
-            <line x1="40" y1="68" x2="40" y2="100" stroke="var(--model)" stroke-width="4"/><text x="40" y="120">A</text>
-            <line x1="480" y1="68" x2="480" y2="100" stroke="var(--model)" stroke-width="4"/><text x="480" y="120">B</text>
-            <line x1="235" y1="68" x2="235" y2="100" stroke="var(--accent)" stroke-width="4"/><text x="235" y="120">M</text>
-            <line x1="285" y1="68" x2="285" y2="100" stroke="var(--accent)" stroke-width="4"/><text x="285" y="120">N</text>
-            <circle cx="260" cy="80" r="3.5" fill="var(--ink)"/><text x="260" y="120">O</text>
-          </g>
-          <g font-family="var(--f-mono)" font-size="11.5" fill="var(--muted)" text-anchor="middle">
-            <line x1="260" y1="40" x2="480" y2="40" stroke="var(--muted)" marker-start="url(#ar)" marker-end="url(#ar)"/><text x="370" y="33">L = AB/2</text>
-            <line x1="235" y1="56" x2="285" y2="56" stroke="var(--muted)"/><text x="260" y="50">s = MN</text>
-            <text x="137" y="145">corriente I (A–B)</text><text x="385" y="145">potencial ΔV (M–N)</text>
-          </g>
-          <defs><marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
-        </svg>
-      </div>
-      <div>
-        <h3>Procedimiento</h3>
-        <ol class="steps0">
-          <li><b>Ubica el sondeo</b> donde irá la puesta a tierra, o lo más cerca posible (RIC N°06, Anexo 6.6). Elige una línea recta y despejada, lejos de cañerías, cercos metálicos y otras puestas a tierra.</li>
-          <li><b>Fija el centro O</b> y tiende la huincha. El centro no se mueve durante todo el sondeo.</li>
-          <li><b>Coloca M y N</b> simétricos al centro, a MN/2 de cada lado, y <b>A y B</b> a L de cada lado.</li>
-          <li><b>Para cada lectura, abre solo A y B</b> según la tabla. M y N se quedan quietos hasta el cambio de MN.</li>
-          <li><b>Respeta MN ≤ AB/5</b>, es decir, L ≥ 2,5·MN. Si no se cumple, el programa marca la lectura con «!».</li>
-          <li><b>Haz el empalme</b> cada vez que cambies MN: mide la misma L con el MN anterior y con el nuevo. Las dos ρa deben dar parecidas.</li>
-          <li><b>Anota en cada fila</b> L, MN y la lectura V/I del instrumento, en ohm.</li>
-        </ol>
-      </div>
-      <div>
-        <h3>Requisitos y recomendaciones</h3>
-        <ul class="steps0">
-          <li><b>Mínimo 12 lecturas</b>, recomendado 12 a 16, repartidas en forma pareja en escala logarítmica.</li>
-          <li><b>Alas de hasta 100 m</b> (50 m aceptable) según el RIC N°06. Si no hay espacio, mide hasta donde se pueda y deja la razón escrita en el informe.</li>
-          <li><b>Instrumento de 4 terminales</b> con resolución de 0,01 Ω y certificado de calibración vigente.</li>
-          <li><b>Electrodos poco enterrados</b> y con buen contacto. Si el suelo está muy seco, humedece solo el punto de contacto.</li>
-          <li><b>Lecturas muy pequeñas</b> (cerca de 0,01 Ω) pierden precisión: agranda MN para aumentar la señal.</li>
-          <li><b>Revisa la curva en terreno</b> con este programa: un punto que salta fuera de la tendencia conviene medirlo de nuevo antes de retirar los equipos.</li>
-        </ul>
-      </div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
-      <h3>Tabla de aberturas recomendada</h3>
-      <div class="scroll"><table id="plantT"><thead><tr><th>N.º</th><th>L = AB/2 (m)</th><th>MN (m)</th><th>AB (m)</th><th></th></tr></thead><tbody><tr><td>1</td><td>0,6</td><td>0,2</td><td>1,2</td><td class="nt"></td></tr><tr><td>2</td><td>0,8</td><td>0,2</td><td>1,6</td><td class="nt"></td></tr><tr><td>3</td><td>1</td><td>0,2</td><td>2</td><td class="nt"></td></tr><tr><td>4</td><td>1,6</td><td>0,2</td><td>3,2</td><td class="nt"></td></tr><tr><td>5</td><td>2</td><td>0,2</td><td>4</td><td class="nt"></td></tr><tr class="emp"><td>6</td><td>2,5</td><td>0,2</td><td>5</td><td class="nt">Empalme</td></tr><tr class="emp"><td>7</td><td>2,5</td><td>1</td><td>5</td><td class="nt">Empalme</td></tr><tr><td>8</td><td>3</td><td>1</td><td>6</td><td class="nt"></td></tr><tr><td>9</td><td>4</td><td>1</td><td>8</td><td class="nt"></td></tr><tr><td>10</td><td>5</td><td>1</td><td>10</td><td class="nt"></td></tr><tr><td>11</td><td>6</td><td>1</td><td>12</td><td class="nt"></td></tr><tr><td>12</td><td>8</td><td>1</td><td>16</td><td class="nt"></td></tr><tr><td>13</td><td>10</td><td>1</td><td>20</td><td class="nt"></td></tr><tr class="emp"><td>14</td><td>15</td><td>1</td><td>30</td><td class="nt">Empalme</td></tr><tr class="emp"><td>15</td><td>15</td><td>5</td><td>30</td><td class="nt">Empalme</td></tr><tr><td>16</td><td>20</td><td>5</td><td>40</td><td class="nt"></td></tr><tr><td>17</td><td>30</td><td>5</td><td>60</td><td class="nt"></td></tr><tr><td>18</td><td>40</td><td>5</td><td>80</td><td class="nt"></td></tr><tr><td>19</td><td>50</td><td>5</td><td>100</td><td class="nt"></td></tr></tbody></table></div>
-      <p class="hint">Cumple MN ≤ AB/5 en todas las filas. Cambia MN a 0,2 → 1 → 5 m con una lectura de empalme en cada cambio. Si el terreno no permite llegar a 50 m, termina donde puedas.</p>
-      <div class="btns"><button class="pri" id="usePlant">Cargar esta tabla en el paso 1</button><span class="count">Carga L y MN; el V/I lo ingresas tú</span></div>
-    </div>
-  </div>
-  </div>
-
-  <div class="pan" role="tabpanel" id="pan-wen" aria-labelledby="tab-wen" hidden>
-    <p class="hint">Método de cuatro electrodos igualmente separados, aceptado por el RIC N°06 (Anexo 6.6). Es el que aparece en la hoja «Wenner» de tu planilla. Los cuatro electrodos se mueven en cada lectura.</p>
-    <p class="note">Los pasos 1 a 3 de este programa trabajan con Schlumberger: las láminas de Orellana-Mooney son curvas Schlumberger. El cálculo con lecturas Wenner se puede agregar como siguiente paso.</p>
-    <div class="cols">
-      <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
-        <div class="chart" style="padding:10px">
-          <svg viewBox="0 0 520 150" role="img" aria-label="Disposición de electrodos Wenner">
-            <line x1="10" y1="80" x2="510" y2="80" stroke="var(--ink)" stroke-width="1.5"/>
-            <g font-family="var(--f-mono)" font-size="13" fill="var(--ink)" text-anchor="middle">
-              <line x1="70" y1="68" x2="70" y2="100" stroke="var(--model)" stroke-width="4"/><text x="70" y="120">A</text>
-              <line x1="196" y1="68" x2="196" y2="100" stroke="var(--accent)" stroke-width="4"/><text x="196" y="120">M</text>
-              <line x1="324" y1="68" x2="324" y2="100" stroke="var(--accent)" stroke-width="4"/><text x="324" y="120">N</text>
-              <line x1="450" y1="68" x2="450" y2="100" stroke="var(--model)" stroke-width="4"/><text x="450" y="120">B</text>
-              <circle cx="260" cy="80" r="3.5" fill="var(--ink)"/><text x="260" y="120">O</text>
-            </g>
-            <g font-family="var(--f-mono)" font-size="11.5" fill="var(--muted)" text-anchor="middle">
-              <line x1="70" y1="45" x2="196" y2="45" stroke="var(--muted)" marker-start="url(#ar2)" marker-end="url(#ar2)"/><text x="133" y="38">a</text>
-              <line x1="196" y1="45" x2="324" y2="45" stroke="var(--muted)" marker-start="url(#ar2)" marker-end="url(#ar2)"/><text x="260" y="38">a</text>
-              <line x1="324" y1="45" x2="450" y2="45" stroke="var(--muted)" marker-start="url(#ar2)" marker-end="url(#ar2)"/><text x="387" y="38">a</text>
-              <text x="260" y="145">corriente I entre A y B · potencial ΔV entre M y N</text>
-            </g>
-            <defs><marker id="ar2" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
-          </svg>
-        </div>
-        <div>
-          <h3>Procedimiento</h3>
-          <ol class="steps0">
-            <li><b>Ubica el sondeo</b> donde irá la puesta a tierra, en línea recta y lejos de estructuras metálicas enterradas.</li>
-            <li><b>Fija el centro O</b> y tiende la huincha. El centro no se mueve.</li>
-            <li><b>Coloca los cuatro electrodos</b> en el orden A, M, N, B, todos separados la misma distancia <b>a</b> y simétricos respecto de O.</li>
-            <li><b>Para cada lectura, mueve los cuatro electrodos</b> a la nueva separación a, manteniendo el centro.</li>
-            <li><b>Entierra poco los electrodos</b>: la profundidad p debe ser menor que a/20 para usar la fórmula simple.</li>
-            <li><b>Anota en cada fila</b> a, p y la lectura R (V/I) del instrumento.</li>
-          </ol>
-        </div>
-        <div>
-          <h3>Cálculo de la resistividad aparente</h3>
-          <div class="formula">ρa = 2π·a·R &nbsp;(si p &lt; a/20)</div>
-          <div class="formula">ρa = 4π·a·R / [1 + 2a/√(a² + 4p²) − a/√(a² + p²)] &nbsp;(fórmula completa, como en la planilla)</div>
-          <ul class="steps0">
-            <li><b>Profundidad aproximada</b> que representa cada lectura: del orden de a.</li>
-            <li><b>Ventaja</b>: la señal ΔV es mayor que en Schlumberger, porque M y N están más separados.</li>
-            <li><b>Desventaja</b>: hay que mover los cuatro electrodos en cada lectura, así que toma más tiempo y es más sensible a variaciones laterales del terreno.</li>
-          </ul>
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
-        <h3>Tabla de separaciones recomendada</h3>
-        <div class="scroll"><table><thead><tr><th>N.º</th><th>a (m)</th><th>AB = 3a (m)</th><th>AB/2 (m)</th><th>p máx. (m)</th></tr></thead><tbody><tr><td>1</td><td>1</td><td>3</td><td>1,5</td><td>0,05</td></tr><tr><td>2</td><td>1,5</td><td>4,5</td><td>2,25</td><td>0,075</td></tr><tr><td>3</td><td>2</td><td>6</td><td>3</td><td>0,1</td></tr><tr><td>4</td><td>3</td><td>9</td><td>4,5</td><td>0,15</td></tr><tr><td>5</td><td>4</td><td>12</td><td>6</td><td>0,2</td></tr><tr><td>6</td><td>5</td><td>15</td><td>7,5</td><td>0,25</td></tr><tr><td>7</td><td>7</td><td>21</td><td>10,5</td><td>0,35</td></tr><tr><td>8</td><td>10</td><td>30</td><td>15</td><td>0,5</td></tr><tr><td>9</td><td>15</td><td>45</td><td>22,5</td><td>0,75</td></tr><tr><td>10</td><td>20</td><td>60</td><td>30</td><td>1</td></tr><tr><td>11</td><td>25</td><td>75</td><td>37,5</td><td>1,25</td></tr><tr><td>12</td><td>30</td><td>90</td><td>45</td><td>1,5</td></tr><tr><td>13</td><td>40</td><td>120</td><td>60</td><td>2</td></tr></tbody></table></div>
-        <p class="hint">Separaciones repartidas en escala logarítmica. Con a = 33 m las alas llegan a 50 m (lo aceptable según el RIC N°06); con a = 67 m llegan a 100 m. Si el terreno no lo permite, termina donde puedas y déjalo escrito en el informe.</p>
-        <h3>Requisitos</h3>
-        <ul class="steps0">
-          <li>Mínimo 12 lecturas.</li>
-          <li>Instrumento de 4 terminales, resolución de 0,01 Ω y calibración vigente (RIC N°06).</li>
-          <li>Usa un solo método por sondeo: Wenner o Schlumberger (Anexo 6.6).</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <div class="pan" role="tabpanel" id="pan-cdp" aria-labelledby="tab-cdp" hidden>
-    <p class="hint">Este método no mide el terreno: mide la <b>resistencia real</b> de la puesta a tierra una vez construida, para comprobar el valor proyectado. Es el método principal del RIC N°06 (Anexo 6.3).</p>
-    <div class="cols">
-      <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
-        <div class="chart" style="padding:10px">
-          <svg viewBox="0 0 520 150" role="img" aria-label="Disposición del método de caída de potencial">
-            <line x1="10" y1="80" x2="510" y2="80" stroke="var(--ink)" stroke-width="1.5"/>
-            <rect x="30" y="66" width="50" height="28" fill="none" stroke="var(--accent)" stroke-width="3"/>
-            <g font-family="var(--f-mono)" font-size="13" fill="var(--ink)" text-anchor="middle">
-              <text x="55" y="120">E</text>
-              <line x1="320" y1="68" x2="320" y2="100" stroke="var(--patron)" stroke-width="4"/><text x="320" y="120">P</text>
-              <line x1="480" y1="68" x2="480" y2="100" stroke="var(--model)" stroke-width="4"/><text x="480" y="120">C</text>
-            </g>
-            <g font-family="var(--f-mono)" font-size="11.5" fill="var(--muted)" text-anchor="middle">
-              <line x1="80" y1="42" x2="480" y2="42" stroke="var(--muted)" marker-start="url(#ar3)" marker-end="url(#ar3)"/><text x="280" y="35">D_C ≥ 6 × diagonal mayor</text>
-              <line x1="80" y1="56" x2="320" y2="56" stroke="var(--muted)" marker-start="url(#ar3)" marker-end="url(#ar3)"/><text x="200" y="52">62 % de D_C</text>
-              <text x="55" y="140">malla</text><text x="400" y="140">P: potencial · C: corriente</text>
-            </g>
-            <defs><marker id="ar3" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
-          </svg>
-        </div>
-        <div>
-          <h3>Procedimiento</h3>
-          <ol class="steps0">
-            <li><b>Desconecta</b> la puesta a tierra de la instalación si es necesario para que la medición no incluya otras tierras, con las precauciones de seguridad que correspondan.</li>
-            <li><b>Conecta el terminal E</b> del instrumento a la malla o al electrodo.</li>
-            <li><b>Clava el electrodo de corriente C</b> en línea recta, a una distancia de al menos <b>6 veces la diagonal mayor</b> de la puesta a tierra.</li>
-            <li><b>Clava el electrodo de potencial P</b> en la misma línea, a <b>62 %</b> de la distancia a C, y anota la resistencia.</li>
-            <li><b>Comprueba</b> moviendo P a 52 % y 72 %: si las tres lecturas difieren menos de 5 % entre sí, la de 62 % es válida. Si no, aleja C.</li>
-            <li><b>Repite</b> la medición en una dirección perpendicular a la primera (Anexo 6.3).</li>
-            <li><b>Registra</b> con fotografías e informe, con el certificado de calibración del instrumento vigente.</li>
-          </ol>
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
-        <h3>Distancias para tu diseño</h3>
-        <p class="hint" id="cdpSrc"></p>
-        <div class="scroll"><table id="cdpT"><thead><tr><th>Electrodo</th><th>% de D_C</th><th>Distancia desde la malla (m)</th></tr></thead><tbody></tbody></table></div>
-        <p class="hint">Se calculan con las dimensiones del paso 4 y se actualizan al cambiarlas.</p>
-        <h3>Requisitos</h3>
-        <ul class="steps0">
-          <li>El instalador debe medir y verificar la puesta a tierra al ponerla en servicio (RIC N°06, 9.2 y 11.1).</li>
-          <li>El medidor de tenaza sirve solo para inspección de un sistema existente, no para la recepción inicial (Anexo 6.3).</li>
-          <li>El valor medido debe cumplir la resistencia de diseño del paso 5.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
+<div class="view" id="v-principal">
+<div class="quick">
+  <span class="qt">Cómo usar</span>
+  <ol>
+    <li><b>Ingresa las lecturas</b> del sondeo o carga la plantilla desde <a href="#metodos">Métodos de medición</a>.</li>
+    <li><b>Revisa la homologación</b> con las curvas patrón o ingresa la tuya.</li>
+    <li><b>Confirma el modelo</b> de suelo.</li>
+    <li><b>Diseña</b> la malla o el electrodo.</li>
+    <li><b>Lee el resultado</b> y la verificación, y copia el informe.</li>
+  </ol>
+  <a class="qmore" href="#instrucciones">Instrucciones completas →</a>
+</div>
 
 <!-- PASO 1 -->
 <section class="step" id="s1">
@@ -544,6 +366,243 @@ td .flag { color: var(--warn); font-weight: 600; cursor: help }
   </div>
 </section>
 </div>
+
+<div class="view" id="v-metodos" hidden>
+<!-- PASO 0 -->
+<section class="step" id="s0">
+  <div class="step-h"><h2>Métodos de medición y cómo se realizan</h2></div>
+  <p class="hint">Elige el método para ver cómo se realiza la medición. Una medición bien hecha evita repetir el trabajo en terreno.</p>
+  <div class="tabs" role="tablist" aria-label="Métodos de medición">
+    <button class="tab on" role="tab" id="tab-sch" aria-selected="true" aria-controls="pan-sch" data-t="sch"><span class="tk">Resistividad</span>Schlumberger</button>
+    <button class="tab" role="tab" id="tab-wen" aria-selected="false" aria-controls="pan-wen" data-t="wen"><span class="tk">Resistividad</span>Wenner</button>
+    <button class="tab" role="tab" id="tab-cdp" aria-selected="false" aria-controls="pan-cdp" data-t="cdp"><span class="tk">Puesta a tierra construida</span>Caída de potencial</button>
+  </div>
+
+  <div class="pan" role="tabpanel" id="pan-sch" aria-labelledby="tab-sch">
+    <p class="hint">Es el método que usa este programa en los pasos 1 a 3. Mide la resistividad aparente del terreno a profundidades crecientes para obtener el modelo de capas.</p>
+    <div class="cols">
+    <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+      <div class="chart" style="padding:10px">
+        <svg viewBox="0 0 520 150" role="img" aria-label="Disposición de electrodos Schlumberger">
+          <line x1="10" y1="80" x2="510" y2="80" stroke="var(--ink)" stroke-width="1.5"/>
+          <g font-family="var(--f-mono)" font-size="13" fill="var(--ink)" text-anchor="middle">
+            <line x1="40" y1="68" x2="40" y2="100" stroke="var(--model)" stroke-width="4"/><text x="40" y="120">A</text>
+            <line x1="480" y1="68" x2="480" y2="100" stroke="var(--model)" stroke-width="4"/><text x="480" y="120">B</text>
+            <line x1="235" y1="68" x2="235" y2="100" stroke="var(--accent)" stroke-width="4"/><text x="235" y="120">M</text>
+            <line x1="285" y1="68" x2="285" y2="100" stroke="var(--accent)" stroke-width="4"/><text x="285" y="120">N</text>
+            <circle cx="260" cy="80" r="3.5" fill="var(--ink)"/><text x="260" y="120">O</text>
+          </g>
+          <g font-family="var(--f-mono)" font-size="11.5" fill="var(--muted)" text-anchor="middle">
+            <line x1="260" y1="40" x2="480" y2="40" stroke="var(--muted)" marker-start="url(#ar)" marker-end="url(#ar)"/><text x="370" y="33">L = AB/2</text>
+            <line x1="235" y1="56" x2="285" y2="56" stroke="var(--muted)"/><text x="260" y="50">s = MN</text>
+            <text x="137" y="145">corriente I (A–B)</text><text x="385" y="145">potencial ΔV (M–N)</text>
+          </g>
+          <defs><marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
+        </svg>
+      </div>
+      <div>
+        <h3>Procedimiento</h3>
+        <ol class="steps0">
+          <li><b>Ubica el sondeo</b> donde irá la puesta a tierra, o lo más cerca posible (RIC N°06, Anexo 6.6). Elige una línea recta y despejada, lejos de cañerías, cercos metálicos y otras puestas a tierra.</li>
+          <li><b>Fija el centro O</b> y tiende la huincha. El centro no se mueve durante todo el sondeo.</li>
+          <li><b>Coloca M y N</b> simétricos al centro, a MN/2 de cada lado, y <b>A y B</b> a L de cada lado.</li>
+          <li><b>Para cada lectura, abre solo A y B</b> según la tabla. M y N se quedan quietos hasta el cambio de MN.</li>
+          <li><b>Respeta MN ≤ AB/5</b>, es decir, L ≥ 2,5·MN. Si no se cumple, el programa marca la lectura con «!».</li>
+          <li><b>Haz el empalme</b> cada vez que cambies MN: mide la misma L con el MN anterior y con el nuevo. Las dos ρa deben dar parecidas.</li>
+          <li><b>Anota en cada fila</b> L, MN y la lectura V/I del instrumento, en ohm.</li>
+        </ol>
+      </div>
+      <div>
+        <h3>Requisitos y recomendaciones</h3>
+        <ul class="steps0">
+          <li><b>Mínimo 12 lecturas</b>, recomendado 12 a 16, repartidas en forma pareja en escala logarítmica.</li>
+          <li><b>Alas de hasta 100 m</b> (50 m aceptable) según el RIC N°06. Si no hay espacio, mide hasta donde se pueda y deja la razón escrita en el informe.</li>
+          <li><b>Instrumento de 4 terminales</b> con resolución de 0,01 Ω y certificado de calibración vigente.</li>
+          <li><b>Electrodos poco enterrados</b> y con buen contacto. Si el suelo está muy seco, humedece solo el punto de contacto.</li>
+          <li><b>Lecturas muy pequeñas</b> (cerca de 0,01 Ω) pierden precisión: agranda MN para aumentar la señal.</li>
+          <li><b>Revisa la curva en terreno</b> con este programa: un punto que salta fuera de la tendencia conviene medirlo de nuevo antes de retirar los equipos.</li>
+        </ul>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+      <h3>Tabla de aberturas recomendada</h3>
+      <div class="scroll"><table id="plantT"><thead><tr><th>N.º</th><th>L = AB/2 (m)</th><th>MN (m)</th><th>AB (m)</th><th></th></tr></thead><tbody><tr><td>1</td><td>0,6</td><td>0,2</td><td>1,2</td><td class="nt"></td></tr><tr><td>2</td><td>0,8</td><td>0,2</td><td>1,6</td><td class="nt"></td></tr><tr><td>3</td><td>1</td><td>0,2</td><td>2</td><td class="nt"></td></tr><tr><td>4</td><td>1,6</td><td>0,2</td><td>3,2</td><td class="nt"></td></tr><tr><td>5</td><td>2</td><td>0,2</td><td>4</td><td class="nt"></td></tr><tr class="emp"><td>6</td><td>2,5</td><td>0,2</td><td>5</td><td class="nt">Empalme</td></tr><tr class="emp"><td>7</td><td>2,5</td><td>1</td><td>5</td><td class="nt">Empalme</td></tr><tr><td>8</td><td>3</td><td>1</td><td>6</td><td class="nt"></td></tr><tr><td>9</td><td>4</td><td>1</td><td>8</td><td class="nt"></td></tr><tr><td>10</td><td>5</td><td>1</td><td>10</td><td class="nt"></td></tr><tr><td>11</td><td>6</td><td>1</td><td>12</td><td class="nt"></td></tr><tr><td>12</td><td>8</td><td>1</td><td>16</td><td class="nt"></td></tr><tr><td>13</td><td>10</td><td>1</td><td>20</td><td class="nt"></td></tr><tr class="emp"><td>14</td><td>15</td><td>1</td><td>30</td><td class="nt">Empalme</td></tr><tr class="emp"><td>15</td><td>15</td><td>5</td><td>30</td><td class="nt">Empalme</td></tr><tr><td>16</td><td>20</td><td>5</td><td>40</td><td class="nt"></td></tr><tr><td>17</td><td>30</td><td>5</td><td>60</td><td class="nt"></td></tr><tr><td>18</td><td>40</td><td>5</td><td>80</td><td class="nt"></td></tr><tr><td>19</td><td>50</td><td>5</td><td>100</td><td class="nt"></td></tr></tbody></table></div>
+      <p class="hint">Cumple MN ≤ AB/5 en todas las filas. Cambia MN a 0,2 → 1 → 5 m con una lectura de empalme en cada cambio. Si el terreno no permite llegar a 50 m, termina donde puedas.</p>
+      <div class="btns"><button class="pri" id="usePlant">Cargar esta tabla en el paso 1</button><span class="count">Carga L y MN; el V/I lo ingresas tú</span></div>
+    </div>
+  </div>
+  </div>
+
+  <div class="pan" role="tabpanel" id="pan-wen" aria-labelledby="tab-wen" hidden>
+    <p class="hint">Método de cuatro electrodos igualmente separados, aceptado por el RIC N°06 (Anexo 6.6). Es el que aparece en la hoja «Wenner» de tu planilla. Los cuatro electrodos se mueven en cada lectura.</p>
+    <p class="note">Los pasos 1 a 3 de este programa trabajan con Schlumberger: las láminas de Orellana-Mooney son curvas Schlumberger. El cálculo con lecturas Wenner se puede agregar como siguiente paso.</p>
+    <div class="cols">
+      <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+        <div class="chart" style="padding:10px">
+          <svg viewBox="0 0 520 150" role="img" aria-label="Disposición de electrodos Wenner">
+            <line x1="10" y1="80" x2="510" y2="80" stroke="var(--ink)" stroke-width="1.5"/>
+            <g font-family="var(--f-mono)" font-size="13" fill="var(--ink)" text-anchor="middle">
+              <line x1="70" y1="68" x2="70" y2="100" stroke="var(--model)" stroke-width="4"/><text x="70" y="120">A</text>
+              <line x1="196" y1="68" x2="196" y2="100" stroke="var(--accent)" stroke-width="4"/><text x="196" y="120">M</text>
+              <line x1="324" y1="68" x2="324" y2="100" stroke="var(--accent)" stroke-width="4"/><text x="324" y="120">N</text>
+              <line x1="450" y1="68" x2="450" y2="100" stroke="var(--model)" stroke-width="4"/><text x="450" y="120">B</text>
+              <circle cx="260" cy="80" r="3.5" fill="var(--ink)"/><text x="260" y="120">O</text>
+            </g>
+            <g font-family="var(--f-mono)" font-size="11.5" fill="var(--muted)" text-anchor="middle">
+              <line x1="70" y1="45" x2="196" y2="45" stroke="var(--muted)" marker-start="url(#ar2)" marker-end="url(#ar2)"/><text x="133" y="38">a</text>
+              <line x1="196" y1="45" x2="324" y2="45" stroke="var(--muted)" marker-start="url(#ar2)" marker-end="url(#ar2)"/><text x="260" y="38">a</text>
+              <line x1="324" y1="45" x2="450" y2="45" stroke="var(--muted)" marker-start="url(#ar2)" marker-end="url(#ar2)"/><text x="387" y="38">a</text>
+              <text x="260" y="145">corriente I entre A y B · potencial ΔV entre M y N</text>
+            </g>
+            <defs><marker id="ar2" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
+          </svg>
+        </div>
+        <div>
+          <h3>Procedimiento</h3>
+          <ol class="steps0">
+            <li><b>Ubica el sondeo</b> donde irá la puesta a tierra, en línea recta y lejos de estructuras metálicas enterradas.</li>
+            <li><b>Fija el centro O</b> y tiende la huincha. El centro no se mueve.</li>
+            <li><b>Coloca los cuatro electrodos</b> en el orden A, M, N, B, todos separados la misma distancia <b>a</b> y simétricos respecto de O.</li>
+            <li><b>Para cada lectura, mueve los cuatro electrodos</b> a la nueva separación a, manteniendo el centro.</li>
+            <li><b>Entierra poco los electrodos</b>: la profundidad p debe ser menor que a/20 para usar la fórmula simple.</li>
+            <li><b>Anota en cada fila</b> a, p y la lectura R (V/I) del instrumento.</li>
+          </ol>
+        </div>
+        <div>
+          <h3>Cálculo de la resistividad aparente</h3>
+          <div class="formula">ρa = 2π·a·R &nbsp;(si p &lt; a/20)</div>
+          <div class="formula">ρa = 4π·a·R / [1 + 2a/√(a² + 4p²) − a/√(a² + p²)] &nbsp;(fórmula completa, como en la planilla)</div>
+          <ul class="steps0">
+            <li><b>Profundidad aproximada</b> que representa cada lectura: del orden de a.</li>
+            <li><b>Ventaja</b>: la señal ΔV es mayor que en Schlumberger, porque M y N están más separados.</li>
+            <li><b>Desventaja</b>: hay que mover los cuatro electrodos en cada lectura, así que toma más tiempo y es más sensible a variaciones laterales del terreno.</li>
+          </ul>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+        <h3>Tabla de separaciones recomendada</h3>
+        <div class="scroll"><table><thead><tr><th>N.º</th><th>a (m)</th><th>AB = 3a (m)</th><th>AB/2 (m)</th><th>p máx. (m)</th></tr></thead><tbody><tr><td>1</td><td>1</td><td>3</td><td>1,5</td><td>0,05</td></tr><tr><td>2</td><td>1,5</td><td>4,5</td><td>2,25</td><td>0,075</td></tr><tr><td>3</td><td>2</td><td>6</td><td>3</td><td>0,1</td></tr><tr><td>4</td><td>3</td><td>9</td><td>4,5</td><td>0,15</td></tr><tr><td>5</td><td>4</td><td>12</td><td>6</td><td>0,2</td></tr><tr><td>6</td><td>5</td><td>15</td><td>7,5</td><td>0,25</td></tr><tr><td>7</td><td>7</td><td>21</td><td>10,5</td><td>0,35</td></tr><tr><td>8</td><td>10</td><td>30</td><td>15</td><td>0,5</td></tr><tr><td>9</td><td>15</td><td>45</td><td>22,5</td><td>0,75</td></tr><tr><td>10</td><td>20</td><td>60</td><td>30</td><td>1</td></tr><tr><td>11</td><td>25</td><td>75</td><td>37,5</td><td>1,25</td></tr><tr><td>12</td><td>30</td><td>90</td><td>45</td><td>1,5</td></tr><tr><td>13</td><td>40</td><td>120</td><td>60</td><td>2</td></tr></tbody></table></div>
+        <p class="hint">Separaciones repartidas en escala logarítmica. Con a = 33 m las alas llegan a 50 m (lo aceptable según el RIC N°06); con a = 67 m llegan a 100 m. Si el terreno no lo permite, termina donde puedas y déjalo escrito en el informe.</p>
+        <h3>Requisitos</h3>
+        <ul class="steps0">
+          <li>Mínimo 12 lecturas.</li>
+          <li>Instrumento de 4 terminales, resolución de 0,01 Ω y calibración vigente (RIC N°06).</li>
+          <li>Usa un solo método por sondeo: Wenner o Schlumberger (Anexo 6.6).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pan" role="tabpanel" id="pan-cdp" aria-labelledby="tab-cdp" hidden>
+    <p class="hint">Este método no mide el terreno: mide la <b>resistencia real</b> de la puesta a tierra una vez construida, para comprobar el valor proyectado. Es el método principal del RIC N°06 (Anexo 6.3).</p>
+    <div class="cols">
+      <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+        <div class="chart" style="padding:10px">
+          <svg viewBox="0 0 520 150" role="img" aria-label="Disposición del método de caída de potencial">
+            <line x1="10" y1="80" x2="510" y2="80" stroke="var(--ink)" stroke-width="1.5"/>
+            <rect x="30" y="66" width="50" height="28" fill="none" stroke="var(--accent)" stroke-width="3"/>
+            <g font-family="var(--f-mono)" font-size="13" fill="var(--ink)" text-anchor="middle">
+              <text x="55" y="120">E</text>
+              <line x1="320" y1="68" x2="320" y2="100" stroke="var(--patron)" stroke-width="4"/><text x="320" y="120">P</text>
+              <line x1="480" y1="68" x2="480" y2="100" stroke="var(--model)" stroke-width="4"/><text x="480" y="120">C</text>
+            </g>
+            <g font-family="var(--f-mono)" font-size="11.5" fill="var(--muted)" text-anchor="middle">
+              <line x1="80" y1="42" x2="480" y2="42" stroke="var(--muted)" marker-start="url(#ar3)" marker-end="url(#ar3)"/><text x="280" y="35">D_C ≥ 6 × diagonal mayor</text>
+              <line x1="80" y1="56" x2="320" y2="56" stroke="var(--muted)" marker-start="url(#ar3)" marker-end="url(#ar3)"/><text x="200" y="52">62 % de D_C</text>
+              <text x="55" y="140">malla</text><text x="400" y="140">P: potencial · C: corriente</text>
+            </g>
+            <defs><marker id="ar3" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
+          </svg>
+        </div>
+        <div>
+          <h3>Procedimiento</h3>
+          <ol class="steps0">
+            <li><b>Desconecta</b> la puesta a tierra de la instalación si es necesario para que la medición no incluya otras tierras, con las precauciones de seguridad que correspondan.</li>
+            <li><b>Conecta el terminal E</b> del instrumento a la malla o al electrodo.</li>
+            <li><b>Clava el electrodo de corriente C</b> en línea recta, a una distancia de al menos <b>6 veces la diagonal mayor</b> de la puesta a tierra.</li>
+            <li><b>Clava el electrodo de potencial P</b> en la misma línea, a <b>62 %</b> de la distancia a C, y anota la resistencia.</li>
+            <li><b>Comprueba</b> moviendo P a 52 % y 72 %: si las tres lecturas difieren menos de 5 % entre sí, la de 62 % es válida. Si no, aleja C.</li>
+            <li><b>Repite</b> la medición en una dirección perpendicular a la primera (Anexo 6.3).</li>
+            <li><b>Registra</b> con fotografías e informe, con el certificado de calibración del instrumento vigente.</li>
+          </ol>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+        <h3>Distancias para tu diseño</h3>
+        <p class="hint" id="cdpSrc"></p>
+        <div class="scroll"><table id="cdpT"><thead><tr><th>Electrodo</th><th>% de D_C</th><th>Distancia desde la malla (m)</th></tr></thead><tbody></tbody></table></div>
+        <p class="hint">Se calculan con las dimensiones del paso 4 y se actualizan al cambiarlas.</p>
+        <h3>Requisitos</h3>
+        <ul class="steps0">
+          <li>El instalador debe medir y verificar la puesta a tierra al ponerla en servicio (RIC N°06, 9.2 y 11.1).</li>
+          <li>El medidor de tenaza sirve solo para inspección de un sistema existente, no para la recepción inicial (Anexo 6.3).</li>
+          <li>El valor medido debe cumplir la resistencia de diseño del paso 5.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<div class="view" id="v-instrucciones" hidden>
+<section class="intro" aria-labelledby="introT">
+  <h2 id="introT" hidden>Presentación</h2>
+  <p class="lead">Este software calcula la <b>resistencia proyectada de un sistema de puesta a tierra</b> antes de construirlo. Parte de un sondeo eléctrico vertical con el método Schlumberger, obtiene el modelo de capas del terreno comparando la curva de campo con las curvas patrón de Orellana-Mooney, reduce ese terreno a una resistividad equivalente con Burgsdorf-Yakobs y calcula la resistencia de la malla, las barras y el sistema completo con Schwarz. Sigue el mismo procedimiento del curso, con la hoja bilogarítmica de 62,5 mm por década.</p>
+  <div class="intro-grid">
+    <div>
+      <h3>Qué hace</h3>
+      <ul>
+        <li>Calcula K y ρa de cada lectura y sus coordenadas X/Y en mm para AutoCAD.</li>
+        <li>Grafica la curva de campo en escala log-log.</li>
+        <li>Busca entre unas 1.500 curvas patrón (2, 3 y 4 capas) la que mejor calza y entrega la cruz de campo.</li>
+        <li>En baja tensión, calcula una <b>malla a tierra</b> (con o sin barras: R₁, R₂, Rm y RT de Schwarz) o un <b>electrodo</b> de barra.</li>
+        <li>Verifica la resistencia de diseño, la corriente real de falla y la sección mínima del conductor.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Cómo se usa</h3>
+      <ol>
+        <li>Ingresa o pega las lecturas de terreno (paso 1).</li>
+        <li>Revisa las curvas patrón propuestas o ingresa tu homologación de AutoCAD (paso 2).</li>
+        <li>Confirma el modelo de suelo (paso 3).</li>
+        <li>Ingresa las dimensiones de la malla (paso 4).</li>
+        <li>Lee la resistencia proyectada y copia el informe (paso 5).</li>
+      </ol>
+    </div>
+    <div>
+      <h3>Consideraciones</h3>
+      <ul>
+        <li><b>s es MN completo</b>, no MN/2, y L debe ser mayor que s/2.</li>
+        <li>Usa <b>mínimo 12 lecturas</b> (recomendado 12 a 16). El pliego RIC N°06 (Anexo 6.6) pide alas de hasta <b>100 m</b> (50 m aceptable). Si no hay espacio, el programa acepta un sondeo reducido y lo marca para que lo justifiques en el informe.</li>
+        <li>Las lecturas con L menor que 2,5·s (MN mayor que AB/5) se marcan con <b>!</b>: no cumplen la condición Schlumberger y las curvas patrón no las representan bien.</li>
+        <li>Las láminas impresas o escaneadas suelen venir a 62,8 mm por década: reescálalas a 62,5 antes de superponerlas.</li>
+        <li>Varias curvas patrón pueden calzar casi igual (equivalencia). Elige la que tenga sentido geológico y compárala con el ajuste fino.</li>
+        <li>Esta versión es para <b>baja tensión</b>. La opción de alta tensión ya aparece, pero aún no calcula. Las tensiones de paso y de contacto se verifican en media y alta tensión.</li>
+        <li>Al final del paso 5 se verifica el diseño: resistencia de diseño (menor entre Rmáx y 20 Ω), corriente real de falla frente al fusible, rango de Schwarz y requisitos del pliego RIC N°06.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="disc">El resultado es un valor proyectado. La resistencia real de la puesta a tierra se debe verificar midiéndola una vez construida la malla. Esta herramienta apoya el cálculo, pero no reemplaza el criterio del proyectista ni la normativa eléctrica vigente.</p>
+</section>
+
+<section class="step" aria-labelledby="pasoT">
+  <div class="step-h"><h2 id="pasoT">Paso a paso</h2></div>
+  <div class="howto">
+    <div><span class="hn">1</span><h3>Mediciones de terreno</h3><p>Ingresa cada lectura con L = AB/2, s = MN completo y V/I del instrumento. Puedes pegar las columnas desde Excel o cargar la tabla de aberturas recomendada desde <a href="#metodos">Métodos de medición</a>. El programa calcula K, ρa y las coordenadas X/Y para AutoCAD, y dibuja la curva en la hoja log-log. Desmarca «Usar» para excluir una lectura sin borrarla.</p></div>
+    <div><span class="hn">2</span><h3>Homologación</h3><p>El programa compara la curva con todas las familias de las láminas Orellana-Mooney y propone las más parecidas, con la lámina, la familia, la curva y la cruz de campo en mm. A la derecha está el ajuste fino para 2, 3 y 4 capas. Si homologaste en AutoCAD, abre «Homologación manual», elige la familia y la curva, e ingresa las cotas Ec y ρc.</p></div>
+    <div><span class="hn">3</span><h3>Modelo de suelo</h3><p>Muestra las capas, sus espesores y resistividades del modelo elegido (ajuste fino, curva patrón o manual), el tipo de curva y el error frente a las lecturas. Revisa los avisos: si la base de la última capa queda cerca del alcance del sondeo, su resistividad es poco confiable.</p></div>
+    <div><span class="hn">4</span><h3>Diseño</h3><p>Elige el nivel de tensión (por ahora solo baja tensión calcula) y el tipo: malla a tierra con o sin barras, o electrodo de barra. Ingresa dimensiones, cuadrícula, profundidad, sección, tipo de unión y barras. En «Verificación del diseño» agrega Rmáx, VL, XΣ e If si los tienes.</p></div>
+    <div><span class="hn">5</span><h3>Resultado y verificación</h3><p>Entrega ρeq de Burgsdorf-Yakobs y, con Schwarz, la resistencia de la malla R₁, de las barras R₂, la mutua Rm y la total RT. Al final revisa la resistencia de diseño, la corriente real de falla, el rango de Schwarz y los requisitos del RIC N°06. «Copiar informe» deja todo listo para pegar en Word o Excel.</p></div>
+  </div>
+</section>
+
+<section class="step" aria-labelledby="lamT">
+  <div class="step-h"><h2 id="lamT">Láminas y escala</h2></div>
+  <p class="hint">La planilla y el programa trabajan con 62,5 mm por década. Las láminas impresas o escaneadas suelen venir a 62,8 mm: para superponerlas en AutoCAD usa ESCALA → R → 62.8 → 62.5 (factor 0,99522). Las curvas del programa ya se calculan a 62,5 mm, así que no necesitan reescalado.</p>
+</section>
+
+</div>
+</div>
 <div class="toast" id="toast" hidden></div>
 
 <script>
@@ -642,8 +701,17 @@ function updCdp() {
     .map(([n, p]) => `<tr${p === 62 ? ' class="emp"' : ''}><td style="text-align:left">${n}</td><td>${p} %</td><td>${fmt(Dc * p / 100, 1)}</td></tr>`).join('');
 }
 $('s4').addEventListener('input', updCdp); $('s4').addEventListener('click', () => setTimeout(updCdp, 0));
+// ---------- Menú principal ----------
+const VIEWS = ['principal', 'metodos', 'instrucciones'];
+function route() {
+  let v = location.hash.slice(1); if (!VIEWS.includes(v)) v = 'principal';
+  VIEWS.forEach(x => $('v-' + x).hidden = x !== v);
+  document.querySelectorAll('.mainnav a').forEach(a => { if (a.dataset.v === v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  if (v === 'principal') plot();
+}
+window.addEventListener('hashchange', () => { route(); window.scrollTo(0, 0); });
 const PLANT = [['0,6', '0,2'], ['0,8', '0,2'], ['1', '0,2'], ['1,6', '0,2'], ['2', '0,2'], ['2,5', '0,2'], ['2,5', '1'], ['3', '1'], ['4', '1'], ['5', '1'], ['6', '1'], ['8', '1'], ['10', '1'], ['15', '1'], ['15', '5'], ['20', '5'], ['30', '5'], ['40', '5'], ['50', '5']];
-$('usePlant').onclick = () => { st.rows = PLANT.map(([L, s]) => ({ L, s, vi: '', on: true })); renderTable(); schedule(); document.getElementById('s1').scrollIntoView({ behavior: 'smooth' }); toast('Plantilla cargada: ingresa los V/I'); };
+$('usePlant').onclick = () => { st.rows = PLANT.map(([L, s]) => ({ L, s, vi: '', on: true })); renderTable(); schedule(); if (location.hash !== '#principal') location.hash = 'principal'; setTimeout(() => document.getElementById('s1').scrollIntoView({ behavior: 'smooth' }), 50); toast('Plantilla cargada: ingresa los V/I'); };
 $('clr').onclick = () => { st.rows = Array.from({ length: 14 }, () => ({ L: '', s: '1', vi: '', on: true })); renderTable(); schedule(); };
 $('pasteBtn').onclick = () => { $('pasteBox').hidden = false; $('pasteTa').focus(); };
 $('pasteNo').onclick = () => { $('pasteBox').hidden = true; };
@@ -951,7 +1019,7 @@ $('copyRep').onclick = () => {
 
 function renderAll() { renderFit(); renderHom(); renderModel(); plot(); renderResult(); }
 setSeg('gV', st.volt); setSeg('gK', st.kind); updSec(); updE(); updCdp();
-renderTable(); plot(); renderResult();
+renderTable(); plot(); renderResult(); route();
 setTimeout(run, 60);
 })();
 </script>

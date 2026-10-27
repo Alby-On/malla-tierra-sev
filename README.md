@@ -6,6 +6,12 @@ Schlumberger → hoja log-log de 62,5 mm/década → curvas patrón Orellana-Moo
 
 ## Uso
 
+La aplicación tiene un menú principal con tres vistas:
+
+- **Principal** (`#principal`): el cálculo, con una guía breve de uso arriba.
+- **Métodos de medición** (`#metodos`): cómo se realizan Schlumberger, Wenner y caída de potencial.
+- **Instrucciones** (`#instrucciones`): presentación, consideraciones, paso a paso y nota sobre láminas y escala.
+
 Abre `index.html` en el navegador (no necesita instalación ni internet, salvo las fuentes tipográficas). También se puede publicar con GitHub Pages.
 
 0. **Cómo medir en terreno**: menú con un método por pestaña. **Schlumberger** (disposición, procedimiento, MN ≤ AB/5, empalmes y tabla de aberturas que se carga en el paso 1), **Wenner** (procedimiento, fórmulas simple y completa con profundidad de electrodos, tabla de separaciones) y **caída de potencial** para medir la puesta a tierra construida (distancias calculadas con el diseño del paso 4, RIC N°06 Anexo 6.3).
