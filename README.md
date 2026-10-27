@@ -29,9 +29,26 @@ Las curvas que dibuja el programa se calculan directamente a 62,5 mm por década
 - ρa = π · (V/I) · [(L/s)² − 0,25] · s
 - X = log10(10·L) · 62,5 · Y = log10(ρa) · 62,5
 - Burgsdorf-Yakobs: r = √(S/π), r0² = r² − b², q0² = 2r(r + b), vi² = ½[zi² + q0² + r0² − √((zi² + q0² + r0²)² − 4q0²r0²)], Fi = √(1 − vi²/r0²), ρeq = Fn / Σ (Fi − Fi−1)/ρi
-- Schwarz: R = ρeq/(π·Lt) · [ln(2Lt/h') + k1·Lt/√S − k2], h' = √(d·h); k1 y k2 según IEEE 80
+- Schwarz: R = ρeq/(π·Lt) · [ln(2Lt/h') + k1·Lt/√S − k2], h' = √(d·h); k1 = 1,43 − 2,3·h/√S − 0,044·x; k2 = 5,50 − 8·h/√S + (0,15 − h/√S)·x; x = largo/ancho
 
 Las curvas teóricas se calculan con la transformada de resistividad de Pekeris y un filtro digital de Hankel (Key, 201 puntos).
+
+## Verificación normativa SEC (Pliego RIC N°06)
+
+Al final del paso 5 el programa revisa los requisitos del pliego que se pueden comprobar con los datos ingresados:
+
+| Requisito | Referencia RIC N°06 |
+|---|---|
+| Sondeo con alas de hasta 100 m (50 m aceptable, 30 m solo en condiciones extremas) | Anexo 6.6 |
+| Método Schlumberger o Wenner | Anexo 6.6 |
+| Conductor desnudo de 25 mm² como mínimo | 8.7 |
+| Profundidad de la malla de 0,5 m como mínimo | 8.11 |
+| Uniones enterradas con soldadura exotérmica o conector apto para enterrar (IEEE 837) | 7.11 |
+| Tiempo de exposición a la falla de 0,5 s como máximo | 8.8 |
+| Resistencia de servicio de 20 Ω como máximo, o de protección R ≤ Vs / I0 | 6.1, 7.3 |
+| Distancias para la medición de verificación por caída de potencial (6 × diagonal, 62 %) | Anexo 6.3 |
+
+Pendiente: tensiones de paso y de contacto (Anexo 6.1, IEEE 80) y barras verticales.
 
 ## Estructura
 
@@ -49,8 +66,7 @@ Después de modificar `src/`, ejecutar `python3 build.py`.
 
 ## Supuestos a revisar
 
-- k1 y k2 de Schwarz se interpolan de las curvas IEEE 80 (h = 0, √S/10 y √S/6).
-- Temperatura máxima de la unión por defecto: 250 °C apernada y 450 °C soldada (editable).
+- Temperatura máxima de la unión por defecto: 450 °C soldada, 250 °C compresión y apernada (editable).
 - Se calcula solo el reticulado, sin barras verticales.
 - La lámina 36 (A-4 y A-5) no viene en el PDF usado, así que esas familias no están en el catálogo.
 - En las familias de 4 capas se usan las 20 combinaciones E2-E3 de las láminas (A a T: E2 = 1, 2, 3, 5 y E3 = 1, 3, 5, 10, 25).

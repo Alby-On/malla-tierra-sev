@@ -76,7 +76,7 @@ textarea { width: 100%; min-height: 110px; font-family: var(--f-mono); font-size
 .f label { font-size: 12.5px; color: var(--muted); font-weight: 500 }
 .f input, .f select { font-family: var(--f-mono); font-size: 14px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); color: var(--ink); width: 100% }
 .f .u { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted) }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 4px; overflow: hidden }
 .seg button { border: 0; border-radius: 0; border-right: 1px solid var(--line); font-weight: 500 }
 .seg button:last-child { border-right: 0 }
 .seg button.on { background: var(--ink); color: var(--paper) }
@@ -108,6 +108,13 @@ details summary { cursor: pointer; font-weight: 600; font-size: 14px }
 .intro ol, .intro ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.5 }
 .intro li b { font-weight: 600 }
 .intro .disc { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; margin: 0; max-width: 95ch }
+.ric { border-top: 2px solid var(--ink); padding-top: 14px; display: flex; flex-direction: column; gap: 10px }
+.checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0 }
+.checks li { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 4px 12px; padding: 8px 0; border-bottom: 1px solid var(--grid); font-size: 14px; align-items: start }
+.checks li .chip { justify-self: start; margin-top: 2px }
+.checks li b { font-weight: 600 }
+.checks li span.d { color: var(--muted); font-size: 13px; display: block }
+td .flag { color: var(--warn); font-weight: 600; cursor: help }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); padding: 8px 14px; border-radius: 4px; font-size: 14px }
 @media (prefers-reduced-motion: no-preference) { .opt, .row { transition: border-color .12s, background .12s } }
 </style>
@@ -148,10 +155,11 @@ details summary { cursor: pointer; font-weight: 600; font-size: 14px }
       <h3>Consideraciones</h3>
       <ul>
         <li><b>s es MN completo</b>, no MN/2, y L debe ser mayor que s/2.</li>
-        <li>Usa <b>13 a 16 lecturas</b> y abre AB/2 al menos hasta la dimensión mayor de la malla: las capas profundas son las que más pesan en la resistencia.</li>
+        <li>Usa <b>13 a 16 lecturas</b>. El pliego RIC N°06 (Anexo 6.6) pide abrir alas de hasta <b>100 m</b> (50 m aceptable): las capas profundas son las que más pesan en la resistencia.</li>
+        <li>Las lecturas con L menor que 2,5·s (MN mayor que AB/5) se marcan con <b>!</b>: no cumplen la condición Schlumberger y las curvas patrón no las representan bien.</li>
         <li>Las láminas impresas o escaneadas suelen venir a 62,8 mm por década: reescálalas a 62,5 antes de superponerlas.</li>
         <li>Varias curvas patrón pueden calzar casi igual (equivalencia). Elige la que tenga sentido geológico y compárala con el ajuste fino.</li>
-        <li>Revisa con tu apunte los valores de k1 y k2, la temperatura máxima de la unión y la corriente de falla. El cálculo no incluye barras verticales.</li>
+        <li>Al final del paso 5 se revisan los requisitos del pliego RIC N°06 de la SEC que se pueden comprobar con los datos: sondeo, sección, profundidad, uniones, tiempo de falla y resistencia. Las tensiones de paso y contacto y las barras verticales aún no se calculan.</li>
       </ul>
     </div>
   </div>
@@ -243,10 +251,10 @@ details summary { cursor: pointer; font-weight: 600; font-size: 14px }
     <div class="f"><label for="gB">Ancho</label><input id="gB" value="10" inputmode="decimal"><span class="u">m</span></div>
     <div class="f"><label for="gCl">Cuadrícula en el largo</label><input id="gCl" value="5" inputmode="decimal"><span class="u">m · separación de conductores transversales</span></div>
     <div class="f"><label for="gCa">Cuadrícula en el ancho</label><input id="gCa" value="5" inputmode="decimal"><span class="u">m · separación de conductores longitudinales</span></div>
-    <div class="f"><label for="gH">Profundidad de instalación</label><input id="gH" value="0,6" inputmode="decimal"><span class="u">m</span></div>
+    <div class="f"><label for="gH">Profundidad de instalación</label><input id="gH" value="0,6" inputmode="decimal"><span class="u">m · mínimo 0,5 m (RIC N°06, 8.11)</span></div>
     <div class="f"><label for="gSec">Sección del conductor</label>
       <select id="gSec">
-        <option value="21.15|5.89">21,15 mm² (4 AWG)</option>
+        <option value="21.15|5.89">21,15 mm² (4 AWG) · bajo el mínimo RIC</option>
         <option value="33.62|7.42">33,62 mm² (2 AWG)</option>
         <option value="53.49|9.45">53,49 mm² (1/0 AWG)</option>
         <option value="67.43|10.6" selected>67,43 mm² (2/0 AWG)</option>
@@ -257,15 +265,25 @@ details summary { cursor: pointer; font-weight: 600; font-size: 14px }
     <div class="f"><label for="gSmm">Sección</label><input id="gSmm" value="67,43" inputmode="decimal" disabled><span class="u">mm²</span></div>
     <div class="f"><label for="gD">Diámetro del conductor</label><input id="gD" value="10,6" inputmode="decimal"><span class="u">mm · cableado desnudo, editable</span></div>
     <div class="f"><label>Unión de conductores</label>
-      <div class="seg" id="gJ"><button data-v="apernada" class="on" type="button">Apernada</button><button data-v="soldada" type="button">Soldada</button></div></div>
-    <div class="f"><label for="gTm">Temperatura máx. de la unión</label><input id="gTm" value="250" inputmode="decimal"><span class="u">°C · ajusta al valor de tu apunte</span></div>
+      <div class="seg" id="gJ"><button data-v="soldada" class="on" type="button">Soldada exotérmica</button><button data-v="compresion" type="button">Compresión</button><button data-v="apernada" type="button">Apernada</button></div>
+      <span class="u" id="gJnote">Unión bajo tierra permitida por RIC N°06 (7.11)</span></div>
+    <div class="f"><label for="gTm">Temperatura máx. de la unión</label><input id="gTm" value="450" inputmode="decimal"><span class="u">°C · ajusta al valor de tu apunte</span></div>
   </div>
   <details>
     <summary>Verificación térmica de la sección (opcional)</summary>
     <div class="form" style="padding-top:10px">
       <div class="f"><label for="gI">Corriente de falla a tierra</label><input id="gI" value="" placeholder="ej. 10" inputmode="decimal"><span class="u">kA</span></div>
-      <div class="f"><label for="gT">Tiempo de despeje</label><input id="gT" value="0,5" inputmode="decimal"><span class="u">s</span></div>
+      <div class="f"><label for="gT">Tiempo de despeje</label><input id="gT" value="0,5" inputmode="decimal"><span class="u">s · máximo 0,5 s (RIC N°06, 8.8)</span></div>
       <div class="f"><label for="gTa">Temperatura ambiente</label><input id="gTa" value="40" inputmode="decimal"><span class="u">°C</span></div>
+    </div>
+  </details>
+  <details>
+    <summary>Criterio de resistencia (RIC N°06)</summary>
+    <div class="form" style="padding-top:10px">
+      <div class="f"><label for="gTipo">Tipo de puesta a tierra</label>
+        <select id="gTipo"><option value="serv">Servicio · máx. 20 Ω (6.1)</option><option value="prot">Protección · R ≤ Vs / I0 (7.3)</option></select></div>
+      <div class="f"><label for="gVs">Tensión de seguridad Vs</label><input id="gVs" value="" placeholder="según RIC N°05, 5.8" inputmode="decimal"><span class="u">V</span></div>
+      <div class="f"><label for="gI0">Corriente de operación de la protección I0</label><input id="gI0" value="" placeholder="ej. 0,3 o 25" inputmode="decimal"><span class="u">A</span></div>
     </div>
   </details>
 </section>
@@ -290,7 +308,12 @@ details summary { cursor: pointer; font-weight: 600; font-size: 14px }
       <div class="btns"><button class="pri" id="copyRep">Copiar informe</button></div>
     </div>
   </div>
-  <p class="note">k1 y k2 se obtienen de las curvas de Schwarz (IEEE 80) en función de la relación largo/ancho y de la profundidad, interpolando entre h = 0, h = √S/10 y h = √S/6. Se calcula solo el reticulado, sin barras verticales.</p>
+  <p class="note">k1 = 1,43 − 2,3·h/√S − 0,044·x y k2 = 5,50 − 8·h/√S + (0,15 − h/√S)·x, con x = largo/ancho (Schwarz). Se calcula solo el reticulado, sin barras verticales.</p>
+  <div class="ric">
+    <div class="step-h"><h3>Verificación normativa SEC · Pliego RIC N°06</h3><span class="count" id="ricSum"></span></div>
+    <ul class="checks" id="ricList"></ul>
+    <p class="hint">Revisión automática de los requisitos del pliego que se pueden comprobar con los datos ingresados. No reemplaza la revisión del proyecto completo ni la declaración ante la SEC.</p>
+  </div>
 </section>
 </div>
 <div class="toast" id="toast" hidden></div>
@@ -312,7 +335,7 @@ const EX = [[0.6,127.4],[0.8,40.8],[1,25.5],[1.6,11],[2,7.6],[2.5,5.3],[3,3.6],[
 const EX2 = [[0.6,348.6],[0.8,150.5],[1,108.2],[1.6,30.7],[2,15.4],[2.5,7.8],[3,4.2],[4,1.8],[5,1],[6,0.5],[8,0.2],[10,0.1]].map(([L, v]) => ({ L: String(L).replace('.', ','), s: '1', vi: String(v).replace('.', ','), on: true }));
 const FAMS = MG.families();
 
-let st = { rows: EX.map(r => ({ ...r })), hom: [], homSel: 0, fit: null, src: 'fit', fitN: null, manual: null, joint: 'apernada', dataKey: '' };
+let st = { rows: EX.map(r => ({ ...r })), hom: [], homSel: 0, fit: null, src: 'fit', fitN: null, manual: null, joint: 'soldada', dataKey: '' };
 try { const sv = JSON.parse(localStorage.getItem('malla-sev-v1') || 'null'); if (sv && sv.rows) { st.rows = sv.rows; if (sv.g) setTimeout(() => restoreG(sv.g), 0); } } catch (e) {}
 function save() { try { localStorage.setItem('malla-sev-v1', JSON.stringify({ rows: st.rows, g: gState() })); } catch (e) {} }
 
@@ -331,7 +354,7 @@ function renderTable() {
   data(true).forEach((d, i) => {
     const r = st.rows[i], tr = document.createElement('tr');
     if (!r.on) tr.className = 'off';
-    tr.innerHTML = `<td>${i + 1}</td>
+    tr.innerHTML = `<td>${i + 1}${d.ok && d.L < 2.5 * d.s ? ' <span class="flag" title="MN mayor que AB/5: no cumple la condición Schlumberger">!</span>' : ''}</td>
       <td><input id="rL${i}" value="${r.L}" inputmode="decimal" aria-label="L lectura ${i + 1}"></td>
       <td><input id="rs${i}" value="${r.s}" inputmode="decimal" aria-label="s lectura ${i + 1}" style="width:52px"></td>
       <td><input id="rv${i}" value="${r.vi}" inputmode="decimal" aria-label="V/I lectura ${i + 1}"></td>
@@ -354,7 +377,8 @@ function refreshRow(i) {
 }
 function updCount() {
   const n = data().length, el = $('cnt');
-  el.textContent = `${n} lecturas válidas · recomendado 13 a 16`;
+  const nf = data().filter(d => d.L < 2.5 * d.s).length;
+  el.textContent = `${n} lecturas válidas · recomendado 13 a 16` + (nf ? ` · ${nf} con MN > AB/5 (!)` : '');
   el.className = 'count' + (n < 13 || n > 16 ? ' warn' : '');
 }
 $('tbl').addEventListener('input', e => {
@@ -531,9 +555,10 @@ function renderModel() {
 }
 
 // ---------- Paso 4 y 5 ----------
-function gState() { const o = {}; ['gA', 'gB', 'gCl', 'gCa', 'gH', 'gSec', 'gSmm', 'gD', 'gTm', 'gI', 'gT', 'gTa'].forEach(k => o[k] = $(k).value); o.joint = st.joint; return o; }
-function restoreG(o) { Object.keys(o).forEach(k => { if ($(k) && k !== 'joint') $(k).value = o[k]; }); setJoint(o.joint || 'apernada', true); $('gSmm').disabled = $('gSec').value !== 'custom'; renderAll(); }
-function setJoint(v, keepTm) { st.joint = v; [...$('gJ').children].forEach(b => b.classList.toggle('on', b.dataset.v === v)); if (!keepTm) $('gTm').value = v === 'apernada' ? '250' : '450'; }
+function gState() { const o = {}; ['gA', 'gB', 'gCl', 'gCa', 'gH', 'gSec', 'gSmm', 'gD', 'gTm', 'gI', 'gT', 'gTa', 'gTipo', 'gVs', 'gI0'].forEach(k => o[k] = $(k).value); o.joint = st.joint; return o; }
+function restoreG(o) { Object.keys(o).forEach(k => { if ($(k) && k !== 'joint') $(k).value = o[k]; }); setJoint(o.joint || 'soldada', true); $('gSmm').disabled = $('gSec').value !== 'custom'; renderAll(); }
+const JOINT = { soldada: { tm: '450', txt: 'soldadas (exotérmica)', note: 'Unión bajo tierra permitida por RIC N°06 (7.11)' }, compresion: { tm: '250', txt: 'por compresión', note: 'Conector apto para enterrar, ensayado según IEEE 837 (RIC N°06, 7.11 c)' }, apernada: { tm: '250', txt: 'apernadas', note: 'Bajo tierra no es inspeccionable: RIC N°06 (7.11) exige soldadura de alto punto de fusión o conector apto' } };
+function setJoint(v, keepTm) { if (!JOINT[v]) v = 'soldada'; st.joint = v; [...$('gJ').children].forEach(b => b.classList.toggle('on', b.dataset.v === v)); if (!keepTm) $('gTm').value = JOINT[v].tm; $('gJnote').textContent = JOINT[v].note; }
 $('gJ').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setJoint(b.dataset.v); renderAll(); save(); });
 $('gSec').addEventListener('change', () => { const v = $('gSec').value; $('gSmm').disabled = v !== 'custom'; if (v !== 'custom') { const [a, d] = v.split('|'); $('gSmm').value = a.replace('.', ','); $('gD').value = d.replace('.', ','); } });
 $('s4').addEventListener('input', () => { renderResult(); save(); });
@@ -563,7 +588,7 @@ function renderResult() {
   for (let j = 0; j < M.nA; j++) { const x = M.nA > 1 ? j * w / (M.nA - 1) : 0; p += `<line x1="${x}" y1="0" x2="${x}" y2="${h}" stroke="${ac}" stroke-width="2"/>`; }
   for (let i = 0; i < M.nL; i++) for (let j = 0; j < M.nA; j++) p += `<rect x="${(M.nA > 1 ? j * w / (M.nA - 1) : 0) - 2.5}" y="${(M.nL > 1 ? i * h / (M.nL - 1) : 0) - 2.5}" width="5" height="5" fill="${css('--ink')}"/>`;
   p += `<text x="${w / 2}" y="-9" text-anchor="middle" fill="${mu}" font-size="12" font-family="${css('--f-mono')}">${fmt(M.largo, 1)} m</text><text transform="translate(-12 ${h / 2}) rotate(-90)" text-anchor="middle" fill="${mu}" font-size="12" font-family="${css('--f-mono')}">${fmt(M.ancho, 1)} m</text>`;
-  p += `<text x="${w / 2}" y="${h + 20}" text-anchor="middle" fill="${mu}" font-size="11.5">${M.nA - 1} × ${M.nL - 1} retículas · ${M.nL * M.nA} uniones ${st.joint === 'apernada' ? 'apernadas' : 'soldadas'}</text></svg>`;
+  p += `<text x="${w / 2}" y="${h + 20}" text-anchor="middle" fill="${mu}" font-size="11.5">${M.nA - 1} × ${M.nL - 1} retículas · ${M.nL * M.nA} uniones ${JOINT[st.joint].txt}</text></svg>`;
   $('plan').innerHTML = p;
   // sección
   const I = num($('gI').value), t = num($('gT').value), Ta = num($('gTa').value), Tm = num($('gTm').value), Smm = num($('gSmm').value);
@@ -571,19 +596,49 @@ function renderResult() {
   if (I > 0 && t > 0 && Tm > Ta) {
     const o = MG.onderdonk(I, t, Ta, Tm), ok = Smm >= o.mm2;
     sb = `<dl class="kv"><dt>Sección mínima (Onderdonk, ${fmt(Tm, 0)} °C)</dt><dd>${fmt(o.mm2, 1)} mm²</dd><dt>Sección elegida</dt><dd>${fmt(Smm, 2)} mm² <span class="chip ${ok ? 'ok' : 'bad'}">${ok ? 'cumple' : 'no cumple'}</span></dd></dl>`;
-  } else sb = `<p class="hint">Ingresa la corriente de falla en el paso 4 para verificar la sección con la temperatura de la unión ${st.joint}.</p>`;
+  } else sb = `<p class="hint">Ingresa la corriente de falla en el paso 4 para verificar la sección con la temperatura de la unión.</p>`;
   if (msgs.length) sb += `<p class="note err">${msgs.join(' ')}</p>`;
   $('secBox').innerHTML = sb;
-  st.last = { m, M, by, R, RL, g };
+  const ric = ricChecks({ M, g, R, I, t, Ta, Tm, Smm });
+  const lab = { ok: 'cumple', warn: 'revisar', bad: 'no cumple', na: 'pendiente' };
+  $('ricList').innerHTML = ric.map(c => `<li><span class="chip ${c.s === 'na' ? 'acc' : c.s}">${lab[c.s]}</span><div><b>${c.t}</b><span class="d">${c.d}</span></div></li>`).join('');
+  const nb = ric.filter(c => c.s === 'bad').length, nw = ric.filter(c => c.s === 'warn').length;
+  $('ricSum').textContent = `${ric.filter(c => c.s === 'ok').length} cumplen · ${nw} a revisar · ${nb} no cumplen`;
+  st.last = { m, M, by, R, RL, g, ric };
+}
+function ricChecks({ M, g, R, I, t, Ta, Tm, Smm }) {
+  const out = [], D = data(), Lmax = D.length ? Math.max(...D.map(d => d.L)) : 0, diag = Math.hypot(M.largo, M.ancho);
+  out.push(Lmax >= 50 ? { s: 'ok', t: `Sondeo de resistividad: AB/2 máx. = ${fmtS(Lmax)} m`, d: 'Anexo 6.6: alas de hasta 100 m; 50 m es aceptable si no se puede llegar a 100 m.' }
+    : Lmax >= 30 ? { s: 'warn', t: `Sondeo de resistividad: AB/2 máx. = ${fmtS(Lmax)} m`, d: 'Anexo 6.6: alas de 30 m se aceptan solo en condiciones extremas. Lo normal es 100 m (o 50 m).' }
+    : { s: 'bad', t: `Sondeo de resistividad: AB/2 máx. = ${fmtS(Lmax)} m`, d: 'Anexo 6.6: el sondeo debe abrir alas de hasta 100 m (50 m aceptable, 30 m solo en condiciones extremas).' });
+  out.push({ s: 'ok', t: 'Método de medición: Schlumberger', d: 'Anexo 6.6: se acepta Schlumberger o Wenner, uno a la vez.' });
+  out.push(Smm >= 25 ? { s: 'ok', t: `Sección del conductor: ${fmt(Smm, 2)} mm²`, d: 'Sección 8.7: mínimo 25 mm² para conductores desnudos usados como electrodo (cobre nuevo, 8.9).' }
+    : { s: 'bad', t: `Sección del conductor: ${fmt(Smm, 2)} mm²`, d: 'Sección 8.7: el mínimo es 25 mm². Usa 33,62 mm² (2 AWG) o mayor.' });
+  out.push(g.h >= 0.5 ? { s: 'ok', t: `Profundidad de la malla: ${fmt(g.h, 2)} m`, d: 'Sección 8.11: mínimo 0,5 m.' } : { s: 'bad', t: `Profundidad de la malla: ${fmt(g.h, 2)} m`, d: 'Sección 8.11: la malla debe enterrarse a 0,5 m como mínimo.' });
+  out.push(st.joint === 'apernada' ? { s: 'bad', t: 'Uniones apernadas bajo tierra', d: 'Sección 7.11: las uniones enterradas deben ser soldadura exotérmica o conector apto para enterrar (IEEE 837). Las no inspeccionables solo admiten soldadura de alto punto de fusión.' }
+    : st.joint === 'compresion' ? { s: 'warn', t: 'Uniones por compresión', d: 'Sección 7.11 c: válidas solo con conectores aptos para enterrar, con protocolo de ensayo o según IEEE 837. Las uniones no inspeccionables exigen soldadura de alto punto de fusión (7.11 a).' }
+    : { s: 'ok', t: 'Uniones con soldadura exotérmica', d: 'Sección 7.11: soldadura de alto punto de fusión, permitida en uniones enterradas.' });
+  if (t > 0) out.push(t <= 0.5 ? { s: 'ok', t: `Tiempo de exposición a la falla: ${fmt(t, 2)} s`, d: 'Sección 8.8: nunca superior a 0,5 s.' } : { s: 'bad', t: `Tiempo de exposición a la falla: ${fmt(t, 2)} s`, d: 'Sección 8.8: el tiempo de exposición nunca puede superar 0,5 s.' });
+  if (I > 0 && t > 0 && Tm > Ta) { const o = MG.onderdonk(I, t, Ta, Tm); out.push(Smm >= o.mm2 ? { s: 'ok', t: `Sección por corriente de falla: ${fmt(o.mm2, 1)} mm² mínimo`, d: 'Sección 8.8: el conductor debe soportar la corriente de falla sin deterioro.' } : { s: 'bad', t: `Sección por corriente de falla: ${fmt(o.mm2, 1)} mm² mínimo`, d: 'Sección 8.8: la sección elegida no soporta la corriente de falla ingresada.' }); }
+  else out.push({ s: 'na', t: 'Sección por corriente de falla', d: 'Sección 8.8: ingresa la corriente de falla para verificarla.' });
+  const tipo = $('gTipo').value, Vs = num($('gVs').value), I0 = num($('gI0').value);
+  if (tipo === 'serv') out.push(R <= 20 ? { s: 'ok', t: `Resistencia de servicio: ${fmt(R, 2)} Ω ≤ 20 Ω`, d: 'Sección 6.1: la puesta a tierra de servicio no debe superar 20 Ω.' } : { s: 'bad', t: `Resistencia de servicio: ${fmt(R, 2)} Ω > 20 Ω`, d: 'Sección 6.1: máximo 20 Ω (6.2 permite 80 Ω solo en casos específicos de baja tensión).' });
+  else if (Vs > 0 && I0 > 0) { const Rmax = Vs / I0; out.push(R <= Rmax ? { s: 'ok', t: `Resistencia de protección: ${fmt(R, 2)} Ω ≤ ${fmtS(Rmax)} Ω`, d: 'Sección 7.3: R ≤ Vs / I0.' } : { s: 'bad', t: `Resistencia de protección: ${fmt(R, 2)} Ω > ${fmtS(Rmax)} Ω`, d: 'Sección 7.3: R ≤ Vs / I0.' }); }
+  else out.push({ s: 'na', t: 'Resistencia de protección', d: 'Sección 7.3: ingresa Vs (RIC N°05, 5.8) e I0 para verificar R ≤ Vs / I0.' });
+  out.push({ s: 'na', t: 'Tensiones de paso y de contacto', d: 'Anexo 6.1 (IEEE 80): este programa todavía no las calcula. Deben verificarse aparte.' });
+  out.push({ s: 'na', t: `Medición de verificación al construir: electrodo de corriente a ≥ ${fmt(6 * diag, 0)} m, potencial a ≈ ${fmt(0.62 * 6 * diag, 0)} m`, d: `Anexo 6.3: caída de potencial, 6 veces la diagonal mayor (${fmt(diag, 1)} m), potencial al 62 %, repetir en dirección perpendicular. Instrumento con certificado de calibración vigente (11.4).` });
+  return out;
 }
 $('copyRep').onclick = () => {
   if (!st.last) return; const { m, M, by, R, RL, g } = st.last; const D = data();
   let t = `INFORME MALLA A TIERRA\n\nMediciones Schlumberger (${D.length} lecturas)\nL(m)\ts(m)\tV/I(Ohm)\trho_a(Ohm m)\n` + D.map(d => [d.L, d.s, d.vi, d.rho.toFixed(1)].join('\t')).join('\n').replace(/\./g, ',');
   t += `\n\nModelo de suelo (${$('modSrc').textContent}, tipo ${MG.tipo(m.rho)}, error ${fmt(modelRms(m), 1)} %)\n`;
   let z = 0; m.rho.forEach((r, i) => { const h = m.h[i]; t += `Capa ${i + 1}: ${fmt(z)} a ${h ? fmt(z += h) : 'inf.'} m, rho = ${fmtS(r)} Ohm m\n`; });
-  t += `\nMalla ${fmt(M.largo, 1)} x ${fmt(M.ancho, 1)} m, cuadrícula ${$('gCl').value} x ${$('gCa').value} m, profundidad ${fmt(g.h, 2)} m, conductor ${$('gSmm').value} mm2 (d = ${$('gD').value} mm), unión ${st.joint}\nLt = ${fmt(M.Lt, 1)} m, S = ${fmt(M.S, 1)} m2\n`;
+  t += `\nMalla ${fmt(M.largo, 1)} x ${fmt(M.ancho, 1)} m, cuadrícula ${$('gCl').value} x ${$('gCa').value} m, profundidad ${fmt(g.h, 2)} m, conductor ${$('gSmm').value} mm2 (d = ${$('gD').value} mm), unión ${JOINT[st.joint].txt}\nLt = ${fmt(M.Lt, 1)} m, S = ${fmt(M.S, 1)} m2\n`;
   t += `\nBurgsdorf-Yakobs: r = ${fmt(by.r, 3)} m, r0² = ${fmt(by.r02, 3)}, q0² = ${fmt(by.q02, 3)}\n` + by.rows.map(r => `  F${r.i} = ${fmt(r.F, 4)}`).join('\n') + `\n  rho_eq = ${fmt(by.rhoEq, 2)} Ohm m\n`;
   t += `\nSchwarz: h' = ${fmt(M.hp, 4)} m, k1 = ${fmt(M.k1, 3)}, k2 = ${fmt(M.k2, 3)}\nRESISTENCIA PROYECTADA R = ${fmt(R, 2)} Ohm\n(Laurent-Niemann referencia: ${fmt(RL, 2)} Ohm)\n`;
+  const lab = { ok: 'CUMPLE', warn: 'REVISAR', bad: 'NO CUMPLE', na: 'PENDIENTE' };
+  t += `\nVERIFICACIÓN RIC N°06\n` + st.last.ric.map(c => `[${lab[c.s]}] ${c.t}`).join('\n') + '\n';
   copy(t, 'Informe copiado');
 };
 

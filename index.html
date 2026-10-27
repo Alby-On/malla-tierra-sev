@@ -76,7 +76,7 @@ textarea { width: 100%; min-height: 110px; font-family: var(--f-mono); font-size
 .f label { font-size: 12.5px; color: var(--muted); font-weight: 500 }
 .f input, .f select { font-family: var(--f-mono); font-size: 14px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); color: var(--ink); width: 100% }
 .f .u { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted) }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 4px; overflow: hidden }
 .seg button { border: 0; border-radius: 0; border-right: 1px solid var(--line); font-weight: 500 }
 .seg button:last-child { border-right: 0 }
 .seg button.on { background: var(--ink); color: var(--paper) }
@@ -108,6 +108,13 @@ details summary { cursor: pointer; font-weight: 600; font-size: 14px }
 .intro ol, .intro ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.5 }
 .intro li b { font-weight: 600 }
 .intro .disc { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; margin: 0; max-width: 95ch }
+.ric { border-top: 2px solid var(--ink); padding-top: 14px; display: flex; flex-direction: column; gap: 10px }
+.checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0 }
+.checks li { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 4px 12px; padding: 8px 0; border-bottom: 1px solid var(--grid); font-size: 14px; align-items: start }
+.checks li .chip { justify-self: start; margin-top: 2px }
+.checks li b { font-weight: 600 }
+.checks li span.d { color: var(--muted); font-size: 13px; display: block }
+td .flag { color: var(--warn); font-weight: 600; cursor: help }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); padding: 8px 14px; border-radius: 4px; font-size: 14px }
 @media (prefers-reduced-motion: no-preference) { .opt, .row { transition: border-color .12s, background .12s } }
 </style>
@@ -148,10 +155,11 @@ details summary { cursor: pointer; font-weight: 600; font-size: 14px }
       <h3>Consideraciones</h3>
       <ul>
         <li><b>s es MN completo</b>, no MN/2, y L debe ser mayor que s/2.</li>
-        <li>Usa <b>13 a 16 lecturas</b> y abre AB/2 al menos hasta la dimensión mayor de la malla: las capas profundas son las que más pesan en la resistencia.</li>
+        <li>Usa <b>13 a 16 lecturas</b>. El pliego RIC N°06 (Anexo 6.6) pide abrir alas de hasta <b>100 m</b> (50 m aceptable): las capas profundas son las que más pesan en la resistencia.</li>
+        <li>Las lecturas con L menor que 2,5·s (MN mayor que AB/5) se marcan con <b>!</b>: no cumplen la condición Schlumberger y las curvas patrón no las representan bien.</li>
         <li>Las láminas impresas o escaneadas suelen venir a 62,8 mm por década: reescálalas a 62,5 antes de superponerlas.</li>
         <li>Varias curvas patrón pueden calzar casi igual (equivalencia). Elige la que tenga sentido geológico y compárala con el ajuste fino.</li>
-        <li>Revisa con tu apunte los valores de k1 y k2, la temperatura máxima de la unión y la corriente de falla. El cálculo no incluye barras verticales.</li>
+        <li>Al final del paso 5 se revisan los requisitos del pliego RIC N°06 de la SEC que se pueden comprobar con los datos: sondeo, sección, profundidad, uniones, tiempo de falla y resistencia. Las tensiones de paso y contacto y las barras verticales aún no se calculan.</li>
       </ul>
     </div>
   </div>
@@ -243,10 +251,10 @@ details summary { cursor: pointer; font-weight: 600; font-size: 14px }
     <div class="f"><label for="gB">Ancho</label><input id="gB" value="10" inputmode="decimal"><span class="u">m</span></div>
     <div class="f"><label for="gCl">Cuadrícula en el largo</label><input id="gCl" value="5" inputmode="decimal"><span class="u">m · separación de conductores transversales</span></div>
     <div class="f"><label for="gCa">Cuadrícula en el ancho</label><input id="gCa" value="5" inputmode="decimal"><span class="u">m · separación de conductores longitudinales</span></div>
-    <div class="f"><label for="gH">Profundidad de instalación</label><input id="gH" value="0,6" inputmode="decimal"><span class="u">m</span></div>
+    <div class="f"><label for="gH">Profundidad de instalación</label><input id="gH" value="0,6" inputmode="decimal"><span class="u">m · mínimo 0,5 m (RIC N°06, 8.11)</span></div>
     <div class="f"><label for="gSec">Sección del conductor</label>
       <select id="gSec">
-        <option value="21.15|5.89">21,15 mm² (4 AWG)</option>
+        <option value="21.15|5.89">21,15 mm² (4 AWG) · bajo el mínimo RIC</option>
         <option value="33.62|7.42">33,62 mm² (2 AWG)</option>
         <option value="53.49|9.45">53,49 mm² (1/0 AWG)</option>
         <option value="67.43|10.6" selected>67,43 mm² (2/0 AWG)</option>
@@ -257,15 +265,25 @@ details summary { cursor: pointer; font-weight: 600; font-size: 14px }
     <div class="f"><label for="gSmm">Sección</label><input id="gSmm" value="67,43" inputmode="decimal" disabled><span class="u">mm²</span></div>
     <div class="f"><label for="gD">Diámetro del conductor</label><input id="gD" value="10,6" inputmode="decimal"><span class="u">mm · cableado desnudo, editable</span></div>
     <div class="f"><label>Unión de conductores</label>
-      <div class="seg" id="gJ"><button data-v="apernada" class="on" type="button">Apernada</button><button data-v="soldada" type="button">Soldada</button></div></div>
-    <div class="f"><label for="gTm">Temperatura máx. de la unión</label><input id="gTm" value="250" inputmode="decimal"><span class="u">°C · ajusta al valor de tu apunte</span></div>
+      <div class="seg" id="gJ"><button data-v="soldada" class="on" type="button">Soldada exotérmica</button><button data-v="compresion" type="button">Compresión</button><button data-v="apernada" type="button">Apernada</button></div>
+      <span class="u" id="gJnote">Unión bajo tierra permitida por RIC N°06 (7.11)</span></div>
+    <div class="f"><label for="gTm">Temperatura máx. de la unión</label><input id="gTm" value="450" inputmode="decimal"><span class="u">°C · ajusta al valor de tu apunte</span></div>
   </div>
   <details>
     <summary>Verificación térmica de la sección (opcional)</summary>
     <div class="form" style="padding-top:10px">
       <div class="f"><label for="gI">Corriente de falla a tierra</label><input id="gI" value="" placeholder="ej. 10" inputmode="decimal"><span class="u">kA</span></div>
-      <div class="f"><label for="gT">Tiempo de despeje</label><input id="gT" value="0,5" inputmode="decimal"><span class="u">s</span></div>
+      <div class="f"><label for="gT">Tiempo de despeje</label><input id="gT" value="0,5" inputmode="decimal"><span class="u">s · máximo 0,5 s (RIC N°06, 8.8)</span></div>
       <div class="f"><label for="gTa">Temperatura ambiente</label><input id="gTa" value="40" inputmode="decimal"><span class="u">°C</span></div>
+    </div>
+  </details>
+  <details>
+    <summary>Criterio de resistencia (RIC N°06)</summary>
+    <div class="form" style="padding-top:10px">
+      <div class="f"><label for="gTipo">Tipo de puesta a tierra</label>
+        <select id="gTipo"><option value="serv">Servicio · máx. 20 Ω (6.1)</option><option value="prot">Protección · R ≤ Vs / I0 (7.3)</option></select></div>
+      <div class="f"><label for="gVs">Tensión de seguridad Vs</label><input id="gVs" value="" placeholder="según RIC N°05, 5.8" inputmode="decimal"><span class="u">V</span></div>
+      <div class="f"><label for="gI0">Corriente de operación de la protección I0</label><input id="gI0" value="" placeholder="ej. 0,3 o 25" inputmode="decimal"><span class="u">A</span></div>
     </div>
   </details>
 </section>
@@ -290,55 +308,19 @@ details summary { cursor: pointer; font-weight: 600; font-size: 14px }
       <div class="btns"><button class="pri" id="copyRep">Copiar informe</button></div>
     </div>
   </div>
-  <p class="note">k1 y k2 se obtienen de las curvas de Schwarz (IEEE 80) en función de la relación largo/ancho y de la profundidad, interpolando entre h = 0, h = √S/10 y h = √S/6. Se calcula solo el reticulado, sin barras verticales.</p>
+  <p class="note">k1 = 1,43 − 2,3·h/√S − 0,044·x y k2 = 5,50 − 8·h/√S + (0,15 − h/√S)·x, con x = largo/ancho (Schwarz). Se calcula solo el reticulado, sin barras verticales.</p>
+  <div class="ric">
+    <div class="step-h"><h3>Verificación normativa SEC · Pliego RIC N°06</h3><span class="count" id="ricSum"></span></div>
+    <ul class="checks" id="ricList"></ul>
+    <p class="hint">Revisión automática de los requisitos del pliego que se pueden comprobar con los datos ingresados. No reemplaza la revisión del proyecto completo ni la declaración ante la SEC.</p>
+  </div>
 </section>
 </div>
 <div class="toast" id="toast" hidden></div>
 
 <script>
 const FILT = {"base": [0.00061125276113, 0.00065820113306, 0.00070875545947, 0.00076319270219, 0.00082181109562, 0.0008849317806, 0.00095290056375, 0.001026089812, 0.0011049004926, 0.0011897643698, 0.0012811463704, 0.0013795471305, 0.0014855057386, 0.0015996026889, 0.0017224630615, 0.0018547599469, 0.0019972181333, 0.002150618078, 0.0023158001825, 0.0024936693966, 0.002685200177, 0.0028914418247, 0.0031135242345, 0.0033526640848, 0.003610171503, 0.0038874572435, 0.0041860404159, 0.0045075568079, 0.0048537678469, 0.0052265702498, 0.0056280064144, 0.0060602756084, 0.0065257460183, 0.0070269677235, 0.0075666866666, 0.0081478596977, 0.0087736707727, 0.0094475483972, 0.010173184409, 0.010954554206, 0.01179593852, 0.012701946875, 0.013677542838, 0.014728071211, 0.015859287312, 0.017077388507, 0.018389048165, 0.019801452211, 0.021322338499, 0.022960039205, 0.02472352647, 0.026622461559, 0.028667247786, 0.030869087511, 0.033240043511, 0.035793105068, 0.038542259127, 0.041502566927, 0.044690246512, 0.048122761584, 0.051818917173, 0.055798962665, 0.060084702737, 0.064699616814, 0.069668987698, 0.075020040085, 0.080782089712, 0.086986703965, 0.093667874817, 0.10086220506, 0.10860910882, 0.11695102752, 0.12593366235, 0.13560622465, 0.14602170558, 0.15723716631, 0.16931405076, 0.18231852213, 0.1963218254, 0.21140067765, 0.22763768838, 0.24512181204, 0.26394883538, 0.28422190224, 0.3060520786, 0.32955896108, 0.3548713321, 0.38212786548, 0.41147788612, 0.44308218808, 0.47711391552, 0.51375951123, 0.55321973808, 0.5957107789, 0.64146542083, 0.69073433064, 0.74378742802, 0.80091536433, 0.86243111494, 0.92867169384, 1.0, 1.0768068055, 1.1595128964, 1.2485713779, 1.3444701568, 1.4477346147, 1.5589304856, 1.6786669562, 1.8076000026, 1.9464359844, 2.0959355145, 2.2569176259, 2.430264259, 2.6169250932, 2.8179227499, 3.0343583944, 3.2674177694, 3.5183776905, 3.7886130415, 4.0796043065, 4.3929456809, 4.7303538054, 5.09367717, 5.4849062417, 5.9061843686, 6.3598195226, 6.8482969437, 7.374292755, 7.9406886243, 8.550587551, 9.2073308659, 9.9145165368, 10.67601888, 11.496009786, 12.378981573, 13.329771603, 14.353588778, 15.456042079, 16.643171297, 17.921480118, 19.297971756, 20.780187319, 22.376247124, 24.094895185, 25.945547113, 27.938341703, 30.08419648, 32.394867508, 34.883013796, 37.562266651, 40.44730436, 43.553932599, 46.899171029, 50.501346536, 54.380193636, 58.556962592, 63.054535828, 67.897553297, 73.112547467, 78.72808868, 84.774941674, 91.28623413, 98.297638159, 105.84756573, 113.97737913, 122.73161752, 132.15824099, 142.3088933, 153.23918479, 165.00899705, 177.68281099, 191.3300601, 206.02551081, 221.84967214, 238.88923676, 257.23755591, 276.99515083, 298.2702635, 321.17944962, 345.84821713, 372.41171388, 401.01546795, 431.816185, 464.98260673, 500.69643536, 539.15332908, 580.56397396, 625.15523819, 673.17141498, 724.87556091, 780.55093713, 840.50256113, 905.05887787, 974.57355906, 1049.4274409, 1130.0306102, 1216.8246515, 1310.2850658, 1410.923876, 1519.2924317, 1635.98443], "j0": [0.11047028182, -0.3002860174, 0.0, 0.93046119983, -1.2379894568, 0.0, 1.5227824969, -1.4812622072, 0.0, 1.2009386825, -1.0423562816, 0.0, 0.81864821542, -0.78379794391, 0.0, 1.072087935, -2.0179734827, 2.6385519142, -2.9169738104, 2.9325477178, -2.7820301769, 2.5486342879, -2.2861325408, 2.0286680294, -1.7904665498, 1.5797782064, -1.3951007945, 1.2368997772, -1.099633354, 0.98291806061, -0.88081274958, 0.79394173229, -0.71663999758, 0.65080524536, -0.59090877637, 0.54003468331, -0.4925062292, 0.45250128291, -0.41392821513, 0.38203038254, -0.35006949206, 0.32439074651, -0.29739910106, 0.27663178906, -0.25343156256, 0.23666177126, -0.21638752143, 0.20297164206, -0.18496637789, 0.17444702839, -0.15819017862, 0.15023863816, -0.13529561681, 0.12967324382, -0.11566198604, 0.11219818277, -0.098770370987, 0.097353077473, -0.084183245527, 0.084753479564, -0.071528298008, 0.074074809072, -0.060483368728, 0.065041626041, -0.050770745261, 0.057427062382, -0.042158048513, 0.051052768312, -0.03445402816, 0.045781390598, -0.027498424039, 0.041507343181, -0.02115449635, 0.038152244563, -0.015305007196, 0.035660069622, -0.009844572094, 0.03398735588, -0.004669634342, 0.033095057483, 0.00032487750573, 0.032948602857, 0.0052404512709, 0.033521919313, 0.01016839267, 0.034797480108, 0.015186406949, 0.036759890775, 0.020356230996, 0.039385372942, 0.025717205521, 0.042628790253, 0.031272650472, 0.046405866219, 0.036967893122, 0.050566641527, 0.042657362302, 0.054856815446, 0.048056973739, 0.058863267262, 0.052679342378, 0.061940817541, 0.055752636721, 0.06312348309, 0.056131712051, 0.061038770639, 0.052230733891, 0.053873407541, 0.042050039593, 0.039495372918, 0.023444648968, 0.015929759009, -0.0051124549565, -0.017504247573, -0.042930285836, -0.058065368352, -0.084438376873, -0.096516419946, -0.11603535629, -0.1145716151, -0.11527469123, -0.087531151638, -0.059173676013, -0.00066603783991, 0.049664944834, 0.11572063574, 0.14489666111, 0.15889983306, 0.10315902123, 0.023894657374, -0.10076008026, -0.17010816791, -0.18065963397, -0.050442208115, 0.10675588291, 0.22438432052, 0.11248611921, -0.10607500253, -0.2494689576, -0.02532563908, 0.23130931626, 0.12650415174, -0.27168955645, -0.057416733017, 0.28283557986, -0.11515291842, -0.18952382144, 0.34989818184, -0.3283594488, 0.22286899355, -0.11918827034, 0.049141368612, -0.010850463307, -0.0069896731661, 0.013962250986, -0.015832476541, 0.015537988875, -0.014435341416, 0.013109344874, -0.011795625619, 0.01057909168, -0.0094821291553, 0.0085026363464, -0.007630076139, 0.0068520431482, -0.0061567610381, 0.0055338494084, -0.0049743830105, 0.0044706997475, -0.0040161618708, 0.0036049552606, -0.0032319518638, 0.0028926301906, -0.0025830346454, 0.0022997509691, -0.0020398798389, 0.0018010000172, -0.001581121784, 0.0013786378968, -0.0011922814636, 0.0010210963806, -0.00086441695402, 0.00072184389671, -0.00059320063234, 0.00047845965559, -0.00037764063699, 0.00029069374862, -0.00021738809704, 0.00015722470214, -0.0001093880481, 7.2742788281e-05, -4.5875085793e-05, 2.7172842542e-05, -1.4935696643e-05, 7.5020724442e-06, -3.3749800092e-06, 1.3230285666e-06, -4.3428133476e-07, 1.1205293892e-07, -2.0236792174e-08, 1.9231339527e-09]};
-const CAT = {"I":"inf","note":"Familias de las láminas Orellana-Mooney (PDF del usuario). 'inf' = ∞. Lámina 36 no viene en el PDF.",
-"f3":[
-[2,"H-1","1-0.65-0.8"],[2,"H-2","1-0.65-1"],[2,"H-3","1-0.65-5"],[2,"H-4","1-0.65-inf"],
-[3,"H-5","1-0.4-0.65"],[3,"H-6","1-0.4-1"],[3,"H-7","1-0.4-2.5"],
-[4,"H-8","1-0.4-inf"],[4,"H-9","1-0.2-0.4"],[4,"H-10","1-0.2-0.65"],
-[5,"H-11","1-0.2-1"],[5,"H-12","1-0.2-5"],
-[6,"H-13","1-0.2-inf"],[6,"H-14","1-0.1-0.2"],
-[7,"H-15","1-0.1-0.4"],[7,"H-16","1-0.1-1"],
-[8,"H-17","1-0.1-inf"],[8,"H-18","1-0.05-0.1"],
-[9,"H-19","1-0.05-0.2"],[9,"H-20","1-0.05-1"],
-[10,"H-21","1-0.05-inf"],[11,"H-22","1-0.025-0.05"],[12,"H-23","1-0.025-0.1"],[13,"H-24","1-0.025-1"],[14,"H-25","1-0.025-inf"],
-[15,"K-1","1-1.5-0"],[15,"K-2","1-1.5-0.2"],[15,"K-3","1-1.5-1"],
-[16,"K-4","1-1.5-1.25"],[16,"K-5","1-2.5-0"],[16,"K-6","1-2.5-0.4"],
-[17,"K-7","1-2.5-1"],[17,"K-8","1-2.5-1.5"],[17,"K-9","1-5-0"],
-[18,"K-10","1-5-0.65"],[18,"K-11","1-5-1"],[18,"K-12","1-5-1.5"],
-[19,"K-13","1-5-2.5"],[19,"K-14","1-10-0"],
-[20,"K-15","1-10-1"],[20,"K-16","1-10-2.5"],[20,"K-17","1-10-5"],
-[21,"K-18","1-20-0"],[22,"K-19","1-20-1"],[22,"K-20","1-20-5"],[23,"K-21","1-20-10"],
-[24,"K-22","1-40-0"],[25,"K-23","1-40-1"],[26,"K-24","1-40-10"],[27,"K-25","1-40-20"],
-[28,"Q-1","1-0.65-0.4"],[28,"Q-2","1-0.65-0.2"],[28,"Q-3","1-0.65-0"],
-[29,"Q-4","1-0.4-0.2"],[29,"Q-5","1-0.4-0.1"],[29,"Q-6","1-0.4-0"],
-[30,"Q-7","1-0.2-0.1"],[30,"Q-8","1-0.2-0.05"],
-[31,"Q-9","1-0.2-0"],[31,"Q-10","1-0.1-0.05"],
-[32,"Q-11","1-0.1-0"],[33,"Q-12","1-0.05-0"],[34,"Q-13","1-0.025-0"],
-[35,"A-1","1-1.5-2.5"],[35,"A-2","1-1.5-5"],[35,"A-3","1-1.5-inf"],
-[37,"A-6","1-2.5-inf"],[37,"A-7","1-5-10"],
-[38,"A-8","1-5-20"],[38,"A-9","1-5-inf"],
-[39,"A-10","1-10-20"],[39,"A-11","1-10-inf"],
-[40,"A-12","1-20-inf"],[41,"A-13","1-40-inf"]],
-"f4":[
-[42,"HK-1","1-0.2-1-0"],[43,"HK-2","1-0.2-2.5-0"],[44,"HK-3","1-0.2-5-0"],[45,"HK-4","1-0.2-10-0"],
-[46,"HA-1","1-0.2-0.65-10"],[46,"HA-2","1-0.4-1-5"],[47,"HA-3","1-0.4-5-inf"],
-[48,"KH-1","1-2.5-0.05-inf"],[49,"KH-2","1-5-0.4-inf"],[50,"KH-3","1-10-0.2-inf"],[51,"KH-4","1-20-0.1-inf"],
-[52,"KH-5","1-2.5-0.65-1"],[52,"KH-6","1-5-0.4-1"],[53,"KH-7","1-10-0.2-1"],[54,"KH-8","1-20-0.1-1"],
-[55,"KQ-1","1-10-2.5-0.1"],[56,"KQ-2","1-20-0.65-0.1"],[57,"KQ-3","1-5-0.65-0"],[58,"KQ-4","1-20-5-0"],
-[59,"QH-1","1-0.65-0.2-1"],[59,"QH-2","1-0.4-0.1-1"],[60,"QH-3","1-0.65-0.2-inf"],[61,"QH-4","1-0.4-0.1-inf"],
-[62,"QQ-1","1-0.2-0.05-0"],[63,"QQ-2","1-0.4-0.2-0.1"],[63,"AK-1","1-2.5-5-1"],
-[64,"AK-2","1-5-10-0"],[65,"AK-3","1-5-10-1"],[65,"AA-1","1-2.5-5-10"],[66,"AA-2","1-5-20-inf"]],
-"two":[0,0.025,0.05,0.07,0.1,0.15,0.2,0.3,0.4,0.5,0.65,0.8,1.25,1.5,2,2.5,3.5,5,7,10,15,20,40,"inf"],
-"E2":[0.1,0.2,0.3,0.5,0.7,1,2,3,5,10,15,25],
-"codes4":"ABCDEFGHIJKLMNOPQRST","E2_4":[1,2,3,5],"E3_4":[1,3,5,10,25]}
-;
+const CAT = {"I":"inf","note":"Familias de las láminas Orellana-Mooney (PDF del usuario). 'inf' = ∞. Cuarto campo opcional: valores de E2 dibujados en esa lámina (si falta, se usan los de 'E2'). Cada familia incluye además E2 = 0 y E2 = ∞. Lámina 36 no viene en el PDF.","f3":[[2,"H-1","1-0.65-0.8",[0.1,0.3,0.7,1,2,3,5,10,15,25]],[2,"H-2","1-0.65-1"],[2,"H-3","1-0.65-5"],[2,"H-4","1-0.65-inf"],[3,"H-5","1-0.4-0.65"],[3,"H-6","1-0.4-1"],[3,"H-7","1-0.4-2.5"],[4,"H-8","1-0.4-inf"],[4,"H-9","1-0.2-0.4",[0.2,0.5,0.7,1,2,3,5,10,15,25]],[4,"H-10","1-0.2-0.65"],[5,"H-11","1-0.2-1"],[5,"H-12","1-0.2-5"],[6,"H-13","1-0.2-inf"],[6,"H-14","1-0.1-0.2"],[7,"H-15","1-0.1-0.4"],[7,"H-16","1-0.1-1"],[8,"H-17","1-0.1-inf"],[8,"H-18","1-0.05-0.1",[0.3,0.7,1,2,3,5,10,15,25]],[9,"H-19","1-0.05-0.2"],[9,"H-20","1-0.05-1"],[10,"H-21","1-0.05-inf"],[11,"H-22","1-0.025-0.05",[0.2,0.5,1,2,3,5,10,15,25]],[12,"H-23","1-0.025-0.1"],[13,"H-24","1-0.025-1"],[14,"H-25","1-0.025-inf"],[15,"K-1","1-1.5-0"],[15,"K-2","1-1.5-0.2"],[15,"K-3","1-1.5-1"],[16,"K-4","1-1.5-1.25"],[16,"K-5","1-2.5-0"],[16,"K-6","1-2.5-0.4"],[17,"K-7","1-2.5-1"],[17,"K-8","1-2.5-1.5"],[17,"K-9","1-5-0"],[18,"K-10","1-5-0.65"],[18,"K-11","1-5-1"],[18,"K-12","1-5-1.5"],[19,"K-13","1-5-2.5"],[19,"K-14","1-10-0"],[20,"K-15","1-10-1"],[20,"K-16","1-10-2.5"],[20,"K-17","1-10-5"],[21,"K-18","1-20-0"],[22,"K-19","1-20-1"],[22,"K-20","1-20-5"],[23,"K-21","1-20-10",[0.2,0.5,1,2,5,10,15,25]],[24,"K-22","1-40-0"],[25,"K-23","1-40-1"],[26,"K-24","1-40-10",[0.1,0.3,0.5,1,2,3,5,10,15,25]],[27,"K-25","1-40-20",[2,3,5,10,15,25]],[28,"Q-1","1-0.65-0.4"],[28,"Q-2","1-0.65-0.2"],[28,"Q-3","1-0.65-0"],[29,"Q-4","1-0.4-0.2"],[29,"Q-5","1-0.4-0.1"],[29,"Q-6","1-0.4-0"],[30,"Q-7","1-0.2-0.1"],[30,"Q-8","1-0.2-0.05"],[31,"Q-9","1-0.2-0"],[31,"Q-10","1-0.1-0.05",[0.2,0.5,1,2,3,5,10,15,25]],[32,"Q-11","1-0.1-0",[0.2,0.5,1,2,3,5,10,15,25]],[33,"Q-12","1-0.05-0",[0.5,1,2,3,5,10,15,25]],[34,"Q-13","1-0.025-0",[1,2,3,5,10,15,25]],[35,"A-1","1-1.5-2.5"],[35,"A-2","1-1.5-5"],[35,"A-3","1-1.5-inf"],[37,"A-6","1-2.5-inf"],[37,"A-7","1-5-10",[0.2,0.7,1,2,3,5,10,15,25]],[38,"A-8","1-5-20"],[38,"A-9","1-5-inf",[0.1,0.3,0.5,0.7,1,2,3,5,10,15,25]],[39,"A-10","1-10-20",[0.3,0.7,1,2,3,5,10,15,25]],[39,"A-11","1-10-inf",[0.3,0.7,1,2,3,5,10,15,25]],[40,"A-12","1-20-inf",[1,2,3,5,10,15,25]],[41,"A-13","1-40-inf",[2,3,5,10,15,25]]],"f4":[[42,"HK-1","1-0.2-1-0"],[43,"HK-2","1-0.2-2.5-0"],[44,"HK-3","1-0.2-5-0"],[45,"HK-4","1-0.2-10-0"],[46,"HA-1","1-0.2-0.65-10"],[46,"HA-2","1-0.4-1-5"],[47,"HA-3","1-0.4-5-inf"],[48,"KH-1","1-2.5-0.05-inf"],[49,"KH-2","1-5-0.4-inf"],[50,"KH-3","1-10-0.2-inf"],[51,"KH-4","1-20-0.1-inf"],[52,"KH-5","1-2.5-0.65-1"],[52,"KH-6","1-5-0.4-1"],[53,"KH-7","1-10-0.2-1"],[54,"KH-8","1-20-0.1-1"],[55,"KQ-1","1-10-2.5-0.1"],[56,"KQ-2","1-20-0.65-0.1"],[57,"KQ-3","1-5-0.65-0"],[58,"KQ-4","1-20-5-0"],[59,"QH-1","1-0.65-0.2-1"],[59,"QH-2","1-0.4-0.1-1"],[60,"QH-3","1-0.65-0.2-inf"],[61,"QH-4","1-0.4-0.1-inf"],[62,"QQ-1","1-0.2-0.05-0"],[63,"QQ-2","1-0.4-0.2-0.1"],[63,"AK-1","1-2.5-5-1"],[64,"AK-2","1-5-10-0"],[65,"AK-3","1-5-10-1"],[65,"AA-1","1-2.5-5-10"],[66,"AA-2","1-5-20-inf"]],"two":[0,0.025,0.05,0.07,0.1,0.15,0.2,0.3,0.4,0.5,0.65,0.8,1.25,1.5,2,2.5,3.5,5,7,10,15,20,40,"inf"],"E2":[0.1,0.2,0.3,0.5,0.7,1,2,3,5,10,15,25],"codes4":"ABCDEFGHIJKLMNOPQRST","E2_4":[1,2,3,5],"E3_4":[1,3,5,10,25]};
 </script>
 <script>
 // Motor de cálculo: SEV Schlumberger, homologación, Burgsdorf-Yakobs, Schwarz
@@ -400,12 +382,12 @@ const MG = (() => {
   // Lista de curvas de una familia (para dibujarla como en la lámina)
   function familyMembers(fam) {
     if (fam.n === 2) return CAT.two.filter(m => +m !== 1 && m !== 0).map(m => ({ label: fmtR(m), mu: [1, val(m)], nu: [] }));
-    if (fam.n === 3) return CAT.E2.map(e => ({ label: String(e), mu: fam.mu, nu: [e] }));
+    if (fam.n === 3) return [{ label: '0', mu: fam.mu, nu: [ZERO] }, ...(fam.e2 || CAT.E2).map(e => ({ label: String(e), mu: fam.mu, nu: [e] })), { label: '∞', mu: fam.mu, nu: [INF] }];
     return [...CAT.codes4].map((c, k) => ({ label: c, code: c, mu: fam.mu, nu: [CAT.E2_4[k % 4], CAT.E3_4[Math.floor(k / 4)]] }));
   }
   function families() {
     const out = [{ n: 2, lam: 1, name: '2 capas', ratio: '1-ρ2', mu: null }];
-    for (const [lam, name, r] of CAT.f3) { const p = r.split('-'); out.push({ n: 3, lam, name, ratio: p.map(fmtR).join('-'), mu: p.map(val) }); }
+    for (const [lam, name, r, e2] of CAT.f3) { const p = r.split('-'); out.push({ n: 3, lam, name, ratio: p.map(fmtR).join('-'), mu: p.map(val), e2 }); }
     for (const [lam, name, r] of CAT.f4) { const p = r.split('-'); out.push({ n: 4, lam, name, ratio: p.map(fmtR).join('-'), mu: p.map(val) }); }
     return out;
   }
@@ -583,11 +565,9 @@ const MG = (() => {
   }
 
   // ---------- Schwarz (malla sola, IEEE 80) ----------
-  function k12(x, hRel) { // hRel = h/√A
-    const A = [-0.04 * x + 1.41, 0.15 * x + 5.50], B = [-0.05 * x + 1.20, 0.10 * x + 4.68], C = [-0.05 * x + 1.13, -0.05 * x + 4.40];
-    const t = Math.min(hRel, 1 / 6);
-    if (t <= 0.1) { const f = t / 0.1; return [A[0] + (B[0] - A[0]) * f, A[1] + (B[1] - A[1]) * f]; }
-    const f = (t - 0.1) / (1 / 6 - 0.1); return [B[0] + (C[0] - B[0]) * f, B[1] + (C[1] - B[1]) * f];
+  // Coeficientes de Schwarz (expresiones analíticas originales, IEEE 80 ec. 54-55 en forma de curvas)
+  function k12(x, hRel) { // x = largo/ancho, hRel = h/√S
+    return [1.43 - 2.3 * hRel - 0.044 * x, 5.50 - 8 * hRel + (0.15 - hRel) * x];
   }
   function malla(g) {
     const largo = Math.max(g.a, g.b), ancho = Math.min(g.a, g.b);
@@ -624,7 +604,7 @@ const EX = [[0.6,127.4],[0.8,40.8],[1,25.5],[1.6,11],[2,7.6],[2.5,5.3],[3,3.6],[
 const EX2 = [[0.6,348.6],[0.8,150.5],[1,108.2],[1.6,30.7],[2,15.4],[2.5,7.8],[3,4.2],[4,1.8],[5,1],[6,0.5],[8,0.2],[10,0.1]].map(([L, v]) => ({ L: String(L).replace('.', ','), s: '1', vi: String(v).replace('.', ','), on: true }));
 const FAMS = MG.families();
 
-let st = { rows: EX.map(r => ({ ...r })), hom: [], homSel: 0, fit: null, src: 'fit', fitN: null, manual: null, joint: 'apernada', dataKey: '' };
+let st = { rows: EX.map(r => ({ ...r })), hom: [], homSel: 0, fit: null, src: 'fit', fitN: null, manual: null, joint: 'soldada', dataKey: '' };
 try { const sv = JSON.parse(localStorage.getItem('malla-sev-v1') || 'null'); if (sv && sv.rows) { st.rows = sv.rows; if (sv.g) setTimeout(() => restoreG(sv.g), 0); } } catch (e) {}
 function save() { try { localStorage.setItem('malla-sev-v1', JSON.stringify({ rows: st.rows, g: gState() })); } catch (e) {} }
 
@@ -643,7 +623,7 @@ function renderTable() {
   data(true).forEach((d, i) => {
     const r = st.rows[i], tr = document.createElement('tr');
     if (!r.on) tr.className = 'off';
-    tr.innerHTML = `<td>${i + 1}</td>
+    tr.innerHTML = `<td>${i + 1}${d.ok && d.L < 2.5 * d.s ? ' <span class="flag" title="MN mayor que AB/5: no cumple la condición Schlumberger">!</span>' : ''}</td>
       <td><input id="rL${i}" value="${r.L}" inputmode="decimal" aria-label="L lectura ${i + 1}"></td>
       <td><input id="rs${i}" value="${r.s}" inputmode="decimal" aria-label="s lectura ${i + 1}" style="width:52px"></td>
       <td><input id="rv${i}" value="${r.vi}" inputmode="decimal" aria-label="V/I lectura ${i + 1}"></td>
@@ -666,7 +646,8 @@ function refreshRow(i) {
 }
 function updCount() {
   const n = data().length, el = $('cnt');
-  el.textContent = `${n} lecturas válidas · recomendado 13 a 16`;
+  const nf = data().filter(d => d.L < 2.5 * d.s).length;
+  el.textContent = `${n} lecturas válidas · recomendado 13 a 16` + (nf ? ` · ${nf} con MN > AB/5 (!)` : '');
   el.className = 'count' + (n < 13 || n > 16 ? ' warn' : '');
 }
 $('tbl').addEventListener('input', e => {
@@ -843,9 +824,10 @@ function renderModel() {
 }
 
 // ---------- Paso 4 y 5 ----------
-function gState() { const o = {}; ['gA', 'gB', 'gCl', 'gCa', 'gH', 'gSec', 'gSmm', 'gD', 'gTm', 'gI', 'gT', 'gTa'].forEach(k => o[k] = $(k).value); o.joint = st.joint; return o; }
-function restoreG(o) { Object.keys(o).forEach(k => { if ($(k) && k !== 'joint') $(k).value = o[k]; }); setJoint(o.joint || 'apernada', true); $('gSmm').disabled = $('gSec').value !== 'custom'; renderAll(); }
-function setJoint(v, keepTm) { st.joint = v; [...$('gJ').children].forEach(b => b.classList.toggle('on', b.dataset.v === v)); if (!keepTm) $('gTm').value = v === 'apernada' ? '250' : '450'; }
+function gState() { const o = {}; ['gA', 'gB', 'gCl', 'gCa', 'gH', 'gSec', 'gSmm', 'gD', 'gTm', 'gI', 'gT', 'gTa', 'gTipo', 'gVs', 'gI0'].forEach(k => o[k] = $(k).value); o.joint = st.joint; return o; }
+function restoreG(o) { Object.keys(o).forEach(k => { if ($(k) && k !== 'joint') $(k).value = o[k]; }); setJoint(o.joint || 'soldada', true); $('gSmm').disabled = $('gSec').value !== 'custom'; renderAll(); }
+const JOINT = { soldada: { tm: '450', txt: 'soldadas (exotérmica)', note: 'Unión bajo tierra permitida por RIC N°06 (7.11)' }, compresion: { tm: '250', txt: 'por compresión', note: 'Conector apto para enterrar, ensayado según IEEE 837 (RIC N°06, 7.11 c)' }, apernada: { tm: '250', txt: 'apernadas', note: 'Bajo tierra no es inspeccionable: RIC N°06 (7.11) exige soldadura de alto punto de fusión o conector apto' } };
+function setJoint(v, keepTm) { if (!JOINT[v]) v = 'soldada'; st.joint = v; [...$('gJ').children].forEach(b => b.classList.toggle('on', b.dataset.v === v)); if (!keepTm) $('gTm').value = JOINT[v].tm; $('gJnote').textContent = JOINT[v].note; }
 $('gJ').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setJoint(b.dataset.v); renderAll(); save(); });
 $('gSec').addEventListener('change', () => { const v = $('gSec').value; $('gSmm').disabled = v !== 'custom'; if (v !== 'custom') { const [a, d] = v.split('|'); $('gSmm').value = a.replace('.', ','); $('gD').value = d.replace('.', ','); } });
 $('s4').addEventListener('input', () => { renderResult(); save(); });
@@ -875,7 +857,7 @@ function renderResult() {
   for (let j = 0; j < M.nA; j++) { const x = M.nA > 1 ? j * w / (M.nA - 1) : 0; p += `<line x1="${x}" y1="0" x2="${x}" y2="${h}" stroke="${ac}" stroke-width="2"/>`; }
   for (let i = 0; i < M.nL; i++) for (let j = 0; j < M.nA; j++) p += `<rect x="${(M.nA > 1 ? j * w / (M.nA - 1) : 0) - 2.5}" y="${(M.nL > 1 ? i * h / (M.nL - 1) : 0) - 2.5}" width="5" height="5" fill="${css('--ink')}"/>`;
   p += `<text x="${w / 2}" y="-9" text-anchor="middle" fill="${mu}" font-size="12" font-family="${css('--f-mono')}">${fmt(M.largo, 1)} m</text><text transform="translate(-12 ${h / 2}) rotate(-90)" text-anchor="middle" fill="${mu}" font-size="12" font-family="${css('--f-mono')}">${fmt(M.ancho, 1)} m</text>`;
-  p += `<text x="${w / 2}" y="${h + 20}" text-anchor="middle" fill="${mu}" font-size="11.5">${M.nA - 1} × ${M.nL - 1} retículas · ${M.nL * M.nA} uniones ${st.joint === 'apernada' ? 'apernadas' : 'soldadas'}</text></svg>`;
+  p += `<text x="${w / 2}" y="${h + 20}" text-anchor="middle" fill="${mu}" font-size="11.5">${M.nA - 1} × ${M.nL - 1} retículas · ${M.nL * M.nA} uniones ${JOINT[st.joint].txt}</text></svg>`;
   $('plan').innerHTML = p;
   // sección
   const I = num($('gI').value), t = num($('gT').value), Ta = num($('gTa').value), Tm = num($('gTm').value), Smm = num($('gSmm').value);
@@ -883,19 +865,49 @@ function renderResult() {
   if (I > 0 && t > 0 && Tm > Ta) {
     const o = MG.onderdonk(I, t, Ta, Tm), ok = Smm >= o.mm2;
     sb = `<dl class="kv"><dt>Sección mínima (Onderdonk, ${fmt(Tm, 0)} °C)</dt><dd>${fmt(o.mm2, 1)} mm²</dd><dt>Sección elegida</dt><dd>${fmt(Smm, 2)} mm² <span class="chip ${ok ? 'ok' : 'bad'}">${ok ? 'cumple' : 'no cumple'}</span></dd></dl>`;
-  } else sb = `<p class="hint">Ingresa la corriente de falla en el paso 4 para verificar la sección con la temperatura de la unión ${st.joint}.</p>`;
+  } else sb = `<p class="hint">Ingresa la corriente de falla en el paso 4 para verificar la sección con la temperatura de la unión.</p>`;
   if (msgs.length) sb += `<p class="note err">${msgs.join(' ')}</p>`;
   $('secBox').innerHTML = sb;
-  st.last = { m, M, by, R, RL, g };
+  const ric = ricChecks({ M, g, R, I, t, Ta, Tm, Smm });
+  const lab = { ok: 'cumple', warn: 'revisar', bad: 'no cumple', na: 'pendiente' };
+  $('ricList').innerHTML = ric.map(c => `<li><span class="chip ${c.s === 'na' ? 'acc' : c.s}">${lab[c.s]}</span><div><b>${c.t}</b><span class="d">${c.d}</span></div></li>`).join('');
+  const nb = ric.filter(c => c.s === 'bad').length, nw = ric.filter(c => c.s === 'warn').length;
+  $('ricSum').textContent = `${ric.filter(c => c.s === 'ok').length} cumplen · ${nw} a revisar · ${nb} no cumplen`;
+  st.last = { m, M, by, R, RL, g, ric };
+}
+function ricChecks({ M, g, R, I, t, Ta, Tm, Smm }) {
+  const out = [], D = data(), Lmax = D.length ? Math.max(...D.map(d => d.L)) : 0, diag = Math.hypot(M.largo, M.ancho);
+  out.push(Lmax >= 50 ? { s: 'ok', t: `Sondeo de resistividad: AB/2 máx. = ${fmtS(Lmax)} m`, d: 'Anexo 6.6: alas de hasta 100 m; 50 m es aceptable si no se puede llegar a 100 m.' }
+    : Lmax >= 30 ? { s: 'warn', t: `Sondeo de resistividad: AB/2 máx. = ${fmtS(Lmax)} m`, d: 'Anexo 6.6: alas de 30 m se aceptan solo en condiciones extremas. Lo normal es 100 m (o 50 m).' }
+    : { s: 'bad', t: `Sondeo de resistividad: AB/2 máx. = ${fmtS(Lmax)} m`, d: 'Anexo 6.6: el sondeo debe abrir alas de hasta 100 m (50 m aceptable, 30 m solo en condiciones extremas).' });
+  out.push({ s: 'ok', t: 'Método de medición: Schlumberger', d: 'Anexo 6.6: se acepta Schlumberger o Wenner, uno a la vez.' });
+  out.push(Smm >= 25 ? { s: 'ok', t: `Sección del conductor: ${fmt(Smm, 2)} mm²`, d: 'Sección 8.7: mínimo 25 mm² para conductores desnudos usados como electrodo (cobre nuevo, 8.9).' }
+    : { s: 'bad', t: `Sección del conductor: ${fmt(Smm, 2)} mm²`, d: 'Sección 8.7: el mínimo es 25 mm². Usa 33,62 mm² (2 AWG) o mayor.' });
+  out.push(g.h >= 0.5 ? { s: 'ok', t: `Profundidad de la malla: ${fmt(g.h, 2)} m`, d: 'Sección 8.11: mínimo 0,5 m.' } : { s: 'bad', t: `Profundidad de la malla: ${fmt(g.h, 2)} m`, d: 'Sección 8.11: la malla debe enterrarse a 0,5 m como mínimo.' });
+  out.push(st.joint === 'apernada' ? { s: 'bad', t: 'Uniones apernadas bajo tierra', d: 'Sección 7.11: las uniones enterradas deben ser soldadura exotérmica o conector apto para enterrar (IEEE 837). Las no inspeccionables solo admiten soldadura de alto punto de fusión.' }
+    : st.joint === 'compresion' ? { s: 'warn', t: 'Uniones por compresión', d: 'Sección 7.11 c: válidas solo con conectores aptos para enterrar, con protocolo de ensayo o según IEEE 837. Las uniones no inspeccionables exigen soldadura de alto punto de fusión (7.11 a).' }
+    : { s: 'ok', t: 'Uniones con soldadura exotérmica', d: 'Sección 7.11: soldadura de alto punto de fusión, permitida en uniones enterradas.' });
+  if (t > 0) out.push(t <= 0.5 ? { s: 'ok', t: `Tiempo de exposición a la falla: ${fmt(t, 2)} s`, d: 'Sección 8.8: nunca superior a 0,5 s.' } : { s: 'bad', t: `Tiempo de exposición a la falla: ${fmt(t, 2)} s`, d: 'Sección 8.8: el tiempo de exposición nunca puede superar 0,5 s.' });
+  if (I > 0 && t > 0 && Tm > Ta) { const o = MG.onderdonk(I, t, Ta, Tm); out.push(Smm >= o.mm2 ? { s: 'ok', t: `Sección por corriente de falla: ${fmt(o.mm2, 1)} mm² mínimo`, d: 'Sección 8.8: el conductor debe soportar la corriente de falla sin deterioro.' } : { s: 'bad', t: `Sección por corriente de falla: ${fmt(o.mm2, 1)} mm² mínimo`, d: 'Sección 8.8: la sección elegida no soporta la corriente de falla ingresada.' }); }
+  else out.push({ s: 'na', t: 'Sección por corriente de falla', d: 'Sección 8.8: ingresa la corriente de falla para verificarla.' });
+  const tipo = $('gTipo').value, Vs = num($('gVs').value), I0 = num($('gI0').value);
+  if (tipo === 'serv') out.push(R <= 20 ? { s: 'ok', t: `Resistencia de servicio: ${fmt(R, 2)} Ω ≤ 20 Ω`, d: 'Sección 6.1: la puesta a tierra de servicio no debe superar 20 Ω.' } : { s: 'bad', t: `Resistencia de servicio: ${fmt(R, 2)} Ω > 20 Ω`, d: 'Sección 6.1: máximo 20 Ω (6.2 permite 80 Ω solo en casos específicos de baja tensión).' });
+  else if (Vs > 0 && I0 > 0) { const Rmax = Vs / I0; out.push(R <= Rmax ? { s: 'ok', t: `Resistencia de protección: ${fmt(R, 2)} Ω ≤ ${fmtS(Rmax)} Ω`, d: 'Sección 7.3: R ≤ Vs / I0.' } : { s: 'bad', t: `Resistencia de protección: ${fmt(R, 2)} Ω > ${fmtS(Rmax)} Ω`, d: 'Sección 7.3: R ≤ Vs / I0.' }); }
+  else out.push({ s: 'na', t: 'Resistencia de protección', d: 'Sección 7.3: ingresa Vs (RIC N°05, 5.8) e I0 para verificar R ≤ Vs / I0.' });
+  out.push({ s: 'na', t: 'Tensiones de paso y de contacto', d: 'Anexo 6.1 (IEEE 80): este programa todavía no las calcula. Deben verificarse aparte.' });
+  out.push({ s: 'na', t: `Medición de verificación al construir: electrodo de corriente a ≥ ${fmt(6 * diag, 0)} m, potencial a ≈ ${fmt(0.62 * 6 * diag, 0)} m`, d: `Anexo 6.3: caída de potencial, 6 veces la diagonal mayor (${fmt(diag, 1)} m), potencial al 62 %, repetir en dirección perpendicular. Instrumento con certificado de calibración vigente (11.4).` });
+  return out;
 }
 $('copyRep').onclick = () => {
   if (!st.last) return; const { m, M, by, R, RL, g } = st.last; const D = data();
   let t = `INFORME MALLA A TIERRA\n\nMediciones Schlumberger (${D.length} lecturas)\nL(m)\ts(m)\tV/I(Ohm)\trho_a(Ohm m)\n` + D.map(d => [d.L, d.s, d.vi, d.rho.toFixed(1)].join('\t')).join('\n').replace(/\./g, ',');
   t += `\n\nModelo de suelo (${$('modSrc').textContent}, tipo ${MG.tipo(m.rho)}, error ${fmt(modelRms(m), 1)} %)\n`;
   let z = 0; m.rho.forEach((r, i) => { const h = m.h[i]; t += `Capa ${i + 1}: ${fmt(z)} a ${h ? fmt(z += h) : 'inf.'} m, rho = ${fmtS(r)} Ohm m\n`; });
-  t += `\nMalla ${fmt(M.largo, 1)} x ${fmt(M.ancho, 1)} m, cuadrícula ${$('gCl').value} x ${$('gCa').value} m, profundidad ${fmt(g.h, 2)} m, conductor ${$('gSmm').value} mm2 (d = ${$('gD').value} mm), unión ${st.joint}\nLt = ${fmt(M.Lt, 1)} m, S = ${fmt(M.S, 1)} m2\n`;
+  t += `\nMalla ${fmt(M.largo, 1)} x ${fmt(M.ancho, 1)} m, cuadrícula ${$('gCl').value} x ${$('gCa').value} m, profundidad ${fmt(g.h, 2)} m, conductor ${$('gSmm').value} mm2 (d = ${$('gD').value} mm), unión ${JOINT[st.joint].txt}\nLt = ${fmt(M.Lt, 1)} m, S = ${fmt(M.S, 1)} m2\n`;
   t += `\nBurgsdorf-Yakobs: r = ${fmt(by.r, 3)} m, r0² = ${fmt(by.r02, 3)}, q0² = ${fmt(by.q02, 3)}\n` + by.rows.map(r => `  F${r.i} = ${fmt(r.F, 4)}`).join('\n') + `\n  rho_eq = ${fmt(by.rhoEq, 2)} Ohm m\n`;
   t += `\nSchwarz: h' = ${fmt(M.hp, 4)} m, k1 = ${fmt(M.k1, 3)}, k2 = ${fmt(M.k2, 3)}\nRESISTENCIA PROYECTADA R = ${fmt(R, 2)} Ohm\n(Laurent-Niemann referencia: ${fmt(RL, 2)} Ohm)\n`;
+  const lab = { ok: 'CUMPLE', warn: 'REVISAR', bad: 'NO CUMPLE', na: 'PENDIENTE' };
+  t += `\nVERIFICACIÓN RIC N°06\n` + st.last.ric.map(c => `[${lab[c.s]}] ${c.t}`).join('\n') + '\n';
   copy(t, 'Informe copiado');
 };
 

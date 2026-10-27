@@ -57,12 +57,12 @@ const MG = (() => {
   // Lista de curvas de una familia (para dibujarla como en la lámina)
   function familyMembers(fam) {
     if (fam.n === 2) return CAT.two.filter(m => +m !== 1 && m !== 0).map(m => ({ label: fmtR(m), mu: [1, val(m)], nu: [] }));
-    if (fam.n === 3) return CAT.E2.map(e => ({ label: String(e), mu: fam.mu, nu: [e] }));
+    if (fam.n === 3) return [{ label: '0', mu: fam.mu, nu: [ZERO] }, ...(fam.e2 || CAT.E2).map(e => ({ label: String(e), mu: fam.mu, nu: [e] })), { label: '∞', mu: fam.mu, nu: [INF] }];
     return [...CAT.codes4].map((c, k) => ({ label: c, code: c, mu: fam.mu, nu: [CAT.E2_4[k % 4], CAT.E3_4[Math.floor(k / 4)]] }));
   }
   function families() {
     const out = [{ n: 2, lam: 1, name: '2 capas', ratio: '1-ρ2', mu: null }];
-    for (const [lam, name, r] of CAT.f3) { const p = r.split('-'); out.push({ n: 3, lam, name, ratio: p.map(fmtR).join('-'), mu: p.map(val) }); }
+    for (const [lam, name, r, e2] of CAT.f3) { const p = r.split('-'); out.push({ n: 3, lam, name, ratio: p.map(fmtR).join('-'), mu: p.map(val), e2 }); }
     for (const [lam, name, r] of CAT.f4) { const p = r.split('-'); out.push({ n: 4, lam, name, ratio: p.map(fmtR).join('-'), mu: p.map(val) }); }
     return out;
   }
@@ -240,11 +240,9 @@ const MG = (() => {
   }
 
   // ---------- Schwarz (malla sola, IEEE 80) ----------
-  function k12(x, hRel) { // hRel = h/√A
-    const A = [-0.04 * x + 1.41, 0.15 * x + 5.50], B = [-0.05 * x + 1.20, 0.10 * x + 4.68], C = [-0.05 * x + 1.13, -0.05 * x + 4.40];
-    const t = Math.min(hRel, 1 / 6);
-    if (t <= 0.1) { const f = t / 0.1; return [A[0] + (B[0] - A[0]) * f, A[1] + (B[1] - A[1]) * f]; }
-    const f = (t - 0.1) / (1 / 6 - 0.1); return [B[0] + (C[0] - B[0]) * f, B[1] + (C[1] - B[1]) * f];
+  // Coeficientes de Schwarz (expresiones analíticas originales, IEEE 80 ec. 54-55 en forma de curvas)
+  function k12(x, hRel) { // x = largo/ancho, hRel = h/√S
+    return [1.43 - 2.3 * hRel - 0.044 * x, 5.50 - 8 * hRel + (0.15 - hRel) * x];
   }
   function malla(g) {
     const largo = Math.max(g.a, g.b), ancho = Math.min(g.a, g.b);
