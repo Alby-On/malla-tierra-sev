@@ -8,7 +8,7 @@ Schlumberger → hoja log-log de 62,5 mm/década → curvas patrón Orellana-Moo
 
 La aplicación tiene un menú principal con tres vistas:
 
-- **Principal** (`#principal`): el cálculo, con una guía breve de uso arriba.
+- **Principal** (`#principal`): primero se elige el nivel de tensión (BT, MT o AT) y el programa muestra solo lo que hay que completar para ese nivel; luego el cálculo en 5 pasos.
 - **Métodos de medición** (`#metodos`): cómo se realizan Schlumberger, Wenner y caída de potencial.
 - **Instrucciones** (`#instrucciones`): presentación, consideraciones, paso a paso y nota sobre láminas y escala.
 

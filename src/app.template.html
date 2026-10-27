@@ -263,6 +263,19 @@ a.ghost { text-decoration: none; color: var(--accent) }
 .tcard.bad .meter i { background: var(--bad) }
 @media (prefers-reduced-motion: no-preference) { .meter i { transition: width .5s ease-out } }
 @media (max-width: 640px) { .seg.lv3 { flex-direction: column } .seg.lv3 button { border-right: 0; border-bottom: 1px solid var(--line) } }
+.lvcard { border: 2px solid var(--ink) }
+.lvcard .seg.lv3 { width: 100% }
+.lvcard .seg.lv3 button { flex: 1 1 0; padding: 12px 16px; font-size: 16px }
+.todo { display: flex; flex-direction: column; gap: 8px }
+#todoList { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px }
+#todoList li { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 5px; padding: 8px 10px; background: var(--paper) }
+#todoList li.done { border-color: var(--ok) }
+#todoList .ic { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; background: var(--grid); color: var(--muted) }
+#todoList li.done .ic { background: var(--ok); color: var(--paper) }
+#todoList li.opt .ic { background: transparent; border: 1px dashed var(--muted) }
+#todoList .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: 14px }
+#todoList .tx span { font-size: 12px; color: var(--muted) }
+#todoList button { font-size: 13px; padding: 4px 10px; font-weight: 600; color: var(--accent); border-color: var(--accent) }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); padding: 8px 14px; border-radius: 4px; font-size: 14px }
 @media (prefers-reduced-motion: no-preference) { .opt, .row { transition: border-color .12s, background .12s } }
 </style>
@@ -292,6 +305,16 @@ a.ghost { text-decoration: none; color: var(--accent) }
 </div>
 
 <div class="view" id="v-principal">
+<section class="step lvcard" id="sLv">
+  <div class="step-h"><h2>Nivel de tensión del proyecto</h2><span class="count">Clasificación SEC, RPTD N°02, sección 4</span></div>
+  <div class="f fw">
+      <div class="seg lv3" id="gV"><button data-v="bt" class="on" type="button">Baja tensión<small>hasta 1 kV</small></button><button data-v="mt" type="button">Media tensión<small>sobre 1 y hasta 23 kV</small></button><button data-v="at" type="button">Alta tensión<small>sobre 23 y hasta 230 kV</small></button></div></div>
+  <p class="note lv" id="lvNote"></p>
+  <div class="todo">
+    <h3>Qué debes completar</h3>
+    <ul id="todoList"></ul>
+  </div>
+</section>
 <details class="quick" id="quickD" open>
   <summary class="qt">Cómo usar</summary>
   <ol>
@@ -393,14 +416,12 @@ a.ghost { text-decoration: none; color: var(--accent) }
 <section class="step" id="s4">
   <div class="step-h"><span class="n">4</span><h2>Diseño de la puesta a tierra</h2></div>
   <div class="form">
-    <div class="f fw"><label>Nivel de tensión <span class="u">(SEC, RPTD N°02, sección 4)</span></label>
-      <div class="seg lv3" id="gV"><button data-v="bt" class="on" type="button">Baja tensión<small>hasta 1 kV</small></button><button data-v="mt" type="button">Media tensión<small>sobre 1 y hasta 23 kV</small></button><button data-v="at" type="button">Alta tensión<small>sobre 23 y hasta 230 kV</small></button></div></div>
     <div class="f" id="gKwrap"><label>Tipo de puesta a tierra</label>
       <div class="seg" id="gK"><button data-v="malla" class="on" type="button">Malla a tierra</button><button data-v="electrodo" type="button">Electrodo (barra)</button></div></div>
     <div class="f" id="gMetWrap" hidden><label for="gMet">Resistencia proyectada con</label>
       <select id="gMet"><option value="sch" selected>Schwarz (malla + barras)</option><option value="lau">Laurent (solo malla)</option></select></div>
   </div>
-  <p class="note lv" id="lvNote"></p>
+
 
   <div id="mallaBox" style="display:flex;flex-direction:column;gap:14px">
     <h3>Malla</h3>
@@ -924,9 +945,35 @@ function showR(R) {
   st.rafR = requestAnimationFrame(step);
   const big = el.closest('.big'); big.classList.remove('flash'); void big.offsetWidth; big.classList.add('flash');
 }
+function updTodo() {
+  const lv = st.volt, n = data().length, m = current(), L = st.last, it = [];
+  const has = ids => ids.every(id => num($(id).value) > 0);
+  const add = (t, ok, go, sub, opt) => it.push({ t, ok, go, sub, opt });
+  add('Lecturas del sondeo', n >= 12 && n <= 20, 's1', `${n} de 12 a 20`);
+  add('Modelo de suelo', !!m, 's2', m ? `${m.n} capas · tipo ${MG.tipo(m.rho)}` : 'homologación o ajuste');
+  if (lv === 'bt') {
+    add('Tipo de puesta a tierra', true, 's4', st.kind === 'electrodo' ? 'electrodo de barra' : 'malla a tierra');
+    if (st.kind === 'electrodo') add('Datos del electrodo', has(['eLb', 'eT']), 'elecBox', 'largo, barra y profundidad');
+    else add('Malla, conductor y barras', has(['gA', 'gB', 'gCl', 'gCa', 'gH', 'gSmm']), 'mallaBox', 'dimensiones, retícula, profundidad, sección');
+    add('Datos de falla y fusible', has(['gVL', 'gX', 'gIf']), 'verDet', 'opcional: VL, ΣX e If', true);
+  } else {
+    add('Malla, conductor y barras', has(['gA', 'gB', 'gCl', 'gCa', 'gH', 'gSmm']), 'mallaBox', 'dimensiones, retícula, profundidad, sección');
+    if (lv === 'mt') {
+      add('Red de media tensión', has(['mST', 'mVL', 'mI3', 'mI1', 'mIaux']), 'mtBox', 'ST, VL, Icc3φ, Icc1φ e If aux');
+      add('Curva del fusible', [0, 1, 2, 3, 4].every(k => has(['fT' + k, 'fC' + k])), 'mtBox', 'reemplaza los valores por los de tu fusible');
+    } else {
+      add('Red de alta tensión', has(['aVL', 'aI3', 'aI1']), 'atBox', 'VL, Icc3φ e Icc1φ');
+      add('Protección de respaldo', has(['aT', 'aSf']), 'atBox', 'ts, Sf y Df');
+    }
+    add('Seguridad de las personas', $('pGrav').value === 'no' || has(['pRs', 'pHs']), 'segBox', `${$('pKg').value} kg · ${$('pGrav').value === 'si' ? 'con gravilla' : 'sin capa superficial'}`);
+  }
+  add('Resultado y verificación', !!(L && L.R), 's5', L && L.R ? `${fmt(L.R, 2)} Ω` : 'se calcula solo');
+  $('todoList').innerHTML = it.map(x => `<li class="${x.ok ? 'done' : ''}${x.opt ? ' opt' : ''}"><span class="ic">${x.ok ? '✓' : x.opt ? '' : '!'}</span><span class="tx">${x.t}<span>${x.sub}</span></span><button type="button" data-go="${x.go}">Ir</button></li>`).join('');
+}
 function updStepper() {
   const n = data().length;
   setStp(1, n >= 12 && n <= 20 ? 'ok' : n ? 'warn' : '', `${n} lecturas`);
+  try { updTodo(); } catch (e) {}
   const busy = $('busy').textContent;
   const m = current();
   if (busy) setStp(2, '', 'calculando…');
@@ -1151,6 +1198,7 @@ function updHV() { const g = $('pGrav').value === 'si'; $('pRs').disabled = !g; 
 $('pGrav').addEventListener('change', updHV); $('aDf').addEventListener('change', updHV);
 $('gJ').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setJoint(b.dataset.v); renderAll(); save(); });
 ['gV', 'gK'].forEach(id => $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setSeg(id, b.dataset.v); renderResult(); save(); }));
+$('sLv').addEventListener('change', () => { renderResult(); save(); });
 function updSec() { const v = $('gSec').value; $('gSmm').disabled = v !== 'custom'; if (v !== 'custom') $('gSmm').value = v.replace('.', ','); const S = num($('gSmm').value); $('gD').value = S > 0 ? fmt(Math.sqrt(4 * S / Math.PI), 2) : '—'; }
 function updE() { $('eRho').disabled = $('eRm').value !== 'man'; }
 $('gSec').addEventListener('change', updSec); $('gSmm').addEventListener('input', updSec); $('eRm').addEventListener('change', updE);
