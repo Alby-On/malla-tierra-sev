@@ -1,0 +1,762 @@
+<title>Malla a Tierra SEV</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: hoja de cálculo de terreno — pasos numerados en secuencia real, tabla a la izquierda y hoja log-log a la derecha */
+:root {
+  --bg: #eef1ef; --paper: #ffffff; --ink: #18211e; --muted: #5d6a65; --line: #d3dad6; --grid: #e3e8e5; --grid2: #c4ccc8;
+  --accent: #1f4fa3; --accent-soft: #e2e9f6; --patron: #1d7a4c; --model: #b5541b; --ok: #1d7a4c; --warn: #a86a00; --bad: #b3261e;
+  --f-display: "Barlow Semi Condensed", "Arial Narrow", sans-serif;
+  --f-body: "Barlow", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121715; --paper: #1a201e; --ink: #e4ebe7; --muted: #95a39d; --line: #2e3734; --grid: #232b28; --grid2: #3a4541;
+  --accent: #7fa6ec; --accent-soft: #1e2a40; --patron: #5cc591; --model: #ee9a62; --ok: #5cc591; --warn: #e3b04b; --bad: #f08079; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121715; --paper: #1a201e; --ink: #e4ebe7; --muted: #95a39d; --line: #2e3734; --grid: #232b28; --grid2: #3a4541;
+  --accent: #7fa6ec; --accent-soft: #1e2a40; --patron: #5cc591; --model: #ee9a62; --ok: #5cc591; --warn: #e3b04b; --bad: #f08079; color-scheme: dark }
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px }
+.wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px }
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; border-bottom: 2px solid var(--ink); padding-bottom: 12px }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: 30px; line-height: 1.1; margin: 0; letter-spacing: .01em; text-wrap: balance }
+.sub { color: var(--muted); margin: 4px 0 0; max-width: 70ch }
+.flow { font-family: var(--f-mono); font-size: 12px; color: var(--muted) }
+section.step { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0 }
+.step-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap }
+.step-h .n { font-family: var(--f-mono); font-size: 12px; color: var(--paper); background: var(--ink); padding: 2px 7px; border-radius: 3px }
+h2 { font-family: var(--f-display); font-weight: 600; font-size: 21px; margin: 0 }
+h3 { font-family: var(--f-display); font-weight: 600; font-size: 16px; margin: 0; letter-spacing: .02em }
+.hint { color: var(--muted); font-size: 13.5px; margin: 0; max-width: 75ch }
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 18px; align-items: start }
+@media (max-width: 900px) { .cols { grid-template-columns: minmax(0, 1fr) } }
+.scroll { overflow-x: auto; min-width: 0 }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 13.5px }
+th { font-family: var(--f-display); font-weight: 600; text-align: right; color: var(--muted); font-size: 12.5px; letter-spacing: .04em; text-transform: uppercase; padding: 6px 6px; border-bottom: 1.5px solid var(--ink); white-space: nowrap }
+td { text-align: right; padding: 3px 6px; border-bottom: 1px solid var(--grid); font-family: var(--f-mono); font-size: 13px; white-space: nowrap }
+th:first-child, td:first-child { text-align: center }
+tr.off td { opacity: .4 }
+td input { width: 72px; font: inherit; text-align: right; background: transparent; color: var(--ink); border: 1px solid transparent; border-radius: 3px; padding: 3px 4px }
+td input:hover { border-color: var(--line) }
+td input:focus { outline: 2px solid var(--accent); outline-offset: -1px; background: var(--accent-soft) }
+td input.bad { border-color: var(--bad) }
+td.calc { color: var(--muted) }
+td.rho { color: var(--accent); font-weight: 500 }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+button { font-family: var(--f-body); font-weight: 600; font-size: 14px; border-radius: 4px; padding: 7px 13px; cursor: pointer; border: 1px solid var(--line); background: var(--paper); color: var(--ink) }
+button:hover { border-color: var(--ink) }
+button.pri { background: var(--accent); border-color: var(--accent); color: var(--paper) }
+button.pri:hover { filter: brightness(1.1) }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+button.x { padding: 2px 7px; font-size: 13px; color: var(--muted) }
+.count { font-family: var(--f-mono); font-size: 12.5px; color: var(--muted) }
+.count.warn { color: var(--warn) }
+textarea { width: 100%; min-height: 110px; font-family: var(--f-mono); font-size: 13px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 8px }
+.chart { background: var(--paper); border: 1px solid var(--line); border-radius: 4px; padding: 6px; min-width: 0 }
+.chart svg { width: 100%; height: auto; display: block }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--muted); padding: 4px 6px }
+.legend i { display: inline-block; width: 18px; height: 0; border-top: 2.5px solid; vertical-align: middle; margin-right: 6px }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px }
+.opt { border: 1px solid var(--line); border-radius: 5px; padding: 10px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; background: var(--paper); text-align: left; font-weight: 400 }
+.opt.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--accent-soft) }
+.opt .t { font-family: var(--f-display); font-weight: 600; font-size: 15.5px; display: flex; justify-content: space-between; gap: 8px }
+.opt .m { font-family: var(--f-mono); font-size: 12.5px; color: var(--muted); line-height: 1.55 }
+.chip { font-family: var(--f-mono); font-size: 11.5px; padding: 1px 6px; border-radius: 10px; border: 1px solid currentColor; white-space: nowrap; font-weight: 500 }
+.chip.ok { color: var(--ok) } .chip.warn { color: var(--warn) } .chip.bad { color: var(--bad) } .chip.acc { color: var(--accent) }
+.list { display: flex; flex-direction: column; gap: 6px }
+.row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; border: 1px solid var(--line); border-radius: 4px; padding: 7px 10px; cursor: pointer; background: var(--paper); font-family: var(--f-mono); font-size: 12.5px; font-weight: 400; text-align: left; flex-wrap: wrap }
+.row.sel { border-color: var(--patron); box-shadow: inset 0 0 0 1px var(--patron) }
+.row b { font-family: var(--f-display); font-size: 14.5px; font-weight: 600; color: var(--ink) }
+.form { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px 16px }
+.f { display: flex; flex-direction: column; gap: 3px; min-width: 0 }
+.f label { font-size: 12.5px; color: var(--muted); font-weight: 500 }
+.f input, .f select { font-family: var(--f-mono); font-size: 14px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); color: var(--ink); width: 100% }
+.f .u { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted) }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden }
+.seg button { border: 0; border-radius: 0; border-right: 1px solid var(--line); font-weight: 500 }
+.seg button:last-child { border-right: 0 }
+.seg button.on { background: var(--ink); color: var(--paper) }
+.result { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; align-items: start }
+@media (max-width: 900px) { .result { grid-template-columns: minmax(0, 1fr) } }
+.big { border: 2px solid var(--ink); border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px }
+.big .lab { font-family: var(--f-display); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted) }
+.big .val { font-family: var(--f-display); font-weight: 700; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums }
+.big .val small { font-size: 22px; font-weight: 600; color: var(--muted) }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 14px; font-size: 13.5px }
+.kv dt { color: var(--muted) } .kv dd { margin: 0; font-family: var(--f-mono); text-align: right; font-variant-numeric: tabular-nums }
+.formula { font-family: var(--f-mono); font-size: 12.5px; background: var(--bg); border-radius: 4px; padding: 8px 10px; color: var(--muted); overflow-x: auto; white-space: nowrap }
+.note { font-size: 13px; color: var(--muted); border-left: 3px solid var(--warn); padding: 4px 10px; margin: 0 }
+.note.err { border-color: var(--bad); color: var(--ink) }
+.busy { font-family: var(--f-mono); font-size: 12.5px; color: var(--accent) }
+.plan svg { width: 100%; max-width: 420px; height: auto; display: block }
+details summary { cursor: pointer; font-weight: 600; font-size: 14px }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); padding: 8px 14px; border-radius: 4px; font-size: 14px }
+@media (prefers-reduced-motion: no-preference) { .opt, .row { transition: border-color .12s, background .12s } }
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1>Malla a Tierra · SEV Schlumberger</h1>
+    <p class="sub">De las lecturas de terreno a la resistencia proyectada de la puesta a tierra, con el mismo procedimiento del curso.</p>
+  </div>
+  <div class="flow">Schlumberger → log-log 62,5 mm/déc → Orellana-Mooney → Burgsdorf-Yakobs → Schwarz</div>
+</header>
+
+<!-- PASO 1 -->
+<section class="step" id="s1">
+  <div class="step-h"><span class="n">1</span><h2>Mediciones de terreno</h2><span class="count" id="cnt"></span></div>
+  <p class="hint">Ingresa L = AB/2, s = MN (completo) y la lectura V/I del instrumento. ρa = π · (V/I) · [(L/s)² − 0,25] · s. Acepta coma o punto decimal. Desmarca una lectura para excluirla del ajuste sin borrarla.</p>
+  <div class="cols">
+    <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+      <div class="scroll"><table id="tbl">
+        <thead><tr><th>N.º</th><th>L (m)</th><th>s (m)</th><th>V/I (Ω)</th><th>K (m)</th><th>ρa (Ω·m)</th><th>X (mm)</th><th>Y (mm)</th><th>Usar</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <div class="btns">
+        <button id="add">+ Agregar lectura</button>
+        <button id="pasteBtn">Pegar desde Excel</button>
+        <button id="ex">Cargar ejemplo 6.1</button>
+        <button id="clr">Vaciar</button>
+        <button id="copyTbl">Copiar tabla</button>
+      </div>
+      <div id="pasteBox" hidden style="display:flex;flex-direction:column;gap:6px">
+        <label class="hint" for="pasteTa">Pega columnas L, s, V/I (separadas por tabulación o punto y coma). Si pegas solo L y V/I, se usa s = 1 m.</label>
+        <textarea id="pasteTa" placeholder="0,6	1	127,4&#10;0,8	1	40,8"></textarea>
+        <div class="btns"><button class="pri" id="pasteOk">Reemplazar lecturas</button><button id="pasteNo">Cancelar</button></div>
+      </div>
+    </div>
+    <div class="chart">
+      <svg id="plot" role="img" aria-label="Curva de campo en escala bilogarítmica"></svg>
+      <div class="legend" id="leg"></div>
+    </div>
+  </div>
+</section>
+
+<!-- PASO 2 -->
+<section class="step" id="s2">
+  <div class="step-h"><span class="n">2</span><h2>Homologación con curvas patrón</h2><span class="busy" id="busy"></span></div>
+  <p class="hint">El programa superpone la curva de campo sobre curvas patrón de 2 y 3 capas (Schlumberger ideal, como las láminas de Orellana-Mooney), sin girar ni escalar, y ubica la cruz de campo. Luego afina el modelo para 2, 3 y 4 capas usando la geometría real de los electrodos.</p>
+  <div class="cols">
+    <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+      <h3>Curvas patrón más parecidas</h3>
+      <div class="list" id="homList"><p class="hint">Calculando curvas patrón…</p></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+      <h3>Ajuste fino por número de capas</h3>
+      <div class="list" id="fitList"></div>
+      <details id="manDet">
+        <summary>Homologación manual (como en AutoCAD)</summary>
+        <div style="display:flex;flex-direction:column;gap:10px;padding-top:10px">
+          <p class="hint">Ingresa la familia que calzó en la lámina y las cotas de la cruz de campo en mm. El programa decodifica E1 y ρ1 y dibuja el modelo sobre tus datos.</p>
+          <div class="form">
+            <div class="f"><label for="mMu">Razones ρ (1 : ρ2/ρ1 : ρ3/ρ1 …)</label><input id="mMu" value="1 : 5 : 0,65"></div>
+            <div class="f"><label for="mNu">Razones de espesor (E2/E1 ; E3/E1)</label><input id="mNu" value="15"></div>
+            <div class="f"><label for="mEc">Cota Ec</label><input id="mEc" value="17,74" inputmode="decimal"><span class="u">mm desde L = 0,1 m</span></div>
+            <div class="f"><label for="mRc">Cota ρc</label><input id="mRc" value="84,02" inputmode="decimal"><span class="u">mm desde ρ = 1 Ω·m</span></div>
+          </div>
+          <div class="btns"><button class="pri" id="manOk">Usar modelo manual</button><span class="count" id="manOut"></span></div>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- PASO 3 -->
+<section class="step" id="s3">
+  <div class="step-h"><span class="n">3</span><h2>Modelo de suelo adoptado</h2><span class="chip acc" id="modSrc"></span></div>
+  <div class="cols">
+    <div class="scroll"><table id="layers"><thead><tr><th>Capa</th><th>Desde (m)</th><th>Hasta (m)</th><th>Espesor (m)</th><th>ρ (Ω·m)</th></tr></thead><tbody></tbody></table></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <dl class="kv" id="modKv"></dl>
+      <p class="note" id="modNote" hidden></p>
+    </div>
+  </div>
+</section>
+
+<!-- PASO 4 -->
+<section class="step" id="s4">
+  <div class="step-h"><span class="n">4</span><h2>Diseño de la malla</h2></div>
+  <div class="form">
+    <div class="f"><label for="gA">Largo</label><input id="gA" value="20" inputmode="decimal"><span class="u">m</span></div>
+    <div class="f"><label for="gB">Ancho</label><input id="gB" value="10" inputmode="decimal"><span class="u">m</span></div>
+    <div class="f"><label for="gCl">Cuadrícula en el largo</label><input id="gCl" value="5" inputmode="decimal"><span class="u">m · separación de conductores transversales</span></div>
+    <div class="f"><label for="gCa">Cuadrícula en el ancho</label><input id="gCa" value="5" inputmode="decimal"><span class="u">m · separación de conductores longitudinales</span></div>
+    <div class="f"><label for="gH">Profundidad de instalación</label><input id="gH" value="0,6" inputmode="decimal"><span class="u">m</span></div>
+    <div class="f"><label for="gSec">Sección del conductor</label>
+      <select id="gSec">
+        <option value="21.15|5.89">21,15 mm² (4 AWG)</option>
+        <option value="33.62|7.42">33,62 mm² (2 AWG)</option>
+        <option value="53.49|9.45">53,49 mm² (1/0 AWG)</option>
+        <option value="67.43|10.6" selected>67,43 mm² (2/0 AWG)</option>
+        <option value="85.01|11.9">85,01 mm² (3/0 AWG)</option>
+        <option value="107.2|13.4">107,2 mm² (4/0 AWG)</option>
+        <option value="custom">Otra…</option>
+      </select></div>
+    <div class="f"><label for="gSmm">Sección</label><input id="gSmm" value="67,43" inputmode="decimal" disabled><span class="u">mm²</span></div>
+    <div class="f"><label for="gD">Diámetro del conductor</label><input id="gD" value="10,6" inputmode="decimal"><span class="u">mm · cableado desnudo, editable</span></div>
+    <div class="f"><label>Unión de conductores</label>
+      <div class="seg" id="gJ"><button data-v="apernada" class="on" type="button">Apernada</button><button data-v="soldada" type="button">Soldada</button></div></div>
+    <div class="f"><label for="gTm">Temperatura máx. de la unión</label><input id="gTm" value="250" inputmode="decimal"><span class="u">°C · ajusta al valor de tu apunte</span></div>
+  </div>
+  <details>
+    <summary>Verificación térmica de la sección (opcional)</summary>
+    <div class="form" style="padding-top:10px">
+      <div class="f"><label for="gI">Corriente de falla a tierra</label><input id="gI" value="" placeholder="ej. 10" inputmode="decimal"><span class="u">kA</span></div>
+      <div class="f"><label for="gT">Tiempo de despeje</label><input id="gT" value="0,5" inputmode="decimal"><span class="u">s</span></div>
+      <div class="f"><label for="gTa">Temperatura ambiente</label><input id="gTa" value="40" inputmode="decimal"><span class="u">°C</span></div>
+    </div>
+  </details>
+</section>
+
+<!-- PASO 5 -->
+<section class="step" id="s5">
+  <div class="step-h"><span class="n">5</span><h2>Resistencia proyectada de la puesta a tierra</h2></div>
+  <div class="result">
+    <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+      <div class="big"><span class="lab">Schwarz · resistencia de la malla</span><span class="val" id="rOut">—</span><span class="count" id="rSub"></span></div>
+      <h3>Burgsdorf-Yakobs · resistividad equivalente</h3>
+      <div class="formula">r = √(S/π) · r0² = r² − b² · q0² = 2r(r + b) · vi² = ½[zi² + q0² + r0² − √((zi² + q0² + r0²)² − 4q0²r0²)] · Fi = √(1 − vi²/r0²) · ρeq = Fn / Σ (Fi − Fi−1)/ρi</div>
+      <div class="scroll"><table id="byT"><thead><tr><th>Capa</th><th>zi (m)</th><th>vi² (m²)</th><th>Fi</th><th>ρi (Ω·m)</th></tr></thead><tbody></tbody></table></div>
+      <dl class="kv" id="byKv"></dl>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+      <h3>Schwarz · cálculo</h3>
+      <div class="formula">R = ρeq / (π·Lt) · [ ln(2Lt / h') + k1·Lt/√S − k2 ] · h' = √(d·h)</div>
+      <dl class="kv" id="swKv"></dl>
+      <div class="plan" id="plan"></div>
+      <div id="secBox"></div>
+      <div class="btns"><button class="pri" id="copyRep">Copiar informe</button></div>
+    </div>
+  </div>
+  <p class="note">k1 y k2 se obtienen de las curvas de Schwarz (IEEE 80) en función de la relación largo/ancho y de la profundidad, interpolando entre h = 0, h = √S/10 y h = √S/6. Se calcula solo el reticulado, sin barras verticales.</p>
+</section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const FILT = {"base": [0.00061125276113, 0.00065820113306, 0.00070875545947, 0.00076319270219, 0.00082181109562, 0.0008849317806, 0.00095290056375, 0.001026089812, 0.0011049004926, 0.0011897643698, 0.0012811463704, 0.0013795471305, 0.0014855057386, 0.0015996026889, 0.0017224630615, 0.0018547599469, 0.0019972181333, 0.002150618078, 0.0023158001825, 0.0024936693966, 0.002685200177, 0.0028914418247, 0.0031135242345, 0.0033526640848, 0.003610171503, 0.0038874572435, 0.0041860404159, 0.0045075568079, 0.0048537678469, 0.0052265702498, 0.0056280064144, 0.0060602756084, 0.0065257460183, 0.0070269677235, 0.0075666866666, 0.0081478596977, 0.0087736707727, 0.0094475483972, 0.010173184409, 0.010954554206, 0.01179593852, 0.012701946875, 0.013677542838, 0.014728071211, 0.015859287312, 0.017077388507, 0.018389048165, 0.019801452211, 0.021322338499, 0.022960039205, 0.02472352647, 0.026622461559, 0.028667247786, 0.030869087511, 0.033240043511, 0.035793105068, 0.038542259127, 0.041502566927, 0.044690246512, 0.048122761584, 0.051818917173, 0.055798962665, 0.060084702737, 0.064699616814, 0.069668987698, 0.075020040085, 0.080782089712, 0.086986703965, 0.093667874817, 0.10086220506, 0.10860910882, 0.11695102752, 0.12593366235, 0.13560622465, 0.14602170558, 0.15723716631, 0.16931405076, 0.18231852213, 0.1963218254, 0.21140067765, 0.22763768838, 0.24512181204, 0.26394883538, 0.28422190224, 0.3060520786, 0.32955896108, 0.3548713321, 0.38212786548, 0.41147788612, 0.44308218808, 0.47711391552, 0.51375951123, 0.55321973808, 0.5957107789, 0.64146542083, 0.69073433064, 0.74378742802, 0.80091536433, 0.86243111494, 0.92867169384, 1.0, 1.0768068055, 1.1595128964, 1.2485713779, 1.3444701568, 1.4477346147, 1.5589304856, 1.6786669562, 1.8076000026, 1.9464359844, 2.0959355145, 2.2569176259, 2.430264259, 2.6169250932, 2.8179227499, 3.0343583944, 3.2674177694, 3.5183776905, 3.7886130415, 4.0796043065, 4.3929456809, 4.7303538054, 5.09367717, 5.4849062417, 5.9061843686, 6.3598195226, 6.8482969437, 7.374292755, 7.9406886243, 8.550587551, 9.2073308659, 9.9145165368, 10.67601888, 11.496009786, 12.378981573, 13.329771603, 14.353588778, 15.456042079, 16.643171297, 17.921480118, 19.297971756, 20.780187319, 22.376247124, 24.094895185, 25.945547113, 27.938341703, 30.08419648, 32.394867508, 34.883013796, 37.562266651, 40.44730436, 43.553932599, 46.899171029, 50.501346536, 54.380193636, 58.556962592, 63.054535828, 67.897553297, 73.112547467, 78.72808868, 84.774941674, 91.28623413, 98.297638159, 105.84756573, 113.97737913, 122.73161752, 132.15824099, 142.3088933, 153.23918479, 165.00899705, 177.68281099, 191.3300601, 206.02551081, 221.84967214, 238.88923676, 257.23755591, 276.99515083, 298.2702635, 321.17944962, 345.84821713, 372.41171388, 401.01546795, 431.816185, 464.98260673, 500.69643536, 539.15332908, 580.56397396, 625.15523819, 673.17141498, 724.87556091, 780.55093713, 840.50256113, 905.05887787, 974.57355906, 1049.4274409, 1130.0306102, 1216.8246515, 1310.2850658, 1410.923876, 1519.2924317, 1635.98443], "j0": [0.11047028182, -0.3002860174, 0.0, 0.93046119983, -1.2379894568, 0.0, 1.5227824969, -1.4812622072, 0.0, 1.2009386825, -1.0423562816, 0.0, 0.81864821542, -0.78379794391, 0.0, 1.072087935, -2.0179734827, 2.6385519142, -2.9169738104, 2.9325477178, -2.7820301769, 2.5486342879, -2.2861325408, 2.0286680294, -1.7904665498, 1.5797782064, -1.3951007945, 1.2368997772, -1.099633354, 0.98291806061, -0.88081274958, 0.79394173229, -0.71663999758, 0.65080524536, -0.59090877637, 0.54003468331, -0.4925062292, 0.45250128291, -0.41392821513, 0.38203038254, -0.35006949206, 0.32439074651, -0.29739910106, 0.27663178906, -0.25343156256, 0.23666177126, -0.21638752143, 0.20297164206, -0.18496637789, 0.17444702839, -0.15819017862, 0.15023863816, -0.13529561681, 0.12967324382, -0.11566198604, 0.11219818277, -0.098770370987, 0.097353077473, -0.084183245527, 0.084753479564, -0.071528298008, 0.074074809072, -0.060483368728, 0.065041626041, -0.050770745261, 0.057427062382, -0.042158048513, 0.051052768312, -0.03445402816, 0.045781390598, -0.027498424039, 0.041507343181, -0.02115449635, 0.038152244563, -0.015305007196, 0.035660069622, -0.009844572094, 0.03398735588, -0.004669634342, 0.033095057483, 0.00032487750573, 0.032948602857, 0.0052404512709, 0.033521919313, 0.01016839267, 0.034797480108, 0.015186406949, 0.036759890775, 0.020356230996, 0.039385372942, 0.025717205521, 0.042628790253, 0.031272650472, 0.046405866219, 0.036967893122, 0.050566641527, 0.042657362302, 0.054856815446, 0.048056973739, 0.058863267262, 0.052679342378, 0.061940817541, 0.055752636721, 0.06312348309, 0.056131712051, 0.061038770639, 0.052230733891, 0.053873407541, 0.042050039593, 0.039495372918, 0.023444648968, 0.015929759009, -0.0051124549565, -0.017504247573, -0.042930285836, -0.058065368352, -0.084438376873, -0.096516419946, -0.11603535629, -0.1145716151, -0.11527469123, -0.087531151638, -0.059173676013, -0.00066603783991, 0.049664944834, 0.11572063574, 0.14489666111, 0.15889983306, 0.10315902123, 0.023894657374, -0.10076008026, -0.17010816791, -0.18065963397, -0.050442208115, 0.10675588291, 0.22438432052, 0.11248611921, -0.10607500253, -0.2494689576, -0.02532563908, 0.23130931626, 0.12650415174, -0.27168955645, -0.057416733017, 0.28283557986, -0.11515291842, -0.18952382144, 0.34989818184, -0.3283594488, 0.22286899355, -0.11918827034, 0.049141368612, -0.010850463307, -0.0069896731661, 0.013962250986, -0.015832476541, 0.015537988875, -0.014435341416, 0.013109344874, -0.011795625619, 0.01057909168, -0.0094821291553, 0.0085026363464, -0.007630076139, 0.0068520431482, -0.0061567610381, 0.0055338494084, -0.0049743830105, 0.0044706997475, -0.0040161618708, 0.0036049552606, -0.0032319518638, 0.0028926301906, -0.0025830346454, 0.0022997509691, -0.0020398798389, 0.0018010000172, -0.001581121784, 0.0013786378968, -0.0011922814636, 0.0010210963806, -0.00086441695402, 0.00072184389671, -0.00059320063234, 0.00047845965559, -0.00037764063699, 0.00029069374862, -0.00021738809704, 0.00015722470214, -0.0001093880481, 7.2742788281e-05, -4.5875085793e-05, 2.7172842542e-05, -1.4935696643e-05, 7.5020724442e-06, -3.3749800092e-06, 1.3230285666e-06, -4.3428133476e-07, 1.1205293892e-07, -2.0236792174e-08, 1.9231339527e-09]};
+</script>
+<script>
+// Motor de cálculo: SEV Schlumberger, homologación, Burgsdorf-Yakobs, Schwarz
+// FILT = {base:[...], j0:[...]} se inyecta antes de este archivo.
+const MG = (() => {
+  const LOG10 = Math.log10, PI = Math.PI;
+  const MOD = 62.5; // mm por década
+
+  // ---------- Fórmulas del curso ----------
+  const K = (L, s) => PI * ((L / s) ** 2 - 0.25) * s;
+  const rhoA = (L, s, VI) => K(L, s) * VI;
+  const codX = L => LOG10(10 * L) * MOD;
+  const codY = r => LOG10(r) * MOD;
+  const decX = mm => Math.pow(10, mm / MOD) / 10;
+  const decY = mm => Math.pow(10, mm / MOD);
+
+  // ---------- Modelo directo ----------
+  // Transformada de resistividad de Pekeris para n capas
+  function T(lam, rho, h) {
+    const n = rho.length;
+    let t = rho[n - 1];
+    for (let i = n - 2; i >= 0; i--) {
+      const th = Math.tanh(lam * h[i]);
+      t = (t + rho[i] * th) / (1 + t * th / rho[i]);
+    }
+    return t;
+  }
+  // G(r) = ∫ T(λ) J0(λr) dλ  (potencial de fuente puntual · 2π/I)
+  function G(r, rho, h) {
+    const b = FILT.base, w = FILT.j0, r1 = rho[0];
+    let s = 0;
+    for (let k = 0; k < b.length; k++) s += (T(b[k] / r, rho, h) - r1) * w[k];
+    return (r1 + s) / r;
+  }
+  // ρa Schlumberger con MN finito (geometría real del curso)
+  function rhoAmodel(L, s, rho, h) {
+    const dV = (G(L - s / 2, rho, h) - G(L + s / 2, rho, h)) / PI;
+    return K(L, s) * dV;
+  }
+  // ρa Schlumberger ideal (MN→0), como en las láminas de Orellana-Mooney
+  function rhoAideal(L, rho, h) {
+    const s = L * 0.02;
+    return rhoAmodel(L, s, rho, h);
+  }
+
+  // ---------- Biblioteca de curvas patrón (ρ1 = 1, E1 = 1) ----------
+  const U0 = -2, U1 = 5, DU = 0.05; // log10(L/E1)
+  const NU = Math.round((U1 - U0) / DU) + 1;
+  const MU = [0.05, 0.1, 0.2, 0.33, 0.5, 0.65, 1, 1.5, 2, 3, 5, 10, 20];
+  const NUS = [0.1, 0.2, 0.33, 0.5, 1, 1.5, 2, 3, 5, 10, 15, 25];
+  let LIB = null;
+  function curveOf(rho, h) {
+    const out = new Float64Array(NU);
+    for (let j = 0; j < NU; j++) out[j] = LOG10(rhoAideal(Math.pow(10, U0 + j * DU), rho, h));
+    return out;
+  }
+  function buildLibrary() {
+    if (LIB) return LIB;
+    LIB = [];
+    for (const m2 of MU) if (m2 !== 1) LIB.push({ n: 2, mu: [1, m2], nu: [], c: curveOf([1, m2], [1]) });
+    for (const m2 of MU) for (const m3 of MU) {
+      if (m2 === 1 || m3 === m2) continue;
+      for (const v of NUS) LIB.push({ n: 3, mu: [1, m2, m3], nu: [v], c: curveOf([1, m2, m3], [1, v]) });
+    }
+    return LIB;
+  }
+  // Superpone una curva patrón sobre los datos (desplazamiento puro en log-log)
+  function matchCurve(c, lx, ly) {
+    let best = { sse: Infinity };
+    const lo = Math.max(...lx) - U1 + 0.01, hi = Math.min(...lx) - U0 - 0.01;
+    for (let e = lo; e <= hi; e += 0.02) {
+      const f = new Array(lx.length);
+      let mean = 0;
+      for (let i = 0; i < lx.length; i++) {
+        const p = (lx[i] - e - U0) / DU, j = Math.floor(p), t = p - j;
+        f[i] = c[j] * (1 - t) + c[j + 1] * t;
+        mean += ly[i] - f[i];
+      }
+      mean /= lx.length;
+      let sse = 0;
+      for (let i = 0; i < lx.length; i++) sse += (ly[i] - mean - f[i]) ** 2;
+      if (sse < best.sse) best = { sse, logE1: e, logR1: mean };
+    }
+    return best;
+  }
+  function homologar(Ls, rhos, nLayers) {
+    const lib = buildLibrary();
+    const lx = Ls.map(LOG10), ly = rhos.map(LOG10);
+    const res = [];
+    for (const cur of lib) {
+      if (nLayers && cur.n !== nLayers) continue;
+      const m = matchCurve(cur.c, lx, ly);
+      if (!isFinite(m.sse)) continue;
+      const E1 = Math.pow(10, m.logE1), r1 = Math.pow(10, m.logR1);
+      res.push({
+        n: cur.n, mu: cur.mu, nu: cur.nu, E1, rho1: r1,
+        rms: Math.sqrt(m.sse / lx.length) * Math.LN10 * 100,
+        rho: cur.mu.map(x => x * r1), h: [E1, ...cur.nu.map(x => x * E1)].slice(0, cur.n - 1),
+        Ec: codX(E1), rhoc: codY(r1)
+      });
+    }
+    res.sort((a, b) => a.rms - b.rms);
+    return res;
+  }
+
+  // ---------- Ajuste fino (Levenberg-Marquardt en log) ----------
+  function misfit(p, n, data) {
+    const rho = p.slice(0, n).map(x => Math.exp(x)), h = p.slice(n).map(x => Math.exp(x));
+    return data.map(d => Math.log(rhoAmodel(d.L, d.s, rho, h)) - Math.log(d.rho));
+  }
+  function lm(p0, n, data, iters = 60) {
+    const rs = data.map(d => d.rho), Ls = data.map(d => d.L);
+    const lo = [], hi = [];
+    for (let k = 0; k < p0.length; k++) {
+      if (k < n) { lo.push(Math.log(Math.min(...rs) / 10)); hi.push(Math.log(Math.max(...rs) * 10)); }
+      else { lo.push(Math.log(Math.min(...Ls) / 10)); hi.push(Math.log(Math.max(...Ls) * 3)); }
+    }
+    const clamp = q => q.map((x, k) => Math.max(lo[k], Math.min(hi[k], x)));
+    let p = clamp(p0.slice()), r = misfit(p, n, data), f = r.reduce((a, x) => a + x * x, 0), lam = 1e-2;
+    const m = p.length;
+    for (let it = 0; it < iters; it++) {
+      const J = [];
+      for (let k = 0; k < m; k++) {
+        const q = p.slice(); q[k] += 1e-4;
+        const rk = misfit(q, n, data);
+        J.push(rk.map((x, i) => (x - r[i]) / 1e-4));
+      }
+      const A = [], g = [];
+      for (let a = 0; a < m; a++) {
+        A.push([]); g.push(J[a].reduce((s, x, i) => s + x * r[i], 0));
+        for (let b = 0; b < m; b++) A[a].push(J[a].reduce((s, x, i) => s + x * J[b][i], 0));
+      }
+      let improved = false;
+      for (let tries = 0; tries < 8; tries++) {
+        const M = A.map((row, a) => row.map((v, b) => v + (a === b ? lam * (A[a][a] + 1e-9) : 0)));
+        const dp = solve(M, g.map(x => -x));
+        if (!dp) { lam *= 10; continue; }
+        const q = p.map((x, k) => x + Math.max(-1.5, Math.min(1.5, dp[k])));
+        // limitar espesores y resistividades a rangos físicos
+        const qc = clamp(q); for (let k = 0; k < m; k++) q[k] = qc[k];
+        const rq = misfit(q, n, data), fq = rq.reduce((a, x) => a + x * x, 0);
+        if (isFinite(fq) && fq < f) { p = q; r = rq; lam = Math.max(lam / 5, 1e-7); improved = (f - fq) / f > 1e-6; f = fq; break; }
+        lam *= 8;
+      }
+      if (!improved) break;
+    }
+    return { p, sse: f };
+  }
+  function solve(A, b) {
+    const n = b.length, M = A.map((r, i) => [...r, b[i]]);
+    for (let c = 0; c < n; c++) {
+      let piv = c;
+      for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[piv][c])) piv = r;
+      if (Math.abs(M[piv][c]) < 1e-14) return null;
+      [M[c], M[piv]] = [M[piv], M[c]];
+      for (let r = 0; r < n; r++) if (r !== c) {
+        const f = M[r][c] / M[c][c];
+        for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k];
+      }
+    }
+    return M.map((r, i) => r[n] / r[i]);
+  }
+  function packModel(p, n, data, sse) {
+    const rho = p.slice(0, n).map(Math.exp), h = p.slice(n).map(Math.exp);
+    return { n, rho, h, rms: Math.sqrt(sse / data.length) * 100 };
+  }
+  function ajustar(data, hom) {
+    const out = {};
+    const startsFor = n => hom.filter(c => c.n === Math.min(n, 3)).slice(0, n === 2 ? 2 : 4);
+    for (const n of [2, 3, 4]) {
+      let best = null;
+      const starts = [];
+      for (const c of startsFor(n)) {
+        if (n <= 3) starts.push([...c.rho.map(Math.log), ...c.h.map(Math.log)]);
+        else {
+          // insertar una capa: dividir cada capa del modelo de 3 capas
+          const r = c.rho, h = c.h;
+          starts.push([r[0], r[0], r[1], r[2]].map(Math.log).concat([h[0] / 2, h[0] / 2, h[1]].map(Math.log)));
+          starts.push([r[0], r[1], r[1], r[2]].map(Math.log).concat([h[0], h[1] / 2, h[1] / 2].map(Math.log)));
+          starts.push([r[0], r[1], r[2], r[2]].map(Math.log).concat([h[0], h[1], h[1] * 2].map(Math.log)));
+          starts.push([r[0], r[1], Math.sqrt(r[1] * r[2]), r[2]].map(Math.log).concat([h[0], h[1], h[1]].map(Math.log)));
+        }
+      }
+      if (n === 4 && out[3]) starts.push([out[3].rho[0], out[3].rho[1], out[3].rho[2], out[3].rho[2] * 0.5].map(Math.log).concat([out[3].h[0], out[3].h[1], (out[3].h[0] + out[3].h[1]) * 3].map(Math.log)), [out[3].rho[0], out[3].rho[1], out[3].rho[2], out[3].rho[2] * 2].map(Math.log).concat([out[3].h[0], out[3].h[1], (out[3].h[0] + out[3].h[1]) * 3].map(Math.log)));
+      for (const s0 of starts) {
+        const r = lm(s0, n, data);
+        if (!best || r.sse < best.sse) best = r;
+      }
+      if (best) out[n] = packModel(best.p, n, data, best.sse);
+    }
+    // recomendación: menos capas salvo mejora clara
+    let rec = 2;
+    if (out[3] && out[3].rms < 0.6 * out[2].rms && out[2].rms > 2) rec = 3;
+    if (rec === 3 && out[4] && out[4].rms < 0.6 * out[3].rms && out[3].rms > 2) rec = 4;
+    out.rec = rec;
+    return out;
+  }
+  function tipo(rho) {
+    let s = '';
+    for (let i = 1; i < rho.length - 1; i++) {
+      const a = rho[i - 1], b = rho[i], c = rho[i + 1];
+      s += b > a && b > c ? 'K' : b < a && b < c ? 'H' : b > a ? 'A' : 'Q';
+    }
+    return s || (rho[1] > rho[0] ? 'ascendente' : 'descendente');
+  }
+
+  // ---------- Burgsdorf-Yakobs ----------
+  function burgsdorf(rho, h, S, b) {
+    const r = Math.sqrt(S / PI), r02 = r * r - b * b, q02 = 2 * r * (r + b);
+    const rows = []; let z = 0, Fprev = 0, den = 0;
+    for (let i = 0; i < rho.length; i++) {
+      let F, v2;
+      if (i < rho.length - 1) {
+        z += h[i];
+        const x = z * z + q02 + r02;
+        v2 = 0.5 * (x - Math.sqrt(x * x - 4 * q02 * r02));
+        F = Math.sqrt(Math.max(0, 1 - v2 / r02));
+      } else { v2 = 0; F = 1; }
+      den += (F - Fprev) / rho[i];
+      rows.push({ i: i + 1, z: i < rho.length - 1 ? z : Infinity, v2, F, rho: rho[i] });
+      Fprev = F;
+    }
+    return { r, r02, q02, rows, rhoEq: 1 / den };
+  }
+
+  // ---------- Schwarz (malla sola, IEEE 80) ----------
+  function k12(x, hRel) { // hRel = h/√A
+    const A = [-0.04 * x + 1.41, 0.15 * x + 5.50], B = [-0.05 * x + 1.20, 0.10 * x + 4.68], C = [-0.05 * x + 1.13, -0.05 * x + 4.40];
+    const t = Math.min(hRel, 1 / 6);
+    if (t <= 0.1) { const f = t / 0.1; return [A[0] + (B[0] - A[0]) * f, A[1] + (B[1] - A[1]) * f]; }
+    const f = (t - 0.1) / (1 / 6 - 0.1); return [B[0] + (C[0] - B[0]) * f, B[1] + (C[1] - B[1]) * f];
+  }
+  function malla(g) {
+    const largo = Math.max(g.a, g.b), ancho = Math.min(g.a, g.b);
+    const nL = Math.round(ancho / g.ca) + 1; // conductores paralelos al largo
+    const nA = Math.round(largo / g.cl) + 1; // conductores paralelos al ancho
+    const Lt = nL * largo + nA * ancho, S = largo * ancho;
+    const d = g.d, hp = Math.sqrt(d * g.h), x = largo / ancho;
+    const [k1, k2] = k12(x, g.h / Math.sqrt(S));
+    return { largo, ancho, nL, nA, Lt, S, d, hp, x, k1, k2 };
+  }
+  function schwarz(rhoEq, m) {
+    return rhoEq / (PI * m.Lt) * (Math.log(2 * m.Lt / m.hp) + m.k1 * m.Lt / Math.sqrt(m.S) - m.k2);
+  }
+  function laurent(rhoEq, m) { return rhoEq / (4 * Math.sqrt(m.S / PI)) + rhoEq / m.Lt; }
+
+  // ---------- Sección mínima (Onderdonk) ----------
+  function onderdonk(IkA, t, Ta, Tm) {
+    const cmil = IkA * 1000 * Math.sqrt(33 * t / LOG10((Tm - Ta) / (234 + Ta) + 1));
+    return { cmil, mm2: cmil * 5.067075e-4 };
+  }
+
+  return { K, rhoA, codX, codY, decX, decY, T, G, rhoAmodel, rhoAideal, homologar, ajustar, tipo, burgsdorf, malla, schwarz, laurent, onderdonk, buildLibrary, MU, NUS };
+})();
+
+
+</script>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const num = v => { if (v == null) return NaN; const s = String(v).trim().replace(/\s/g, '').replace(',', '.'); return s === '' ? NaN : Number(s); };
+const fmt = (x, d = 2) => !isFinite(x) ? '—' : x.toLocaleString('es-CL', { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtS = x => !isFinite(x) ? '—' : x >= 100 ? fmt(x, 0) : x >= 10 ? fmt(x, 1) : x >= 1 ? fmt(x, 2) : fmt(x, 3);
+const EX = [[0.6,127.4],[0.8,40.8],[1,25.5],[1.6,11],[2,7.6],[2.5,5.3],[3,3.6],[4,2],[5,1.2],[6,0.7],[8,0.3],[10,0.1]].map(([L, v]) => ({ L: String(L).replace('.', ','), s: '1', vi: String(v).replace('.', ','), on: true }));
+const FAM = { '5|0.65': 'K-10, lám. 18', '5|1': 'K-11, lám. 18', '5|1.5': 'K-12, lám. 18' };
+
+let st = { rows: EX.map(r => ({ ...r })), hom: [], homSel: 0, fit: null, src: 'fit', fitN: null, manual: null, joint: 'apernada', dataKey: '' };
+try { const sv = JSON.parse(localStorage.getItem('malla-sev-v1') || 'null'); if (sv && sv.rows) { st.rows = sv.rows; if (sv.g) setTimeout(() => restoreG(sv.g), 0); } } catch (e) {}
+function save() { try { localStorage.setItem('malla-sev-v1', JSON.stringify({ rows: st.rows, g: gState() })); } catch (e) {} }
+
+function toast(t) { const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 1800); }
+async function copy(txt, msg) { try { await navigator.clipboard.writeText(txt); toast(msg); } catch (e) { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast(msg); } catch (_) { toast('Selecciona y copia manualmente'); } ta.remove(); } }
+
+// ---------- Paso 1: tabla ----------
+function data(all) {
+  return st.rows.map((r, i) => { const L = num(r.L), s = num(r.s), vi = num(r.vi);
+    const ok = L > 0 && s > 0 && vi > 0 && L > s / 2;
+    return { i, L, s, vi, ok, on: r.on, K: ok ? MG.K(L, s) : NaN, rho: ok ? MG.rhoA(L, s, vi) : NaN }; })
+    .filter(d => all || (d.ok && d.on));
+}
+function renderTable() {
+  const tb = $('tbl').tBodies[0]; tb.innerHTML = '';
+  data(true).forEach((d, i) => {
+    const r = st.rows[i], tr = document.createElement('tr');
+    if (!r.on) tr.className = 'off';
+    tr.innerHTML = `<td>${i + 1}</td>
+      <td><input id="L${i}" value="${r.L}" inputmode="decimal" aria-label="L lectura ${i + 1}"></td>
+      <td><input id="s${i}" value="${r.s}" inputmode="decimal" aria-label="s lectura ${i + 1}" style="width:52px"></td>
+      <td><input id="v${i}" value="${r.vi}" inputmode="decimal" aria-label="V/I lectura ${i + 1}"></td>
+      <td class="calc" data-k>${d.ok ? fmt(d.K) : '—'}</td><td class="rho" data-r>${d.ok ? fmt(d.rho, 1) : '—'}</td>
+      <td class="calc" data-x>${d.ok ? fmt(MG.codX(d.L)) : '—'}</td><td class="calc" data-y>${d.ok ? fmt(MG.codY(d.rho)) : '—'}</td>
+      <td><input type="checkbox" id="u${i}" ${r.on ? 'checked' : ''} aria-label="Usar lectura ${i + 1}" style="width:auto"></td>
+      <td><button class="x" data-del="${i}" aria-label="Eliminar lectura ${i + 1}">✕</button></td>`;
+    tb.appendChild(tr);
+  });
+  updCount();
+}
+function refreshRow(i) {
+  const d = data(true)[i], tr = $('tbl').tBodies[0].rows[i];
+  tr.querySelector('[data-k]').textContent = d.ok ? fmt(d.K) : '—';
+  tr.querySelector('[data-r]').textContent = d.ok ? fmt(d.rho, 1) : '—';
+  tr.querySelector('[data-x]').textContent = d.ok ? fmt(MG.codX(d.L)) : '—';
+  tr.querySelector('[data-y]').textContent = d.ok ? fmt(MG.codY(d.rho)) : '—';
+  ['L', 's', 'v'].forEach(k => { const el = $(k + i); el.classList.toggle('bad', !(num(el.value) > 0)); });
+  tr.classList.toggle('off', !st.rows[i].on);
+}
+function updCount() {
+  const n = data().length, el = $('cnt');
+  el.textContent = `${n} lecturas válidas · recomendado 13 a 16`;
+  el.className = 'count' + (n < 13 || n > 16 ? ' warn' : '');
+}
+$('tbl').addEventListener('input', e => {
+  const m = e.target.id.match(/^([Lsvu])(\d+)$/); if (!m) return;
+  const i = +m[2], k = { L: 'L', s: 's', v: 'vi', u: 'on' }[m[1]];
+  st.rows[i][k] = m[1] === 'u' ? e.target.checked : e.target.value;
+  refreshRow(i); updCount(); schedule();
+});
+$('tbl').addEventListener('click', e => { const b = e.target.closest('[data-del]'); if (!b) return; st.rows.splice(+b.dataset.del, 1); renderTable(); schedule(); });
+$('add').onclick = () => { const last = st.rows[st.rows.length - 1]; st.rows.push({ L: '', s: last ? last.s : '1', vi: '', on: true }); renderTable(); $('L' + (st.rows.length - 1)).focus(); };
+$('ex').onclick = () => { st.rows = EX.map(r => ({ ...r })); renderTable(); schedule(); };
+$('clr').onclick = () => { st.rows = Array.from({ length: 14 }, () => ({ L: '', s: '1', vi: '', on: true })); renderTable(); schedule(); };
+$('pasteBtn').onclick = () => { $('pasteBox').hidden = false; $('pasteTa').focus(); };
+$('pasteNo').onclick = () => { $('pasteBox').hidden = true; };
+$('pasteOk').onclick = () => {
+  const rows = $('pasteTa').value.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(l => l.split(/\t|;|\s{2,}/).map(x => x.trim()).filter(Boolean))
+    .filter(c => c.length >= 2 && num(c[0]) > 0).map(c => c.length >= 3 ? { L: c[0], s: c[1], vi: c[2], on: true } : { L: c[0], s: '1', vi: c[1], on: true });
+  if (!rows.length) { toast('No se reconocieron filas'); return; }
+  st.rows = rows; $('pasteBox').hidden = true; $('pasteTa').value = ''; renderTable(); schedule(); toast(`${rows.length} lecturas cargadas`);
+};
+$('copyTbl').onclick = () => {
+  const lines = ['N\tL (m)\ts (m)\tV/I (Ohm)\tK (m)\trho_a (Ohm m)\tX (mm)\tY (mm)'];
+  data(true).forEach((d, i) => d.ok && lines.push([i + 1, d.L, d.s, d.vi, d.K.toFixed(2), d.rho.toFixed(1), MG.codX(d.L).toFixed(2), MG.codY(d.rho).toFixed(2)].join('\t').replace(/\./g, ',')));
+  copy(lines.join('\n'), 'Tabla copiada para Excel');
+};
+
+// ---------- Gráfico log-log ----------
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function curvePts(model, L0, L1, ideal) {
+  const pts = []; if (!model) return pts;
+  for (let lg = Math.log10(L0); lg <= Math.log10(L1) + 1e-9; lg += 0.04) {
+    const L = 10 ** lg; const r = MG.rhoAideal(L, model.rho, model.h); if (isFinite(r) && r > 0) pts.push([L, r]);
+  }
+  return pts;
+}
+function plot() {
+  const D = data(), all = data(true).filter(d => d.ok && !d.on), svg = $('plot');
+  const pat = st.hom[st.homSel], mod = current();
+  const Ls = D.map(d => d.L).concat(all.map(d => d.L)), Rs = D.map(d => d.rho).concat(all.map(d => d.rho));
+  if (!Ls.length) { svg.setAttribute('viewBox', '0 0 400 120'); svg.innerHTML = `<text x="200" y="64" text-anchor="middle" fill="${css('--muted')}" font-size="13">Ingresa lecturas para ver la curva</text>`; $('leg').innerHTML = ''; return; }
+  let x0 = Math.floor(Math.log10(Math.min(...Ls)) + 1e-9), x1 = Math.ceil(Math.log10(Math.max(...Ls)) - 1e-9);
+  const cPat = pat ? curvePts(pat, 10 ** x0, 10 ** x1) : [], cMod = mod ? curvePts(mod, 10 ** x0, 10 ** x1) : [];
+  const allR = Rs.concat(cMod.map(p => p[1]), cPat.map(p => p[1]));
+  if (pat) { allR.push(pat.rho1); x0 = Math.min(x0, Math.floor(Math.log10(pat.E1))); }
+  let y0 = Math.floor(Math.log10(Math.min(...Rs) / 1.5)), y1 = Math.ceil(Math.log10(Math.max(...Rs) * 1.5));
+  if (pat) { y0 = Math.min(y0, Math.floor(Math.log10(pat.rho1))); }
+  y0 = Math.max(y0, Math.floor(Math.log10(Math.min(...allR))) - 0); y1 = Math.max(y1, y0 + 2); x1 = Math.max(x1, x0 + 2);
+  const dec = Math.min(200, Math.max(90, 560 / (x1 - x0))), ml = 52, mb = 40, mt = 14, mr = 16, W = ml + (x1 - x0) * dec + mr, H = mt + (y1 - y0) * dec + mb;
+  const X = L => ml + (Math.log10(L) - x0) * dec, Y = r => mt + (y1 - Math.log10(r)) * dec;
+  const g1 = css('--grid'), g2 = css('--grid2'), mu = css('--muted'), ink = css('--ink'), ac = css('--accent'), pc = css('--patron'), mc = css('--model');
+  let s = '';
+  for (let d = x0; d <= x1; d++) for (let k = 1; k <= 9; k++) { if (d === x1 && k > 1) break; const x = X(k * 10 ** d); s += `<line x1="${x}" y1="${mt}" x2="${x}" y2="${H - mb}" stroke="${k === 1 ? g2 : g1}" stroke-width="${k === 1 ? 1.2 : .8}"/>`; }
+  for (let d = y0; d <= y1; d++) for (let k = 1; k <= 9; k++) { if (d === y1 && k > 1) break; const y = Y(k * 10 ** d); s += `<line x1="${ml}" y1="${y}" x2="${W - mr}" y2="${y}" stroke="${k === 1 ? g2 : g1}" stroke-width="${k === 1 ? 1.2 : .8}"/>`; }
+  const lab = v => v >= 1 ? v.toLocaleString('es-CL') : String(v).replace('.', ',');
+  for (let d = x0; d <= x1; d++) s += `<text x="${X(10 ** d)}" y="${H - mb + 16}" text-anchor="middle" fill="${mu}" font-size="11.5" font-family="${css('--f-mono')}">${lab(+(10 ** d).toPrecision(1))}</text>`;
+  for (let d = y0; d <= y1; d++) s += `<text x="${ml - 6}" y="${Y(10 ** d) + 4}" text-anchor="end" fill="${mu}" font-size="11.5" font-family="${css('--f-mono')}">${lab(+(10 ** d).toPrecision(1))}</text>`;
+  s += `<text x="${(ml + W - mr) / 2}" y="${H - 6}" text-anchor="middle" fill="${ink}" font-size="12.5">L = AB/2 (m)</text>`;
+  s += `<text transform="translate(13 ${(mt + H - mb) / 2}) rotate(-90)" text-anchor="middle" fill="${ink}" font-size="12.5">ρa (Ω·m)</text>`;
+  const path = (pts, c, dash, w) => pts.length ? `<polyline fill="none" stroke="${c}" stroke-width="${w}" ${dash ? `stroke-dasharray="${dash}"` : ''} points="${pts.map(p => X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1)).join(' ')}"/>` : '';
+  s += `<clipPath id="cp"><rect x="${ml}" y="${mt}" width="${W - ml - mr}" height="${H - mt - mb}"/></clipPath><g clip-path="url(#cp)">`;
+  if (pat) {
+    s += path(cPat, pc, '', 2);
+    const cx = X(pat.E1), cy = Y(pat.rho1);
+    s += `<line x1="${cx}" y1="${cy}" x2="${cx}" y2="${H - mb}" stroke="${pc}" stroke-dasharray="2 3"/><line x1="${ml}" y1="${cy}" x2="${cx}" y2="${cy}" stroke="${pc}" stroke-dasharray="2 3"/>`;
+    s += `<line x1="${cx - 9}" y1="${cy}" x2="${cx + 9}" y2="${cy}" stroke="${pc}" stroke-width="2"/><line x1="${cx}" y1="${cy - 9}" x2="${cx}" y2="${cy + 9}" stroke="${pc}" stroke-width="2"/>`;
+    const right = cx > W - mr - 190; s += `<text x="${right ? cx - 7 : cx + 7}" y="${cy - 8}" text-anchor="${right ? 'end' : 'start'}" fill="${pc}" font-size="11.5" font-family="${css('--f-mono')}">cruz (${fmt(pat.Ec)} ; ${fmt(pat.rhoc)} mm)</text>`;
+  }
+  if (mod && st.src !== 'pat') s += path(cMod, mc, '6 4', 2);
+  s += path(D.map(d => [d.L, d.rho]), ac, '', 1.6);
+  s += '</g>';
+  D.forEach(d => s += `<circle cx="${X(d.L)}" cy="${Y(d.rho)}" r="3.6" fill="${ac}"/>`);
+  all.forEach(d => s += `<circle cx="${X(d.L)}" cy="${Y(d.rho)}" r="3.6" fill="none" stroke="${mu}" stroke-width="1.4"/>`);
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.innerHTML = s;
+  $('leg').innerHTML = `<span><i style="border-color:${ac}"></i>Curva de campo</span>` + (pat ? `<span><i style="border-color:${pc}"></i>Curva patrón ${patLabel(pat)}</span>` : '') + (mod && st.src !== 'pat' ? `<span><i style="border-color:${mc};border-top-style:dashed"></i>Modelo adoptado</span>` : '') + (all.length ? `<span>○ lectura excluida</span>` : '') + `<span>escala bilogarítmica, décadas iguales en ambos ejes</span>`;
+}
+const ratio = x => (+x.toPrecision(3)).toLocaleString('es-CL');
+function patLabel(c) { const fam = FAM[c.mu.slice(1).join('|')]; return `${MG.tipo(c.mu)} 1 : ${c.mu.slice(1).map(ratio).join(' : ')}${c.nu.length ? ' · E2/E1 = ' + ratio(c.nu[0]) : ''}${fam ? ` (${fam})` : ''}`; }
+
+// ---------- Paso 2: homologación y ajuste ----------
+let timer = null, libReady = false;
+function schedule() { save(); clearTimeout(timer); timer = setTimeout(run, 350); plot(); }
+async function run() {
+  const D = data();
+  const key = JSON.stringify(D.map(d => [d.L, d.s, d.rho]));
+  if (key === st.dataKey) { renderAll(); return; }
+  st.dataKey = key;
+  if (D.length < 4) { st.hom = []; st.fit = null; $('homList').innerHTML = '<p class="hint">Se necesitan al menos 4 lecturas válidas.</p>'; $('fitList').innerHTML = ''; renderAll(); return; }
+  if (!libReady) { $('busy').textContent = 'Generando curvas patrón…'; await new Promise(r => setTimeout(r, 30)); MG.buildLibrary(); libReady = true; }
+  $('busy').textContent = 'Homologando…'; await new Promise(r => setTimeout(r, 20));
+  if (key !== st.dataKey) return;
+  const hom = MG.homologar(D.map(d => d.L), D.map(d => d.rho));
+  // quedarse con la mejor curva de cada familia
+  const seen = new Set(); st.hom = hom.filter(c => { const k = c.mu.join('|'); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6);
+  st.homSel = 0; renderHom(); plot();
+  $('busy').textContent = 'Ajustando 2, 3 y 4 capas…'; await new Promise(r => setTimeout(r, 20));
+  if (key !== st.dataKey) return;
+  st.fit = MG.ajustar(D, hom); st.fitN = st.fit.rec;
+  if (st.src !== 'man' && st.src !== 'pat') st.src = 'fit';
+  $('busy').textContent = '';
+  renderAll();
+}
+function renderHom() {
+  const el = $('homList');
+  if (!st.hom.length) { el.innerHTML = '<p class="hint">Sin resultados.</p>'; return; }
+  el.innerHTML = st.hom.map((c, i) => `<button class="row ${i === st.homSel ? 'sel' : ''}" data-h="${i}"><span><b>${patLabel(c)}</b><br>E1 = ${fmtS(c.E1)} m · ρ1 = ${fmtS(c.rho1)} Ω·m · cruz Ec ${fmt(c.Ec)} / ρc ${fmt(c.rhoc)} mm</span><span class="chip ${c.rms < 8 ? 'ok' : c.rms < 15 ? 'warn' : 'bad'}">error ${fmt(c.rms, 1)} %</span></button>`).join('')
+    + `<div class="btns"><button id="usePat">Adoptar la curva patrón seleccionada</button></div>`;
+}
+$('homList').addEventListener('click', e => {
+  if (e.target.closest('#usePat')) { st.src = 'pat'; renderAll(); toast('Modelo: curva patrón'); return; }
+  const b = e.target.closest('[data-h]'); if (!b) return; st.homSel = +b.dataset.h; renderHom(); if (st.src === 'pat') renderAll(); else plot();
+});
+function renderFit() {
+  const el = $('fitList'); if (!st.fit) { el.innerHTML = ''; return; }
+  el.innerHTML = [2, 3, 4].filter(n => st.fit[n]).map(n => { const f = st.fit[n];
+    return `<button class="row ${st.src === 'fit' && st.fitN === n ? 'sel' : ''}" data-f="${n}"><span><b>${n} capas · tipo ${MG.tipo(f.rho)}</b>${st.fit.rec === n ? ' <span class="chip acc">recomendado</span>' : ''}<br>ρ = ${f.rho.map(fmtS).join(' / ')} Ω·m<br>E = ${f.h.map(fmtS).join(' / ')} m</span><span class="chip ${f.rms < 5 ? 'ok' : f.rms < 12 ? 'warn' : 'bad'}">error ${fmt(f.rms, 1)} %</span></button>`; }).join('');
+}
+$('fitList').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; st.src = 'fit'; st.fitN = +b.dataset.f; renderAll(); });
+$('manOk').onclick = () => {
+  const mu = $('mMu').value.split(':').map(num), nu = $('mNu').value.split(/;|\//).map(num).filter(x => x > 0);
+  const Ec = num($('mEc').value), rc = num($('mRc').value);
+  if (mu.length < 2 || mu.some(x => !(x > 0)) || !(isFinite(Ec) && isFinite(rc)) || nu.length < mu.length - 2) { $('manOut').textContent = 'Revisa razones y cotas: se necesitan n−2 razones de espesor para n capas.'; return; }
+  const E1 = MG.decX(Ec), r1 = MG.decY(rc), m = mu.map(x => x / mu[0]);
+  st.manual = { n: m.length, rho: m.map(x => x * r1), h: [E1, ...nu.slice(0, m.length - 2).map(x => x * E1)] };
+  st.src = 'man'; $('manOut').textContent = `E1 = ${fmt(E1, 3)} m · ρ1 = ${fmt(r1, 2)} Ω·m`; renderAll();
+};
+function current() {
+  if (st.src === 'man' && st.manual) return st.manual;
+  if (st.src === 'pat' && st.hom[st.homSel]) { const c = st.hom[st.homSel]; return { n: c.n, rho: c.rho, h: c.h }; }
+  if (st.fit && st.fit[st.fitN]) return st.fit[st.fitN];
+  return null;
+}
+function modelRms(m) { const D = data(); if (!m || !D.length) return NaN; return Math.sqrt(D.reduce((a, d) => a + Math.log(MG.rhoAmodel(d.L, d.s, m.rho, m.h) / d.rho) ** 2, 0) / D.length) * 100; }
+
+// ---------- Paso 3 ----------
+function renderModel() {
+  const m = current(), tb = $('layers').tBodies[0];
+  $('modSrc').textContent = { fit: `ajuste fino ${st.fitN || ''} capas`, pat: 'curva patrón', man: 'homologación manual' }[st.src] || '';
+  if (!m) { tb.innerHTML = '<tr><td colspan="5">—</td></tr>'; $('modKv').innerHTML = ''; return; }
+  let z = 0; tb.innerHTML = m.rho.map((r, i) => { const h = m.h[i], a = z; if (h) z += h;
+    return `<tr><td>${i + 1}</td><td>${fmt(a)}</td><td>${h ? fmt(z) : '∞'}</td><td>${h ? fmt(h) : '∞'}</td><td>${fmtS(r)}</td></tr>`; }).join('');
+  const D = data(), Lmax = Math.max(...D.map(d => d.L));
+  $('modKv').innerHTML = `<dt>Tipo de curva</dt><dd>${MG.tipo(m.rho)}</dd><dt>Error respecto de las lecturas</dt><dd>${fmt(modelRms(m), 1)} %</dd><dt>Razones ρ</dt><dd>1 : ${m.rho.slice(1).map(x => ratio(x / m.rho[0])).join(' : ')}</dd><dt>L máximo medido</dt><dd>${fmtS(Lmax)} m</dd>`;
+  const note = $('modNote'), depth = m.h.reduce((a, b) => a + b, 0);
+  const msgs = [];
+  if (depth > Lmax / 2) msgs.push(`La base de la última capa (${fmtS(depth)} m) está cerca del alcance del sondeo: el valor de ρ${m.n} es poco confiable. Conviene abrir más AB.`);
+  if (st.src === 'fit' && st.fit && m.rho[m.n - 1] <= Math.min(...D.map(d => d.rho)) / 9.9) msgs.push('La última capa quedó en el límite inferior del ajuste porque las últimas lecturas caen muy rápido. Revisa esas lecturas o compara con la curva patrón.');
+  note.hidden = !msgs.length; note.textContent = msgs.join(' ');
+}
+
+// ---------- Paso 4 y 5 ----------
+function gState() { const o = {}; ['gA', 'gB', 'gCl', 'gCa', 'gH', 'gSec', 'gSmm', 'gD', 'gTm', 'gI', 'gT', 'gTa'].forEach(k => o[k] = $(k).value); o.joint = st.joint; return o; }
+function restoreG(o) { Object.keys(o).forEach(k => { if ($(k) && k !== 'joint') $(k).value = o[k]; }); setJoint(o.joint || 'apernada', true); $('gSmm').disabled = $('gSec').value !== 'custom'; renderAll(); }
+function setJoint(v, keepTm) { st.joint = v; [...$('gJ').children].forEach(b => b.classList.toggle('on', b.dataset.v === v)); if (!keepTm) $('gTm').value = v === 'apernada' ? '250' : '450'; }
+$('gJ').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setJoint(b.dataset.v); renderAll(); save(); });
+$('gSec').addEventListener('change', () => { const v = $('gSec').value; $('gSmm').disabled = v !== 'custom'; if (v !== 'custom') { const [a, d] = v.split('|'); $('gSmm').value = a.replace('.', ','); $('gD').value = d.replace('.', ','); } });
+$('s4').addEventListener('input', () => { renderResult(); save(); });
+$('s4').addEventListener('change', () => { renderResult(); save(); });
+
+function renderResult() {
+  const m = current();
+  const g = { a: num($('gA').value), b: num($('gB').value), cl: num($('gCl').value), ca: num($('gCa').value), h: num($('gH').value), d: num($('gD').value) / 1000 };
+  const bad = Object.entries(g).filter(([k, v]) => !(v > 0)).length;
+  const out = (html) => { $('rOut').innerHTML = html; };
+  if (!m || bad) { out('—'); $('rSub').textContent = bad ? 'Completa las dimensiones de la malla' : 'Falta el modelo de suelo'; ['byKv', 'swKv', 'plan', 'secBox'].forEach(k => $(k).innerHTML = ''); $('byT').tBodies[0].innerHTML = ''; return; }
+  const M = MG.malla(g);
+  const msgs = [];
+  if (g.cl > M.largo || g.ca > M.ancho) msgs.push('La cuadrícula es mayor que la malla.');
+  const by = MG.burgsdorf(m.rho, m.h, M.S, g.h);
+  if (by.r02 <= 0) msgs.push('La profundidad supera el radio equivalente de la malla: Burgsdorf-Yakobs no es aplicable.');
+  $('byT').tBodies[0].innerHTML = by.rows.map(r => `<tr><td>${r.i}</td><td>${isFinite(r.z) ? fmt(r.z) : '∞'}</td><td>${isFinite(r.z) ? fmt(r.v2, 3) : '0'}</td><td>${fmt(r.F, 4)}</td><td>${fmtS(r.rho)}</td></tr>`).join('');
+  $('byKv').innerHTML = `<dt>Área S</dt><dd>${fmt(M.S, 1)} m²</dd><dt>Radio equivalente r</dt><dd>${fmt(by.r, 3)} m</dd><dt>b (profundidad)</dt><dd>${fmt(g.h, 2)} m</dd><dt>r0²</dt><dd>${fmt(by.r02, 3)} m²</dd><dt>q0²</dt><dd>${fmt(by.q02, 3)} m²</dd><dt><b>ρ equivalente</b></dt><dd><b>${fmt(by.rhoEq, 2)} Ω·m</b></dd>`;
+  const R = MG.schwarz(by.rhoEq, M), RL = MG.laurent(by.rhoEq, M);
+  out(`${fmt(R, R < 10 ? 2 : 1)} <small>Ω</small>`);
+  $('rSub').textContent = `ρeq ${fmt(by.rhoEq, 1)} Ω·m · malla ${fmt(M.largo, 1)} × ${fmt(M.ancho, 1)} m · Laurent-Niemann como referencia: ${fmt(RL, 2)} Ω`;
+  $('swKv').innerHTML = `<dt>Conductores en el largo</dt><dd>${M.nL} × ${fmt(M.largo, 1)} m</dd><dt>Conductores en el ancho</dt><dd>${M.nA} × ${fmt(M.ancho, 1)} m</dd><dt>Longitud total Lt</dt><dd>${fmt(M.Lt, 1)} m</dd><dt>d · h</dt><dd>${fmt(M.d * 1000, 1)} mm · ${fmt(g.h, 2)} m</dd><dt>h' = √(d·h)</dt><dd>${fmt(M.hp, 4)} m</dd><dt>Relación largo/ancho</dt><dd>${fmt(M.x, 2)}</dd><dt>h/√S</dt><dd>${fmt(g.h / Math.sqrt(M.S), 3)}</dd><dt>k1 · k2</dt><dd>${fmt(M.k1, 3)} · ${fmt(M.k2, 3)}</dd>`;
+  // planta
+  const sc = 300 / Math.max(M.largo, M.ancho), w = M.largo * sc, h = M.ancho * sc, ac = css('--accent'), mu = css('--muted');
+  let p = `<svg viewBox="-30 -24 ${w + 60} ${h + 50}" role="img" aria-label="Planta de la malla">`;
+  for (let i = 0; i < M.nL; i++) { const y = M.nL > 1 ? i * h / (M.nL - 1) : 0; p += `<line x1="0" y1="${y}" x2="${w}" y2="${y}" stroke="${ac}" stroke-width="2"/>`; }
+  for (let j = 0; j < M.nA; j++) { const x = M.nA > 1 ? j * w / (M.nA - 1) : 0; p += `<line x1="${x}" y1="0" x2="${x}" y2="${h}" stroke="${ac}" stroke-width="2"/>`; }
+  for (let i = 0; i < M.nL; i++) for (let j = 0; j < M.nA; j++) p += `<rect x="${(M.nA > 1 ? j * w / (M.nA - 1) : 0) - 2.5}" y="${(M.nL > 1 ? i * h / (M.nL - 1) : 0) - 2.5}" width="5" height="5" fill="${css('--ink')}"/>`;
+  p += `<text x="${w / 2}" y="-9" text-anchor="middle" fill="${mu}" font-size="12" font-family="${css('--f-mono')}">${fmt(M.largo, 1)} m</text><text transform="translate(-12 ${h / 2}) rotate(-90)" text-anchor="middle" fill="${mu}" font-size="12" font-family="${css('--f-mono')}">${fmt(M.ancho, 1)} m</text>`;
+  p += `<text x="${w / 2}" y="${h + 20}" text-anchor="middle" fill="${mu}" font-size="11.5">${M.nA - 1} × ${M.nL - 1} retículas · ${M.nL * M.nA} uniones ${st.joint === 'apernada' ? 'apernadas' : 'soldadas'}</text></svg>`;
+  $('plan').innerHTML = p;
+  // sección
+  const I = num($('gI').value), t = num($('gT').value), Ta = num($('gTa').value), Tm = num($('gTm').value), Smm = num($('gSmm').value);
+  let sb = '';
+  if (I > 0 && t > 0 && Tm > Ta) {
+    const o = MG.onderdonk(I, t, Ta, Tm), ok = Smm >= o.mm2;
+    sb = `<dl class="kv"><dt>Sección mínima (Onderdonk, ${fmt(Tm, 0)} °C)</dt><dd>${fmt(o.mm2, 1)} mm²</dd><dt>Sección elegida</dt><dd>${fmt(Smm, 2)} mm² <span class="chip ${ok ? 'ok' : 'bad'}">${ok ? 'cumple' : 'no cumple'}</span></dd></dl>`;
+  } else sb = `<p class="hint">Ingresa la corriente de falla en el paso 4 para verificar la sección con la temperatura de la unión ${st.joint}.</p>`;
+  if (msgs.length) sb += `<p class="note err">${msgs.join(' ')}</p>`;
+  $('secBox').innerHTML = sb;
+  st.last = { m, M, by, R, RL, g };
+}
+$('copyRep').onclick = () => {
+  if (!st.last) return; const { m, M, by, R, RL, g } = st.last; const D = data();
+  let t = `INFORME MALLA A TIERRA\n\nMediciones Schlumberger (${D.length} lecturas)\nL(m)\ts(m)\tV/I(Ohm)\trho_a(Ohm m)\n` + D.map(d => [d.L, d.s, d.vi, d.rho.toFixed(1)].join('\t')).join('\n').replace(/\./g, ',');
+  t += `\n\nModelo de suelo (${$('modSrc').textContent}, tipo ${MG.tipo(m.rho)}, error ${fmt(modelRms(m), 1)} %)\n`;
+  let z = 0; m.rho.forEach((r, i) => { const h = m.h[i]; t += `Capa ${i + 1}: ${fmt(z)} a ${h ? fmt(z += h) : 'inf.'} m, rho = ${fmtS(r)} Ohm m\n`; });
+  t += `\nMalla ${fmt(M.largo, 1)} x ${fmt(M.ancho, 1)} m, cuadrícula ${$('gCl').value} x ${$('gCa').value} m, profundidad ${fmt(g.h, 2)} m, conductor ${$('gSmm').value} mm2 (d = ${$('gD').value} mm), unión ${st.joint}\nLt = ${fmt(M.Lt, 1)} m, S = ${fmt(M.S, 1)} m2\n`;
+  t += `\nBurgsdorf-Yakobs: r = ${fmt(by.r, 3)} m, r0² = ${fmt(by.r02, 3)}, q0² = ${fmt(by.q02, 3)}\n` + by.rows.map(r => `  F${r.i} = ${fmt(r.F, 4)}`).join('\n') + `\n  rho_eq = ${fmt(by.rhoEq, 2)} Ohm m\n`;
+  t += `\nSchwarz: h' = ${fmt(M.hp, 4)} m, k1 = ${fmt(M.k1, 3)}, k2 = ${fmt(M.k2, 3)}\nRESISTENCIA PROYECTADA R = ${fmt(R, 2)} Ohm\n(Laurent-Niemann referencia: ${fmt(RL, 2)} Ohm)\n`;
+  copy(t, 'Informe copiado');
+};
+
+function renderAll() { renderFit(); renderHom(); renderModel(); plot(); renderResult(); }
+renderTable(); plot(); renderResult();
+setTimeout(run, 60);
+})();
+</script>
