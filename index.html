@@ -1610,7 +1610,8 @@ function setSeg(id, v) {
   $('thSum').textContent = bt ? 'Verificación térmica de la sección (opcional)' : 'Datos para la sección mínima (temperatura ambiente)';
 }
 function updHV() { const g = $('pGrav').value === 'si'; $('pRs').disabled = !g; $('pHs').disabled = !g; $('aDfv').disabled = $('aDf').value !== 'man';
-  const sv = $('mServ').value === 'si'; $('mSis').disabled = sv; $('mSisU').textContent = sv ? 'no aplica: la malla es tierra común de MT y BT, no hay separación de tierras' : 'para la separación de tierras MT/BT (RIC N°06, sección 10)'; }
+  const sv = $('mServ').value === 'si'; $('mSis').disabled = !sv; if (!sv) $('mSis').value = 'TT';
+  $('mSisU').textContent = sv ? 'esquema del neutro de BT conectado a esta malla' : 'no aplica: solo protección, la BT tiene su propia tierra (se calcula la separación como TT)'; }
 $('pGrav').addEventListener('change', updHV); $('aDf').addEventListener('change', updHV); $('mServ').addEventListener('change', updHV);
 $('gJ').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setJoint(b.dataset.v); renderAll(); save(); });
 ['gV', 'gK'].forEach(id => $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setSeg(id, b.dataset.v); renderResult(); save(); }));
@@ -1854,7 +1855,7 @@ function calcHV(lvl, m, R, res, Tm, Ta, Smm) {
   o.T = MG.tensiones({ rhoEq: res.by.rhoEq, IG: o.IG, Lc: M.Lt, a: M.largo, b: M.ancho, D: o.D, h: g.h, d: g.d, nb: res.n, Lb: res.Lb, perim: res.n > 0 });
   o.okC = o.GPR <= o.tol.Etc || o.T.Em <= o.tol.Etc; o.okP = o.T.Es <= o.tol.Etp;
   if (mt) { // RIC N°06, sección 10: unión o separación de las tierras de MT y BT
-    const sis = $('mSis').value, tD = o.tr && (o.tr.estado === 'ok' || o.tr.estado === 'menor') ? o.tr.t : o.tTol;
+    const sis = o.serv ? $('mSis').value : 'TT', tD = o.tr && (o.tr.estado === 'ok' || o.tr.estado === 'menor') ? o.tr.t : o.tTol;
     o.s10 = { sis, t: tD, Id: I1, Vca: MG.vca(tD), comun: o.serv };
     o.s10.Rt = o.s10.Vca / I1;
     if (!o.serv) { o.s10.U = sis === 'TT' ? (tD <= 5 ? 600 : 250) : 2 * o.tol.Etc; o.s10.D = res.by.rhoEq * I1 / (2 * Math.PI * o.s10.U); }
@@ -1869,7 +1870,7 @@ function renderHV(o, R) {
     const tt = e => e.estado === 'menor' ? `< ${fmtS(e.t)} s` : e.estado === 'ok' ? `${fmtS(e.t)} s` : e.estado === 'no opera' ? 'no opera' : '—';
     $('mtKv1').innerHTML = `<dt>Fusible de arranque IA = 1,5·ST/(√3·VL)</dt><dd>${A(r.IA, 2)} → ${o.fus || '—'}</dd><dt>X₁ = X₂ = VL/(√3·Icc3φ)</dt><dd>${fmt(r.X1, 3)} Ω</dd><dt>X₀ = 3VL/(√3·Icc1φ) − (X₁ + X₂)</dt><dd>${fmt(r.X0, 3)} Ω</dd><dt>ΣX = X₀ + X₁ + X₂</dt><dd>${fmt(r.SX, 3)} Ω</dd><dt>If mín del fusible</dt><dd>${A(o.Ifmin)}</dd><dt>If aux · tiempo t₂</dt><dd>${A(o.Ifaux, 0)} · ${tt(o.t2)}</dd>`;
     $('mtKv2').innerHTML = `<dt>Rmáx = ⅓·√(3VL²/If aux² − ΣX²)</dt><dd>${isFinite(o.Rmax) ? fmt(o.Rmax, 2) + ' Ω' : '—'}</dd><dt><b>Rdiseño</b> (menor entre Rmáx, 20 Ω${o.serv ? ' y 5 Ω' : ''})</dt><dd><b>${fmt(o.Rdis, 2)} Ω</b></dd><dt>R proyectada</dt><dd>${fmt(R, 2)} Ω</dd><dt><b>If1φ real</b> = 3VL/[√3·√((3R)² + ΣX²)]</dt><dd><b>${A(o.If)}</b></dd><dt>Tiempo real de operación</dt><dd>${tt(o.tr)}</dd><dt>Smín = K·If·FD·√t/1973</dt><dd>${isFinite(o.Smin) ? fmt(o.Smin, 2) + ' mm²' : '—'} (K ${fmt(o.K, 2)} · FD ${isFinite(o.FD) ? fmt(o.FD, 2) : '—'})</dd>`
-      + (o.s10 ? `<dt>Sección 10 · Vca (t = ${fmtS(o.s10.t)} s)</dt><dd>${fmt(o.s10.Vca, 1)} V</dd><dt>Rt máx. para unir = Vca/Id</dt><dd>${fmt(o.s10.Rt, 3)} Ω (Id = Icc1φ ${fmtS(o.s10.Id)} A)</dd>` + (o.s10.comun ? `<dt><b>Tierra común MT/BT</b></dt><dd><b>${o.s10.unir ? 'permitida' : 'no permitida: baja R'}</b></dd>` : `<dt>U (${o.s10.sis}) · D = ρ·Id/(2π·U)</dt><dd>${fmt(o.s10.U, 0)} V · ${fmt(o.s10.D, 1)} m</dd><dt><b>Tierras de MT y BT</b></dt><dd><b>${o.s10.unir ? 'se pueden unir' : 'separadas, D ≥ ' + fmt(o.s10.D, 1) + ' m'}</b></dd>`) : '');
+      + (o.s10 ? `<dt>Sección 10 · Vca (t = ${fmtS(o.s10.t)} s)</dt><dd>${fmt(o.s10.Vca, 1)} V</dd><dt>Rt máx. para unir = Vca/Id</dt><dd>${fmt(o.s10.Rt, 3)} Ω (Id = Icc1φ ${fmtS(o.s10.Id)} A)</dd>` + (o.s10.comun ? `<dt><b>Tierra común MT/BT (${o.s10.sis})</b></dt><dd><b>${o.s10.unir ? 'permitida' : 'no permitida: baja R'}</b></dd>` : `<dt>U (${o.s10.sis}) · D = ρ·Id/(2π·U)</dt><dd>${fmt(o.s10.U, 0)} V · ${fmt(o.s10.D, 1)} m</dd><dt><b>Tierras de MT y BT</b></dt><dd><b>${o.s10.unir ? 'se pueden unir' : 'separadas, D ≥ ' + fmt(o.s10.D, 1) + ' m'}</b></dd>`) : '');
   }
   const T = o.T, tol = o.tol;
   const card = (name, E, Et, ok, extra) => { const pct = Math.min(100, E / Et * 100); return `<div class="tcard ${ok ? 'ok' : 'bad'}"><div class="tt"><b>${name}</b><span class="chip ${ok ? 'ok' : 'bad'}">${ok ? 'cumple' : 'no cumple'}</span></div><div class="nums"><span>calculada<strong>${fmt(E, 0)} V</strong></span><span>tolerable<strong>${fmt(Et, 0)} V</strong></span></div><div class="meter" role="img" aria-label="${fmt(pct, 0)} % de la tolerable"><i style="width:${pct}%"></i></div><span class="u">${extra}</span></div>`; };
@@ -1955,7 +1956,7 @@ $('copyRep').onclick = () => {
     t += `\nRED: VL = ${fmt(hv.VL / 1000, 1)} kV, Icc3 = ${fmtS(hv.I3)} A, Icc1 = ${fmtS(hv.I1)} A\n  X1 = X2 = ${fmt(hv.rd.X1, 3)} Ohm, X0 = ${fmt(hv.rd.X0, 3)} Ohm, suma X = ${fmt(hv.rd.SX, 3)} Ohm\n`;
     if (hv.lvl === 'mt') t += `  Fusible de arranque IA = ${fmt(hv.rd.IA, 2)} A (${hv.fus}); If aux = ${fmtS(hv.Ifaux)} A; Rmax = ${isFinite(hv.Rmax) ? fmt(hv.Rmax, 2) : '-'} Ohm\n  If1fi real = ${fmt(hv.If, 1)} A; tiempo de operación ${hv.tr.estado === 'menor' ? '< ' : ''}${isFinite(hv.tr.t) ? fmtS(hv.tr.t) : '-'} s\n`;
     else t += `  If = ${fmt(hv.If, 1)} A; Sf = ${fmt(hv.Sf, 2)}; Df = ${fmt(hv.Df, 2)}; ts = ${fmtS(hv.tTerm)} s\n`;
-    if (hv.s10 && hv.s10.comun) t += `  Sección 10 RIC N°06: Vca = ${fmt(hv.s10.Vca, 1)} V, Rt máx para unir = ${fmt(hv.s10.Rt, 3)} Ohm -> tierra común MT/BT ${hv.s10.unir ? 'permitida' : 'no permitida'}\n`;
+    if (hv.s10 && hv.s10.comun) t += `  Sección 10 RIC N°06: Vca = ${fmt(hv.s10.Vca, 1)} V, Rt máx para unir = ${fmt(hv.s10.Rt, 3)} Ohm -> tierra común MT/BT (${hv.s10.sis}) ${hv.s10.unir ? 'permitida' : 'no permitida'}\n`;
     else if (hv.s10) t += `  Sección 10 RIC N°06: Vca = ${fmt(hv.s10.Vca, 1)} V, Rt máx para unir = ${fmt(hv.s10.Rt, 3)} Ohm, U = ${fmt(hv.s10.U, 0)} V (${hv.s10.sis}), D = ${fmt(hv.s10.D, 1)} m -> ${hv.s10.unir ? 'se pueden unir' : 'tierras separadas'}\n`;
     if (isFinite(hv.Smin)) t += `  Smin térmica = ${fmt(hv.Smin, 2)} mm2 (K ${fmt(hv.K, 2)}, FD ${fmt(hv.FD, 2)}); mínimo normativo 25 mm2\n`;
     t += `\nTENSIONES (IEEE 80-2013, ${hv.kg} kg, t = ${fmtS(hv.tTol)} s${hv.grav ? `, gravilla ${fmtS(hv.rhoS)} Ohm m x ${fmtS(hv.hs)} m, Cs = ${fmt(hv.Cs, 4)}` : ''})\n  IG = ${fmt(hv.IG, 1)} A, GPR = ${fmt(hv.GPR, 0)} V\n  n = ${fmt(hv.T.n, 3)}, Km = ${fmt(hv.T.Km, 4)}, Ks = ${fmt(hv.T.Ks, 4)}, Ki = ${fmt(hv.T.Ki, 3)}, LM = ${fmt(hv.T.LM, 2)} m, LS = ${fmt(hv.T.LS, 1)} m\n  Contacto: Em = ${fmt(hv.T.Em, 0)} V / tolerable ${fmt(hv.tol.Etc, 1)} V\n  Paso: Es = ${fmt(hv.T.Es, 0)} V / tolerable ${fmt(hv.tol.Etp, 1)} V\n`;
