@@ -64,7 +64,10 @@ Al final del paso 5 el programa revisa los requisitos del pliego que se pueden c
 | Profundidad de la malla de 0,5 m como mínimo | 8.11 |
 | Uniones enterradas con soldadura exotérmica o conector apto para enterrar (IEEE 837) | 7.11 |
 | Tiempo de exposición a la falla de 0,5 s como máximo | 8.8 |
-| Resistencia de servicio de 20 Ω como máximo, o de protección R ≤ Vs / I0 | 6.1, 7.3 |
+| Resistencia de servicio de 20 Ω como máximo con neutralización TN; con falla permanente ningún conductor activo a más de 250 V respecto de tierra | 6.1 |
+| Hasta 80 Ω en BT con neutralización: ≤ 10 kW con interruptor omnipolar y diferenciales 300/30 mA, o disyuntor que corta el neutro con protección de sobretensión (UNE-EN 50550, IEC 61643-11) | 6.2.1, 6.2.2 |
+| Hasta 5 Ω (resistencia combinada del neutro) en redes internas con subestación MT propia | 6.7.3 |
+| Resistencia de protección R ≤ Vs / I0 | 7.3 |
 | Distancias para la medición de verificación por caída de potencial (6 × diagonal, 62 %) | Anexo 6.3 |
 
 En media y alta tensión se agregan:

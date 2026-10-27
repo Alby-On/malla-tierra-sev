@@ -419,6 +419,9 @@ input.auto { background: var(--accent-soft) !important; color: var(--accent) !im
       <div class="seg" id="gK"><button data-v="malla" class="on" type="button">Malla a tierra</button><button data-v="electrodo" type="button">Electrodo (barra)</button></div></div>
     <div class="f" id="gMetWrap" hidden><label for="gMet">Resistencia proyectada con</label>
       <select id="gMet"><option value="sch" selected>Schwarz (malla + barras)</option><option value="lau">Laurent (solo malla)</option></select></div>
+    <div class="f" id="gLimWrap" style="grid-column:1/-1"><label for="gLim">Criterio de resistencia (RIC N°06)</label>
+      <select id="gLim"><option value="20" selected>20 Ω · tierra de servicio con neutralización TN (6.1)</option><option value="80a">80 Ω · hasta 10 kW, interruptor omnipolar y diferenciales 300/30 mA (6.2.1)</option><option value="80b">80 Ω · disyuntor general que corta el neutro y protección de sobretensión (6.2.2)</option><option value="5">5 Ω · red interna con subestación MT propia (6.7.3)</option></select>
+      <span class="u" id="gLimU"></span></div>
   </div>
 
 
@@ -537,7 +540,7 @@ input.auto { background: var(--accent-soft) !important; color: var(--accent) !im
   <details id="verDet">
     <summary>Verificación del diseño (guía de Schwarz y RIC N°06)</summary>
     <div class="form" style="padding-top:10px">
-      <div class="f"><label for="gRmax">Rmáx calculada</label><input id="gRmax" value="" placeholder="opcional" inputmode="decimal"><span class="u">Ω · Rdiseño = menor entre Rmáx y 20 Ω</span></div>
+      <div class="f"><label for="gRmax">Rmáx calculada</label><input id="gRmax" value="" placeholder="opcional" inputmode="decimal"><span class="u">Ω · Rdiseño = menor entre Rmáx y el criterio RIC</span></div>
       <div class="f"><label for="gVL">Tensión de línea VL</label><input id="gVL" value="" placeholder="ej. 23" inputmode="decimal"><span class="u">kV</span></div>
       <div class="f"><label for="gX">Reactancia del lazo XΣ</label><input id="gX" value="" placeholder="ej. 21,078" inputmode="decimal"><span class="u">Ω</span></div>
       <div class="f"><label for="gIf">Corriente que funde el fusible If</label><input id="gIf" value="" placeholder="ej. 200" inputmode="decimal"><span class="u">A en el tiempo de despeje</span></div>
@@ -808,7 +811,7 @@ input.auto { background: var(--accent-soft) !important; color: var(--accent) !im
         <li>Las láminas impresas o escaneadas suelen venir a 62,8 mm por década: reescálalas a 62,5 antes de superponerlas.</li>
         <li>Varias curvas patrón pueden calzar casi igual (equivalencia). Elige la que tenga sentido geológico y compárala con el ajuste fino.</li>
         <li>Esta versión es para <b>baja tensión</b>. La opción de alta tensión ya aparece, pero aún no calcula. Las tensiones de paso y de contacto se verifican en media y alta tensión.</li>
-        <li>Al final del paso 5 se verifica el diseño: resistencia de diseño (menor entre Rmáx y 20 Ω), corriente real de falla frente al fusible, rango de Schwarz y requisitos del pliego RIC N°06.</li>
+        <li>Al final del paso 5 se verifica el diseño: resistencia de diseño (menor entre Rmáx y el criterio del RIC N°06: 20 Ω, 80 Ω o 5 Ω en baja tensión), corriente real de falla frente al fusible, rango de Schwarz y requisitos del pliego RIC N°06.</li>
       </ul>
     </div>
   </div>
@@ -1588,13 +1591,13 @@ function renderModel() {
 }
 
 // ---------- Paso 4 y 5 ----------
-const GIDS = ['gA', 'gB', 'gCl', 'gCa', 'gH', 'gSec', 'gSmm', 'gTm', 'gN', 'gLb', 'gRb', 'eLb', 'eRb', 'eT', 'eRm', 'eRho', 'gRmax', 'gVL', 'gX', 'gIf', 'gI', 'gT', 'gTa', 'gMet', 'mST', 'mVL', 'mI3', 'mI1', 'mIaux', 'mFT', 'mFR', 'mFus', 'mServ', 'mSis', 'fT0', 'fM0', 'fC0', 'fT1', 'fM1', 'fC1', 'fT2', 'fM2', 'fC2', 'fT3', 'fM3', 'fC3', 'fT4', 'fM4', 'fC4', 'aVL', 'aI3', 'aI1', 'aT', 'aSf', 'aDf', 'aDfv', 'pKg', 'pTt', 'pGrav', 'pRs', 'pHs'];
+const GIDS = ['gA', 'gB', 'gCl', 'gCa', 'gH', 'gSec', 'gSmm', 'gTm', 'gN', 'gLb', 'gRb', 'eLb', 'eRb', 'eT', 'eRm', 'eRho', 'gRmax', 'gVL', 'gX', 'gIf', 'gI', 'gT', 'gTa', 'gMet', 'gLim', 'mST', 'mVL', 'mI3', 'mI1', 'mIaux', 'mFT', 'mFR', 'mFus', 'mServ', 'mSis', 'fT0', 'fM0', 'fC0', 'fT1', 'fM1', 'fC1', 'fT2', 'fM2', 'fC2', 'fT3', 'fM3', 'fC3', 'fT4', 'fM4', 'fC4', 'aVL', 'aI3', 'aI1', 'aT', 'aSf', 'aDf', 'aDfv', 'pKg', 'pTt', 'pGrav', 'pRs', 'pHs'];
 function gState() { const o = {}; GIDS.forEach(k => o[k] = $(k).value); o.meth = st.meth; o.gAuto = $('gAuto').checked; o.joint = st.joint; o.volt = st.volt; o.kind = st.kind; return o; }
-function restoreG(o) { GIDS.forEach(k => { if (o[k] != null && $(k)) $(k).value = o[k]; }); setMeth(o.meth || 'sch', true); renderTable(); if (o.gAuto != null) $('gAuto').checked = o.gAuto; setJoint(o.joint || 'soldada', true); setSeg('gV', o.volt || 'bt'); setSeg('gK', o.kind || 'malla'); updSec(); updE(); updHV(); initFuse(o.mFR); updCdp(); renderAll(); }
+function restoreG(o) { GIDS.forEach(k => { if (o[k] != null && $(k)) $(k).value = o[k]; }); setMeth(o.meth || 'sch', true); renderTable(); if (o.gAuto != null) $('gAuto').checked = o.gAuto; setJoint(o.joint || 'soldada', true); setSeg('gV', o.volt || 'bt'); setSeg('gK', o.kind || 'malla'); updSec(); updE(); updHV(); updLim(); initFuse(o.mFR); updCdp(); renderAll(); }
 const JOINT = { soldada: { tm: '1083', txt: 'soldadas (exotérmica)', note: 'Unión bajo tierra permitida por RIC N°06 (7.11)' }, compresion: { tm: '250', txt: 'por compresión', note: 'Conector apto para enterrar, ensayado según IEEE 837 (RIC N°06, 7.11 c)' }, apernada: { tm: '250', txt: 'apernadas', note: 'Bajo tierra no es inspeccionable: RIC N°06 (7.11) exige soldadura de alto punto de fusión o conector apto' } };
 function setJoint(v, keepTm) { if (!JOINT[v]) v = 'soldada'; st.joint = v; [...$('gJ').children].forEach(b => b.classList.toggle('on', b.dataset.v === v)); if (!keepTm) $('gTm').value = JOINT[v].tm; $('gJnote').textContent = JOINT[v].note; }
 const LVNOTE = {
-  bt: 'Baja tensión (hasta 1 kV): instalaciones de consumo, Pliego RIC N°06. Se calcula una malla o un electrodo y la resistencia debe ser de 20 Ω como máximo. Las tensiones de paso y de contacto no se exigen en este nivel.',
+  bt: 'Baja tensión (hasta 1 kV): instalaciones de consumo, Pliego RIC N°06. Se calcula una malla o un electrodo. La resistencia máxima es 20 Ω con neutralización (6.1), 80 Ω en los casos del 6.2 o 5 Ω con subestación MT propia (6.7.3). Las tensiones de paso y de contacto no se exigen en este nivel.',
   mt: 'Media tensión (sobre 1 kV y hasta 23 kV): la resistencia máxima sale de la red y del fusible del transformador, con el límite de 20 Ω. Se verifican la corriente real de falla, la sección mínima del conductor y las tensiones de contacto y de paso (IEEE Std 80-2013).',
   at: 'Alta tensión (sobre 23 kV y hasta 230 kV): Pliego RPTD N°06. Tensiones de paso y de contacto según IEEE Std 80-2013 (8.25), resistencia de 20 Ω como máximo (8.27), cobre de 25 mm² como mínimo (8.14) y uniones exotérmicas o conector apto (8.17). Sobre 230 kV es extra alta tensión y queda fuera del alcance.'
 };
@@ -1606,9 +1609,17 @@ function setSeg(id, v) {
   $('gKwrap').hidden = !bt; $('gMetWrap').hidden = bt;
   $('mallaBox').hidden = elec; $('elecBox').hidden = !elec;
   $('mtBox').hidden = lv !== 'mt'; $('atBox').hidden = lv !== 'at'; $('segBox').hidden = bt;
-  $('pTtWrap').hidden = lv === 'at'; $('verDet').hidden = !bt; $('gIwrap').hidden = !bt;
+  $('pTtWrap').hidden = lv === 'at'; $('verDet').hidden = !bt; $('gLimWrap').hidden = !bt; $('gIwrap').hidden = !bt;
   $('thSum').textContent = bt ? 'Verificación térmica de la sección (opcional)' : 'Datos para la sección mínima (temperatura ambiente)';
 }
+const LIM = {
+  '20': { v: 20, n: '6.1', u: 'Neutro y tierra de protección comunes (TN). Además, con falla permanente ningún conductor activo puede quedar a más de 250 V respecto de tierra.' },
+  '80a': { v: 80, n: '6.2.1', u: 'Solo BT con neutralización: potencia ≤ 10 kW, interruptor general omnipolar, diferenciales de 300 mA en alimentadores y 30 mA en circuitos.' },
+  '80b': { v: 80, n: '6.2.2', u: 'Solo BT con neutralización: disyuntor general que corta también el neutro y protección de sobretensión según UNE-EN 50550 e IEC 61643-11.' },
+  '5': { v: 5, n: '6.7.3', u: 'Resistencia combinada de todas las tierras del neutro: junto a la subestación y cada 5 postes o 200 m.' } };
+const limBT = () => LIM[$('gLim').value] || LIM['20'];
+function updLim() { $('gLimU').textContent = limBT().u; }
+$('gLim').addEventListener('change', updLim);
 function updHV() { const g = $('pGrav').value === 'si'; $('pRs').disabled = !g; $('pHs').disabled = !g; $('aDfv').disabled = $('aDf').value !== 'man';
   const sv = $('mServ').value === 'si'; $('mSis').disabled = !sv; if (!sv) $('mSis').value = 'TT';
   $('mSisU').textContent = sv ? 'esquema del neutro de BT conectado a esta malla' : 'no aplica: solo protección, la BT tiene su propia tierra (se calcula la separación como TT)'; }
@@ -1697,7 +1708,7 @@ function renderResult() {
   const clear = msg => { $('rOut').innerHTML = '—'; $('rVer').innerHTML = ''; $('rSub').textContent = msg; ['byKv', 'swKv', 'plan', 'secBox', 'ricList', 'swF', 'mtKv1', 'mtKv2', 'tcKv1', 'tcKv2', 'tcCards', 'tcNote'].forEach(k => $(k).innerHTML = ''); updStepper(); $('byT').tBodies[0].innerHTML = ''; $('ricSum').textContent = ''; st.last = null; };
   if (!m) return clear('Falta el modelo de suelo');
   const I = num($('gI').value), t = num($('gT').value), Ta = num($('gTa').value), Tm = num($('gTm').value), Smm = num($('gSmm').value);
-  const Rmax = num($('gRmax').value), Rdis = Rmax > 0 ? Math.min(Rmax, 20) : 20;
+  const Lim = limBT(), Rmax = num($('gRmax').value), Rdis = Rmax > 0 ? Math.min(Rmax, Lim.v) : Lim.v;
   const VL = num($('gVL').value), X = num($('gX').value), If = num($('gIf').value);
   let R, res = {};
   if (!elec) {
@@ -1887,7 +1898,7 @@ function hvChecks(o, R) {
   const c = [], mt = o.lvl === 'mt', T = o.T;
   if (mt) {
     c.push(o.Ifaux > o.Ifmin && o.Ifaux < o.I1 ? { s: 'ok', t: `Corriente auxiliar: ${fmtS(o.Ifmin)} A < If aux ${fmtS(o.Ifaux)} A < Icc1φ ${fmtS(o.I1)} A`, d: 'Guía de resistencia máxima, paso 3.' } : { s: 'bad', t: `Corriente auxiliar fuera de rango: If aux ${fmtS(o.Ifaux)} A`, d: 'Debe quedar entre la corriente mínima de fusión del fusible y la corriente de cortocircuito monofásica.' });
-    c.push(R <= o.Rdis ? { s: 'ok', t: `Resistencia: ${fmt(R, 2)} Ω ≤ Rdiseño ${fmt(o.Rdis, 2)} Ω`, d: `Menor entre Rmáx (${isFinite(o.Rmax) ? fmt(o.Rmax, 2) + ' Ω' : '—'}), 20 Ω (RIC N°06)${o.serv ? ' y 5 Ω (6.7.3)' : ''}.` } : { s: 'bad', t: `Resistencia: ${fmt(R, 2)} Ω > Rdiseño ${fmt(o.Rdis, 2)} Ω`, d: 'Agrandar la malla: el término del área es el que más pesa. Luego barras más largas o más barras en el perímetro.' });
+    c.push(R <= o.Rdis ? { s: 'ok', t: `Resistencia: ${fmt(R, 2)} Ω ≤ Rdiseño ${fmt(o.Rdis, 2)} Ω`, d: `Menor entre Rmáx (${isFinite(o.Rmax) ? fmt(o.Rmax, 2) + ' Ω' : '—'}), 20 Ω (RIC N°06, 6.1)${o.serv ? ' y 5 Ω (6.7.3)' : ''}.` } : { s: 'bad', t: `Resistencia: ${fmt(R, 2)} Ω > Rdiseño ${fmt(o.Rdis, 2)} Ω`, d: 'Agrandar la malla: el término del área es el que más pesa. Luego barras más largas o más barras en el perímetro.' });
     const opera = o.tr.estado === 'ok' || o.tr.estado === 'menor';
     c.push(opera && o.If > o.Ifaux ? { s: 'ok', t: `Corriente real de falla: ${fmt(o.If, 1)} A > If aux ${fmtS(o.Ifaux)} A`, d: `El fusible opera en ${o.tr.estado === 'menor' ? 'menos de ' : ''}${fmtS(o.tr.t)} s.` } : { s: 'bad', t: `Corriente real de falla: ${fmt(o.If, 1)} A`, d: opera ? 'Es menor que la corriente auxiliar: el fusible demora más que lo exigido.' : 'El fusible no opera con esta corriente según su curva.' });
     if (o.serv) c.push(R <= 5 ? { s: 'ok', t: `Tierra de servicio con subestación propia: ${fmt(R, 2)} Ω ≤ 5 Ω`, d: 'RIC N°06, 6.7.3. Además, la tensión de los conductores activos a tierra no debe superar 250 V en falla permanente (6.7.1).' } : { s: 'bad', t: `Tierra de servicio con subestación propia: ${fmt(R, 2)} Ω > 5 Ω`, d: 'RIC N°06, 6.7.3: la resistencia combinada de las puestas a tierra de servicio no debe superar 5 Ω.' });
@@ -1929,7 +1940,10 @@ function ricChecks({ lvl, hv, elec, res, R, Rdis, Rmax, Ireal, If, I, t, Ta, Tm,
   if (lvl === 'bt' && !elec) { if (I > 0 && t > 0 && Tm > Ta) { const o = MG.onderdonk(I, t, Ta, Tm); out.push(Smm >= o.mm2 ? { s: 'ok', t: `Sección por corriente de falla: ${fmt(o.mm2, 1)} mm² mínimo`, d: 'Sección 8.8: el conductor soporta la corriente de falla.' } : { s: 'bad', t: `Sección por corriente de falla: ${fmt(o.mm2, 1)} mm² mínimo`, d: 'Sección 8.8: la sección elegida no soporta la corriente de falla ingresada.' }); }
     else out.push({ s: 'na', t: 'Sección por corriente de falla', d: 'Sección 8.8: ingresa la corriente de falla para verificarla.' }); }
   if (hv) hvChecks(hv, R).forEach(c => out.push(c));
-  else out.push(R <= Rdis ? { s: 'ok', t: `Resistencia: ${fmt(R, 2)} Ω ≤ Rdiseño ${fmtS(Rdis)} Ω`, d: `Guía y RIC N°06 (6.1): Rdiseño es el menor entre Rmáx${Rmax > 0 ? ` (${fmtS(Rmax)} Ω)` : ''} y 20 Ω.` } : { s: 'bad', t: `Resistencia: ${fmt(R, 2)} Ω > Rdiseño ${fmtS(Rdis)} Ω`, d: 'No cumple. Lo más eficaz es aumentar la superficie de la malla; luego, barras más largas que alcancen una capa más conductora.' });
+  if (!hv) { const L = limBT();
+    out.push({ s: L.v === 80 ? 'warn' : 'ok', t: `Criterio de resistencia: ${L.v} Ω (RIC N°06, ${L.n})`, d: L.v === 80 ? `${L.u} Las condiciones deben quedar especificadas en planos e informe; si no se cumplen, el límite es 20 Ω (6.1).` : L.u });
+    out.push({ s: 'na', t: 'Falla permanente: conductores activos ≤ 250 V respecto de tierra', d: 'RIC N°06, 6.1: el diseño de la tierra de servicio debe asegurar que, con una falla permanente, ningún conductor activo quede a más de 250 V respecto de tierra.' }); }
+  if (!hv) out.push(R <= Rdis ? { s: 'ok', t: `Resistencia: ${fmt(R, 2)} Ω ≤ Rdiseño ${fmtS(Rdis)} Ω`, d: `Guía y RIC N°06 (${limBT().n}): Rdiseño es el menor entre Rmáx${Rmax > 0 ? ` (${fmtS(Rmax)} Ω)` : ''} y ${limBT().v} Ω.` } : { s: 'bad', t: `Resistencia: ${fmt(R, 2)} Ω > Rdiseño ${fmtS(Rdis)} Ω`, d: 'No cumple. Lo más eficaz es aumentar la superficie de la malla; luego, barras más largas que alcancen una capa más conductora.' });
   if (hv) {}
   else if (isFinite(Ireal) && If > 0) out.push(Ireal > If ? { s: 'ok', t: `Corriente real de falla: ${fmt(Ireal, 0)} A > If ${fmtS(If)} A`, d: 'Guía de Schwarz, paso 5: el fusible despeja dentro del tiempo de despeje.' } : { s: 'bad', t: `Corriente real de falla: ${fmt(Ireal, 0)} A ≤ If ${fmtS(If)} A`, d: 'Guía de Schwarz, paso 5: la corriente no alcanza a fundir el fusible a tiempo. Hay que bajar la resistencia.' });
   else out.push({ s: 'na', t: 'Corriente real de falla', d: 'Guía de Schwarz, paso 5: ingresa VL, XΣ e If en el paso 4 para verificar que el fusible despeje.' });
@@ -1961,14 +1975,14 @@ $('copyRep').onclick = () => {
     if (isFinite(hv.Smin)) t += `  Smin térmica = ${fmt(hv.Smin, 2)} mm2 (K ${fmt(hv.K, 2)}, FD ${fmt(hv.FD, 2)}); mínimo normativo 25 mm2\n`;
     t += `\nTENSIONES (IEEE 80-2013, ${hv.kg} kg, t = ${fmtS(hv.tTol)} s${hv.grav ? `, gravilla ${fmtS(hv.rhoS)} Ohm m x ${fmtS(hv.hs)} m, Cs = ${fmt(hv.Cs, 4)}` : ''})\n  IG = ${fmt(hv.IG, 1)} A, GPR = ${fmt(hv.GPR, 0)} V\n  n = ${fmt(hv.T.n, 3)}, Km = ${fmt(hv.T.Km, 4)}, Ks = ${fmt(hv.T.Ks, 4)}, Ki = ${fmt(hv.T.Ki, 3)}, LM = ${fmt(hv.T.LM, 2)} m, LS = ${fmt(hv.T.LS, 1)} m\n  Contacto: Em = ${fmt(hv.T.Em, 0)} V / tolerable ${fmt(hv.tol.Etc, 1)} V\n  Paso: Es = ${fmt(hv.T.Es, 0)} V / tolerable ${fmt(hv.tol.Etp, 1)} V\n`;
   }
-  t += `\nRESISTENCIA PROYECTADA = ${fmt(R, 2)} Ohm (Rdiseño ${fmtS(Rdis)} Ohm)\n` + (isFinite(Ireal) ? `Corriente real de falla If1fi = ${fmt(Ireal, 0)} A\n` : '');
+  t += `\nRESISTENCIA PROYECTADA = ${fmt(R, 2)} Ohm (Rdiseño ${fmtS(Rdis)} Ohm${st.last.lvl === 'bt' ? `, criterio RIC N°06 ${limBT().n}: ${limBT().v} Ohm` : ''})\n` + (isFinite(Ireal) ? `Corriente real de falla If1fi = ${fmt(Ireal, 0)} A\n` : '');
   const L = { ok: 'CUMPLE', warn: 'REVISAR', bad: 'NO CUMPLE', na: 'PENDIENTE', nap: 'NO APLICA' };
   t += `\nVERIFICACIÓN\n` + ric.map(c => `[${L[c.s]}] ${c.t}`).join('\n') + '\n';
   copy(t, 'Informe copiado');
 };
 
 function renderAll() { renderFit(); renderHom(); renderModel(); plot(); renderResult(); updStepper(); }
-setMeth(st.meth || 'sch', true); setSeg('gV', st.volt); setSeg('gK', st.kind); updSec(); updE(); updHV(); initFuse(); updCdp();
+setMeth(st.meth || 'sch', true); setSeg('gV', st.volt); setSeg('gK', st.kind); updSec(); updE(); updHV(); updLim(); initFuse(); updCdp();
 renderTable(); plot(); renderResult(); route();
 setTimeout(run, 60);
 })();
