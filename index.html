@@ -276,6 +276,11 @@ a.ghost { text-decoration: none; color: var(--accent) }
 #todoList .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: 14px }
 #todoList .tx span { font-size: 12px; color: var(--muted) }
 #todoList button { font-size: 13px; padding: 4px 10px; font-weight: 600; color: var(--accent); border-color: var(--accent) }
+label.chk { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink); font-weight: 600; cursor: pointer }
+label.chk input { width: 18px; height: 18px; accent-color: var(--accent) }
+input.auto { background: var(--accent-soft) !important; color: var(--accent) !important; font-weight: 600 }
+.autobox { display: flex; flex-direction: column; gap: 6px; background: var(--bg); border-radius: 5px; padding: 10px 12px }
+#autoT tr.pick td { background: var(--accent-soft); font-weight: 600 }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); padding: 8px 14px; border-radius: 4px; font-size: 14px }
 @media (prefers-reduced-motion: no-preference) { .opt, .row { transition: border-color .12s, background .12s } }
 </style>
@@ -431,6 +436,7 @@ a.ghost { text-decoration: none; color: var(--accent) }
     <div class="form">
       <div class="f"><label for="gA">Largo (lado mayor a)</label><input id="gA" value="20" inputmode="decimal"><span class="u">m</span></div>
       <div class="f"><label for="gB">Ancho (lado menor b)</label><input id="gB" value="10" inputmode="decimal"><span class="u">m</span></div>
+      <div class="f fw"><label class="chk" for="gAuto"><input type="checkbox" id="gAuto" checked> Calcular la cuadrícula automáticamente</label><span class="u">el programa prueba las retículas posibles y elige la que cumple con menos conductor</span></div>
       <div class="f"><label for="gCl">Cuadrícula en el largo</label><input id="gCl" value="5" inputmode="decimal"><span class="u">m · separación de conductores transversales</span></div>
       <div class="f"><label for="gCa">Cuadrícula en el ancho</label><input id="gCa" value="5" inputmode="decimal"><span class="u">m · separación de conductores longitudinales</span></div>
       <div class="f"><label for="gH">Profundidad de la malla h</label><input id="gH" value="0,6" inputmode="decimal"><span class="u">m · mínimo 0,5 m (RIC N°06, 8.11)</span></div>
@@ -455,6 +461,10 @@ a.ghost { text-decoration: none; color: var(--accent) }
         <div class="seg" id="gJ"><button data-v="soldada" class="on" type="button">Soldada exotérmica</button><button data-v="compresion" type="button">Compresión</button><button data-v="apernada" type="button">Apernada</button></div>
         <span class="u" id="gJnote">Unión bajo tierra permitida por RIC N°06 (7.11)</span></div>
       <div class="f"><label for="gTm">Temperatura máx. de la unión</label><input id="gTm" value="1083" inputmode="decimal"><span class="u">°C · ajusta al valor de tu apunte</span></div>
+    </div>
+    <div id="autoBox" class="autobox" hidden>
+      <p class="hint" id="autoNote"></p>
+      <details><summary>Ver las alternativas evaluadas</summary><div class="scroll"><table id="autoT"><thead><tr><th>Retícula</th><th>D largo × ancho (m)</th><th>Lc (m)</th><th>R (Ω)</th><th id="autoTh">Em / Es (V)</th><th>Estado</th></tr></thead><tbody></tbody></table></div></details>
     </div>
     <h3>Barras verticales</h3>
     <div class="form">
@@ -1581,8 +1591,8 @@ function renderModel() {
 
 // ---------- Paso 4 y 5 ----------
 const GIDS = ['gA', 'gB', 'gCl', 'gCa', 'gH', 'gSec', 'gSmm', 'gTm', 'gN', 'gLb', 'gRb', 'eLb', 'eRb', 'eT', 'eRm', 'eRho', 'gRmax', 'gVL', 'gX', 'gIf', 'gI', 'gT', 'gTa', 'gMet', 'mST', 'mVL', 'mI3', 'mI1', 'mIaux', 'mFT', 'mFR', 'mFus', 'mServ', 'mSis', 'fT0', 'fM0', 'fC0', 'fT1', 'fM1', 'fC1', 'fT2', 'fM2', 'fC2', 'fT3', 'fM3', 'fC3', 'fT4', 'fM4', 'fC4', 'aVL', 'aI3', 'aI1', 'aT', 'aSf', 'aDf', 'aDfv', 'pKg', 'pTt', 'pGrav', 'pRs', 'pHs'];
-function gState() { const o = {}; GIDS.forEach(k => o[k] = $(k).value); o.meth = st.meth; o.joint = st.joint; o.volt = st.volt; o.kind = st.kind; return o; }
-function restoreG(o) { GIDS.forEach(k => { if (o[k] != null && $(k)) $(k).value = o[k]; }); setMeth(o.meth || 'sch', true); renderTable(); setJoint(o.joint || 'soldada', true); setSeg('gV', o.volt || 'bt'); setSeg('gK', o.kind || 'malla'); updSec(); updE(); updHV(); initFuse(o.mFR); updCdp(); renderAll(); }
+function gState() { const o = {}; GIDS.forEach(k => o[k] = $(k).value); o.meth = st.meth; o.gAuto = $('gAuto').checked; o.joint = st.joint; o.volt = st.volt; o.kind = st.kind; return o; }
+function restoreG(o) { GIDS.forEach(k => { if (o[k] != null && $(k)) $(k).value = o[k]; }); setMeth(o.meth || 'sch', true); renderTable(); if (o.gAuto != null) $('gAuto').checked = o.gAuto; setJoint(o.joint || 'soldada', true); setSeg('gV', o.volt || 'bt'); setSeg('gK', o.kind || 'malla'); updSec(); updE(); updHV(); initFuse(o.mFR); updCdp(); renderAll(); }
 const JOINT = { soldada: { tm: '1083', txt: 'soldadas (exotérmica)', note: 'Unión bajo tierra permitida por RIC N°06 (7.11)' }, compresion: { tm: '250', txt: 'por compresión', note: 'Conector apto para enterrar, ensayado según IEEE 837 (RIC N°06, 7.11 c)' }, apernada: { tm: '250', txt: 'apernadas', note: 'Bajo tierra no es inspeccionable: RIC N°06 (7.11) exige soldadura de alto punto de fusión o conector apto' } };
 function setJoint(v, keepTm) { if (!JOINT[v]) v = 'soldada'; st.joint = v; [...$('gJ').children].forEach(b => b.classList.toggle('on', b.dataset.v === v)); if (!keepTm) $('gTm').value = JOINT[v].tm; $('gJnote').textContent = JOINT[v].note; }
 const LVNOTE = {
@@ -1624,6 +1634,61 @@ function rodNodes(M, n) { // posiciones de barras: esquinas primero y luego repa
   return out;
 }
 const lab5 = { ok: 'cumple', warn: 'revisar', bad: 'no cumple', na: 'pendiente', nap: 'no aplica' };
+// ---------- Cuadrícula automática ----------
+function gridOpts(side) {
+  const dmin = side < 5 ? 1 : 2.5, dmax = Math.min(10, side), out = [];
+  for (let k = Math.max(1, Math.ceil(side / dmax - 1e-9)); side / k >= dmin - 1e-9 && k <= 40; k++) out.push(side / k);
+  return out;
+}
+const f4 = x => String(+x.toFixed(4)).replace('.', ',');
+function autoGrid(m, RdisBT, aO, bO, probe) {
+  const lvl = st.volt, a = aO || num($('gA').value), b = bO || num($('gB').value), h = num($('gH').value), Smm = num($('gSmm').value);
+  const keep = probe ? [$('gCl').value, $('gCa').value] : null;
+  if (!(a > 0 && b > 0 && h > 0 && Smm > 0)) { st.auto = null; return; }
+  const d = Math.sqrt(4 * Smm / Math.PI) / 1000, n = Math.max(0, Math.round(num($('gN').value) || 0)), Lb = num($('gLb').value), rb = num($('gRb').value);
+  const Ta = num($('gTa').value), Tm = num($('gTm').value), L = Math.max(a, b), W = Math.min(a, b), lau = lvl !== 'bt' && $('gMet').value === 'lau';
+  const cands = [];
+  for (const Dl of gridOpts(L)) for (const Da of gridOpts(W)) {
+    $('gCl').value = f4(Dl); $('gCa').value = f4(Da);
+    const g = { a, b, cl: Dl, ca: Da, h, d }, M = MG.malla(g), by = MG.burgsdorf(m.rho, m.h, M.S, h);
+    const S = MG.sistema({ rhoEq: by.rhoEq, a: M.largo, b: M.ancho, Lc: M.Lt, h, d, n, Lb, rb });
+    const R = lau ? MG.laurent(by.rhoEq, M) : S.RT;
+    let Rd = RdisBT, hv = null, ex = R / Rd, ok;
+    if (lvl !== 'bt') {
+      hv = calcHV(lvl, m, R, { g, M, by, S, n, Lb, rb }, Tm, Ta, Smm);
+      if (hv.err) hv = null;
+    }
+    if (hv) { Rd = hv.Rdis; ex = Math.max(R / Rd, hv.T.Em / hv.tol.Etc * (hv.GPR <= hv.tol.Etc ? 0 : 1), hv.T.Es / hv.tol.Etp); ok = R <= Rd && hv.okC && hv.okP && hv.T.valid.n; }
+    else ok = R <= Rd;
+    cands.push({ Dl, Da, nl: Math.round(L / Dl), na: Math.round(W / Da), Lc: M.Lt, R, ok, ex, hv, inR: Dl >= 2.5 && Da >= 2.5 });
+  }
+  const pass = cands.filter(c => c.ok).sort((x, y) => x.Lc - y.Lc || Math.abs(x.Dl - x.Da) - Math.abs(y.Dl - y.Da) || y.inR - x.inR);
+  const pick = pass[0] || cands.slice().sort((x, y) => x.ex - y.ex || x.Lc - y.Lc)[0];
+  if (probe) { $('gCl').value = keep[0]; $('gCa').value = keep[1]; return pass[0] || null; }
+  if (!pick) { st.auto = null; return; }
+  let sug = null;
+  if (!pass.length) for (let k = 1.1; k <= 4.001; k += 0.1) { // tamaño mínimo de malla (misma proporción) que sí cumple
+    const A2 = Math.ceil(a * k * 2) / 2, B2 = Math.ceil(b * k * 2) / 2, ok = autoGrid(m, RdisBT, A2, B2, true);
+    if (ok) { sug = { a: A2, b: B2, c: ok }; break; }
+  }
+  $('gCl').value = f4(pick.Dl); $('gCa').value = f4(pick.Da);
+  st.auto = { pick, n: cands.length, pass, cands, any: pass.length > 0, hv: lvl !== 'bt', sug };
+}
+function renderAuto() {
+  const on = $('gAuto').checked, A = st.auto;
+  $('gCl').readOnly = on; $('gCa').readOnly = on; $('gCl').classList.toggle('auto', on); $('gCa').classList.toggle('auto', on);
+  $('autoBox').hidden = !on || !A;
+  if (!on || !A) return;
+  const p = A.pick, cell = `${p.nl} × ${p.na} retículas de ${fmt(p.Dl, 2)} × ${fmt(p.Da, 2)} m`;
+  $('autoNote').innerHTML = A.any
+    ? `<b>Cuadrícula elegida: ${cell}</b> · Lc ${fmt(p.Lc, 1)} m · R ${fmt(p.R, 2)} Ω${A.hv ? ` · Em ${fmt(p.hv.T.Em, 0)} V y Es ${fmt(p.hv.T.Es, 0)} V dentro de lo tolerable` : ''}. Es la que cumple con menos conductor entre ${A.n} combinaciones probadas (${A.pass.length} cumplen).${p.inR ? '' : ' La retícula queda bajo 2,5 m porque la malla es pequeña: fuera del rango de IEEE 80-2013.'}`
+    : `<b>Ninguna cuadrícula cumple con estas dimensiones.</b> Se dejó la más cercana a cumplir: ${cell}. ` + (A.sug ? `Con una malla de <b>${fmt(A.sug.a, 1)} × ${fmt(A.sug.b, 1)} m</b> sí cumple (retícula de ${fmt(A.sug.c.Dl, 2)} × ${fmt(A.sug.c.Da, 2)} m, R ${fmt(A.sug.c.R, 2)} Ω). <a href="#" id="useDims">Usar esas medidas</a>` : `Ni agrandando la malla hasta 4 veces se cumple: ${A.hv ? 'agrega gravilla, ' : ''}más barras o barras más largas.`);
+  const show = (A.pass.length ? A.pass : A.cands.slice().sort((x, y) => x.ex - y.ex)).slice(0, 8);
+  $('autoTh').textContent = A.hv ? 'Em / Es (V)' : '—';
+  $('autoT').tBodies[0].innerHTML = show.map(c => `<tr class="${c === p ? 'pick' : ''}"><td>${c.nl} × ${c.na}</td><td>${fmt(c.Dl, 2)} × ${fmt(c.Da, 2)}</td><td>${fmt(c.Lc, 1)}</td><td>${fmt(c.R, 2)}</td><td>${c.hv ? fmt(c.hv.T.Em, 0) + ' / ' + fmt(c.hv.T.Es, 0) : '—'}</td><td><span class="chip ${c.ok ? 'ok' : 'bad'}">${c.ok ? 'cumple' : 'no cumple'}</span></td></tr>`).join('');
+}
+$('gAuto').addEventListener('change', () => { renderResult(); save(); });
+$('autoBox').addEventListener('click', e => { if (!e.target.closest('#useDims') || !st.auto || !st.auto.sug) return; e.preventDefault(); $('gA').value = f4(st.auto.sug.a); $('gB').value = f4(st.auto.sug.b); renderResult(); save(); toast('Medidas de la malla actualizadas'); });
 function renderResult() {
   const lvl = st.volt, m = current(), elec = lvl === 'bt' && st.kind === 'electrodo';
   $('mtBlock').hidden = lvl !== 'mt'; $('tcBlock').hidden = lvl === 'bt';
@@ -1636,6 +1701,8 @@ function renderResult() {
   const VL = num($('gVL').value), X = num($('gX').value), If = num($('gIf').value);
   let R, res = {};
   if (!elec) {
+    if ($('gAuto').checked) autoGrid(m, Rdis); else st.auto = null;
+    renderAuto();
     const g = { a: num($('gA').value), b: num($('gB').value), cl: num($('gCl').value), ca: num($('gCa').value), h: num($('gH').value), d: Math.sqrt(4 * Smm / Math.PI) / 1000 };
     if (Object.values(g).some(v => !(v > 0))) return clear('Completa las dimensiones de la malla');
     const n = Math.max(0, Math.round(num($('gN').value) || 0)), Lb = num($('gLb').value), rb = num($('gRb').value);
