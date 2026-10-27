@@ -21,7 +21,7 @@
 [hidden] { display: none !important }
 body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px }
-.wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px }
+.wrap { max-width: 1320px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px }
 header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; border-bottom: 2px solid var(--ink); padding-bottom: 12px }
 h1 { font-family: var(--f-display); font-weight: 700; font-size: 30px; line-height: 1.1; margin: 0; letter-spacing: .01em; text-wrap: balance }
 .sub { color: var(--muted); margin: 4px 0 0; max-width: 70ch }
@@ -186,6 +186,65 @@ a.ghost { text-decoration: none; color: var(--accent) }
 @media (pointer: coarse) { td input { padding: 8px 6px; min-height: 36px } }
 @media (max-width: 480px) { .mainnav .lg { display: none } .mainnav a { padding: 6px 10px; font-size: 15px } }
 .verd a { color: var(--accent) }
+/* ---------- Animaciones (solo si el sistema no pide reducir movimiento) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .view:not([hidden]) { animation: fadeUp .35s ease-out both }
+  .pan:not([hidden]) { animation: fadeUp .3s ease-out both }
+  section.step { animation: fadeUp .45s ease-out both }
+  #v-principal > section.step:nth-of-type(2) { animation-delay: .04s } #v-principal > section.step:nth-of-type(3) { animation-delay: .08s }
+  .toast:not([hidden]) { animation: slideUp .25s ease-out both }
+  button, .stp, .opt, .row, .tab, .mainnav a { transition: transform .12s ease, background-color .15s ease, border-color .15s ease, box-shadow .15s ease, color .15s ease }
+  button:active, .stp:active { transform: scale(.97) }
+  .row:hover, .stp:hover { transform: translateY(-1px); box-shadow: 0 3px 10px -6px rgba(0, 0, 0, .35) }
+  .stp.bump .sn { animation: pop .45s ease-out }
+  .big.flash { animation: flash .7s ease-out }
+  .drawin { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .9s ease-out forwards }
+  .popin { transform-box: fill-box; transform-origin: center; animation: pop .35s ease-out both }
+  .stagger li { animation: fadeUp .35s ease-out both }
+  .stagger li:nth-child(2) { animation-delay: .03s } .stagger li:nth-child(3) { animation-delay: .06s } .stagger li:nth-child(4) { animation-delay: .09s }
+  .stagger li:nth-child(5) { animation-delay: .12s } .stagger li:nth-child(6) { animation-delay: .15s } .stagger li:nth-child(7) { animation-delay: .18s }
+  .stagger li:nth-child(8) { animation-delay: .21s } .stagger li:nth-child(9) { animation-delay: .24s } .stagger li:nth-child(n+10) { animation-delay: .27s }
+  details[open] > :not(summary) { animation: fadeUp .25s ease-out both }
+  .verd .big-chip { animation: pop .4s ease-out both }
+  tbody tr { animation: fadeIn .25s ease-out both }
+}
+@keyframes fadeUp { from { opacity: .35; transform: translateY(8px) } to { opacity: 1; transform: none } }
+@keyframes fadeIn { from { opacity: .4 } to { opacity: 1 } }
+@keyframes slideUp { from { opacity: 0; transform: translate(-50%, 12px) } to { opacity: 1; transform: translate(-50%, 0) } }
+@keyframes pop { 0% { transform: scale(.6) } 60% { transform: scale(1.15) } 100% { transform: scale(1) } }
+@keyframes draw { to { stroke-dashoffset: 0 } }
+@keyframes flash { 0% { box-shadow: 0 0 0 0 var(--accent) } 100% { box-shadow: 0 0 0 10px transparent } }
+
+/* ---------- PC ---------- */
+@media (min-width: 901px) {
+  #s1 .chart { position: sticky; top: 150px; align-self: start }
+  .step { padding: 22px }
+}
+/* ---------- Celular ---------- */
+.colT { display: none; align-self: flex-start }
+@media (max-width: 640px) {
+  body { padding-block: 12px 40px }
+  h1 { font-size: 25px }
+  .flow { display: none }
+  section.step { padding: 14px; gap: 12px; scroll-margin-top: 120px }
+  h2 { font-size: 19px }
+  .colT { display: inline-flex }
+  #tbl:not(.full) .oc { display: none }
+  td input { width: 54px; padding: 6px 3px }
+  td, th { padding-left: 3px; padding-right: 3px }
+  .form { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px }
+  .f .u { font-size: 11px }
+  .f:has(.seg) { grid-column: 1 / -1 }
+  .seg { display: flex; width: 100% } .seg button { flex: 1 1 0 }
+  .f input, .f select, td input, textarea { font-size: 16px }
+  .btns button { flex: 1 1 auto }
+  .big .val { font-size: 38px }
+  .checks li { grid-template-columns: minmax(0, 1fr); gap: 4px }
+  .quick { padding: 10px 12px }
+  .tab { padding: 6px 10px 7px; font-size: 15px }
+  .next { justify-content: stretch } .next .nextb { width: 100% }
+}
+@media (pointer: coarse) { button, .stp, .tab, .mainnav a { min-height: 40px } }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); padding: 8px 14px; border-radius: 4px; font-size: 14px }
 @media (prefers-reduced-motion: no-preference) { .opt, .row { transition: border-color .12s, background .12s } }
 </style>
@@ -233,8 +292,9 @@ a.ghost { text-decoration: none; color: var(--accent) }
   <p class="hint">Ingresa L = AB/2, s = MN (completo) y la lectura V/I del instrumento. ρa = π · (V/I) · [(L/s)² − 0,25] · s. Acepta coma o punto decimal. Desmarca una lectura para excluirla del ajuste sin borrarla.</p>
   <div class="cols">
     <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+      <button type="button" class="ghost colT" id="colT" aria-pressed="false">Mostrar K, X e Y</button>
       <div class="scroll"><table id="tbl">
-        <thead><tr><th>N.º</th><th>L (m)</th><th>s (m)</th><th>V/I (Ω)</th><th>K (m)</th><th>ρa (Ω·m)</th><th>X (mm)</th><th>Y (mm)</th><th>Usar</th><th></th></tr></thead>
+        <thead><tr><th>N.º</th><th>L (m)</th><th>s (m)</th><th>V/I (Ω)</th><th class="oc">K (m)</th><th>ρa (Ω·m)</th><th class="oc">X (mm)</th><th class="oc">Y (mm)</th><th>Usar</th><th></th></tr></thead>
         <tbody></tbody>
       </table></div>
       <div class="btns">
@@ -984,7 +1044,7 @@ const EX = [[0.6,127.4],[0.8,40.8],[1,25.5],[1.6,11],[2,7.6],[2.5,5.3],[3,3.6],[
 const EX2 = [[0.6,348.6],[0.8,150.5],[1,108.2],[1.6,30.7],[2,15.4],[2.5,7.8],[3,4.2],[4,1.8],[5,1],[6,0.5],[8,0.2],[10,0.1]].map(([L, v]) => ({ L: String(L).replace('.', ','), s: '1', vi: String(v).replace('.', ','), on: true }));
 const FAMS = MG.families();
 
-let st = { rows: EX.map(r => ({ ...r })), hom: [], homSel: 0, fit: null, src: 'fit', fitN: null, manual: null, joint: 'soldada', dataKey: '' };
+let st = { rows: EX.map(r => ({ ...r })), hom: [], homSel: 0, fit: null, src: 'fit', fitN: null, manual: null, joint: 'soldada', dataKey: '', anim: true, shownR: NaN };
 try { const sv = JSON.parse(localStorage.getItem('malla-sev-v2') || 'null'); if (sv && sv.rows) { st.rows = sv.rows; if (sv.g) setTimeout(() => restoreG(sv.g), 0); } } catch (e) {}
 function save() { try { localStorage.setItem('malla-sev-v2', JSON.stringify({ rows: st.rows, g: gState() })); } catch (e) {} }
 
@@ -1007,8 +1067,8 @@ function renderTable() {
       <td><input id="rL${i}" value="${r.L}" inputmode="decimal" aria-label="L lectura ${i + 1}"></td>
       <td><input id="rs${i}" value="${r.s}" inputmode="decimal" aria-label="s lectura ${i + 1}" style="width:52px"></td>
       <td><input id="rv${i}" value="${r.vi}" inputmode="decimal" aria-label="V/I lectura ${i + 1}"></td>
-      <td class="calc" data-k>${d.ok ? fmt(d.K) : '—'}</td><td class="rho" data-r>${d.ok ? fmt(d.rho, 1) : '—'}</td>
-      <td class="calc" data-x>${d.ok ? fmt(MG.codX(d.L)) : '—'}</td><td class="calc" data-y>${d.ok ? fmt(MG.codY(d.rho)) : '—'}</td>
+      <td class="calc oc" data-k>${d.ok ? fmt(d.K) : '—'}</td><td class="rho" data-r>${d.ok ? fmt(d.rho, 1) : '—'}</td>
+      <td class="calc oc" data-x>${d.ok ? fmt(MG.codX(d.L)) : '—'}</td><td class="calc oc" data-y>${d.ok ? fmt(MG.codY(d.rho)) : '—'}</td>
       <td><input type="checkbox" id="ru${i}" ${r.on ? 'checked' : ''} aria-label="Usar lectura ${i + 1}" style="width:auto"></td>
       <td><button class="x" data-del="${i}" aria-label="Eliminar lectura ${i + 1}">✕</button></td>`;
     tb.appendChild(tr);
@@ -1037,10 +1097,17 @@ $('tbl').addEventListener('input', e => {
   st.rows[i][k] = m[1] === 'u' ? e.target.checked : e.target.value;
   refreshRow(i); updCount(); schedule();
 });
+$('tbl').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return; const m = e.target.id.match(/^r([Lsv])(\d+)$/); if (!m) return; e.preventDefault();
+  const i = +m[2] + 1;
+  if (i >= st.rows.length) { if (st.rows.length >= 20) { toast('Máximo 20 lecturas'); return; } const last = st.rows[st.rows.length - 1]; st.rows.push({ L: '', s: last ? last.s : '1', vi: '', on: true }); renderTable(); }
+  const n = $('r' + m[1] + i); if (n) { n.focus(); n.select(); }
+});
+$('colT').onclick = () => { const on = !$('tbl').classList.contains('full'); $('tbl').classList.toggle('full', on); $('colT').setAttribute('aria-pressed', on); $('colT').textContent = on ? 'Ocultar K, X e Y' : 'Mostrar K, X e Y'; };
 $('tbl').addEventListener('click', e => { const b = e.target.closest('[data-del]'); if (!b) return; st.rows.splice(+b.dataset.del, 1); renderTable(); schedule(); });
 $('add').onclick = () => { if (st.rows.length >= 20) { toast('Máximo 20 lecturas'); return; } const last = st.rows[st.rows.length - 1]; st.rows.push({ L: '', s: last ? last.s : '1', vi: '', on: true }); renderTable(); $('rL' + (st.rows.length - 1)).focus(); };
-$('ex').onclick = () => { st.rows = EX.map(r => ({ ...r })); renderTable(); schedule(); };
-$('ex2').onclick = () => { st.rows = EX2.map(r => ({ ...r })); renderTable(); schedule(); };
+$('ex').onclick = () => { st.anim = true; st.rows = EX.map(r => ({ ...r })); renderTable(); schedule(); };
+$('ex2').onclick = () => { st.anim = true; st.rows = EX2.map(r => ({ ...r })); renderTable(); schedule(); };
 function setTab(t) {
   document.querySelectorAll('#s0 .tab').forEach(b => { const on = b.dataset.t === t; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
   document.querySelectorAll('#s0 .pan').forEach(p => p.hidden = p.id !== 'pan-' + t);
@@ -1068,7 +1135,22 @@ function setBusy(t) { $('busy').textContent = t; updStepper(); }
 // ---------- Barra de avance y navegación entre pasos ----------
 function goStep(id) { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }
 document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) { if (b.tagName === 'A') e.preventDefault(); goStep(b.dataset.go); } });
-function setStp(i, cls, txt) { const b = document.querySelector(`.stp[data-go="s${i}"]`); b.classList.remove('ok', 'warn', 'bad'); if (cls) b.classList.add(cls); $('ss' + i).textContent = txt; b.title = txt; }
+function setStp(i, cls, txt) {
+  const b = document.querySelector(`.stp[data-go="s${i}"]`), prev = b.dataset.k, key = (cls || '') + '|' + txt;
+  b.classList.remove('ok', 'warn', 'bad'); if (cls) b.classList.add(cls); $('ss' + i).textContent = txt; b.title = txt;
+  if (prev && prev !== key) { b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); }
+  b.dataset.k = key;
+}
+const RM = matchMedia('(prefers-reduced-motion: reduce)');
+function showR(R) {
+  const el = $('rOut'), to = R, from = st.shownR, d = to < 10 ? 2 : 1;
+  st.shownR = to;
+  if (RM.matches || !isFinite(from) || Math.abs(from - to) < 1e-9) { el.innerHTML = `${fmt(to, d)} <small>Ω</small>`; return; }
+  const t0 = performance.now(), dur = 450; cancelAnimationFrame(st.rafR);
+  const step = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.innerHTML = `${fmt(from + (to - from) * e, d)} <small>Ω</small>`; if (k < 1) st.rafR = requestAnimationFrame(step); };
+  st.rafR = requestAnimationFrame(step);
+  const big = el.closest('.big'); big.classList.remove('flash'); void big.offsetWidth; big.classList.add('flash');
+}
 function updStepper() {
   const n = data().length;
   setStp(1, n >= 12 && n <= 20 ? 'ok' : n ? 'warn' : '', `${n} lecturas`);
@@ -1114,7 +1196,7 @@ $('pasteOk').onclick = () => {
     .filter(c => c.length >= 2 && num(c[0]) > 0).map(c => c.length >= 3 ? { L: c[0], s: c[1], vi: c[2], on: true } : { L: c[0], s: '1', vi: c[1], on: true });
   if (!rows.length) { toast('No se reconocieron filas'); return; }
   if (rows.length > 20) { rows.length = 20; toast('Se cargaron solo las primeras 20 lecturas (máximo 20)'); }
-  st.rows = rows; $('pasteBox').hidden = true; $('pasteTa').value = ''; renderTable(); schedule(); toast(`${rows.length} lecturas cargadas`);
+  st.anim = true; st.rows = rows; $('pasteBox').hidden = true; $('pasteTa').value = ''; renderTable(); schedule(); toast(`${rows.length} lecturas cargadas`);
 };
 $('copyTbl').onclick = () => {
   const lines = ['N\tL (m)\ts (m)\tV/I (Ohm)\tK (m)\trho_a (Ohm m)\tX (mm)\tY (mm)'];
@@ -1172,9 +1254,10 @@ function plot() {
     const right = cx > W - mr - 190; s += `<text x="${right ? cx - 7 : cx + 7}" y="${cy - 8}" text-anchor="${right ? 'end' : 'start'}" fill="${pc}" font-size="11.5" font-family="${css('--f-mono')}">cruz (${fmt(pat.Ec)} ; ${fmt(pat.rhoc)} mm)</text>`;
   }
   if (mod && st.src !== 'pat') s += path(cMod, mc, '6 4', 2);
-  s += path(D.map(d => [d.L, d.rho]), ac, '', 1.6);
+  { const fp = path(D.map(d => [d.L, d.rho]), ac, '', 1.6); s += st.anim ? fp.replace('<polyline ', '<polyline class="drawin" pathLength="1" ') : fp; }
   s += '</g>';
-  D.forEach(d => s += `<circle cx="${X(d.L)}" cy="${Y(d.rho)}" r="3.6" fill="${ac}"/>`);
+  D.forEach((d, k) => s += `<circle${st.anim ? ` class="popin" style="animation-delay:${(k * 45)}ms"` : ''} cx="${X(d.L)}" cy="${Y(d.rho)}" r="3.6" fill="${ac}"/>`);
+  st.anim = false;
   all.forEach(d => s += `<circle cx="${X(d.L)}" cy="${Y(d.rho)}" r="3.6" fill="none" stroke="${mu}" stroke-width="1.4"/>`);
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.innerHTML = s;
   $('leg').innerHTML = `<span><i style="border-color:${ac}"></i>Curva de campo</span>` + (pat ? `<span><i style="border-color:${pc}"></i>Curva patrón ${patLabel(pat)}</span>` : '') + (mod && st.src !== 'pat' ? `<span><i style="border-color:${mc};border-top-style:dashed"></i>Modelo adoptado</span>` : '') + (all.length ? `<span>○ lectura excluida</span>` : '') + `<span>escala bilogarítmica, décadas iguales en ambos ejes</span>`;
@@ -1326,7 +1409,7 @@ function renderResult() {
     $('byKv').innerHTML = `<dt>Área S</dt><dd>${fmt(M.S, 1)} m²</dd><dt>Radio equivalente r</dt><dd>${fmt(by.r, 3)} m</dd><dt>b (profundidad)</dt><dd>${fmt(g.h, 2)} m</dd><dt>r0²</dt><dd>${fmt(by.r02, 3)} m²</dd><dt>q0²</dt><dd>${fmt(by.q02, 3)} m²</dd><dt><b>ρ equivalente</b></dt><dd><b>${fmt(by.rhoEq, 2)} Ω·m</b></dd>`;
     const bars = S.R2 != null;
     $('rLab').textContent = bars ? `Schwarz · resistencia total (malla + ${n} barras)` : 'Schwarz · resistencia de la malla';
-    $('rOut').innerHTML = `${fmt(R, R < 10 ? 2 : 1)} <small>Ω</small>`;
+    showR(R);
     $('rSub').textContent = `ρeq ${fmt(by.rhoEq, 1)} Ω·m · malla ${fmt(M.largo, 1)} × ${fmt(M.ancho, 1)} m` + (bars ? ` · solo malla R₁ = ${fmt(S.R1, 2)} Ω` : '');
     $('swH').textContent = bars ? 'Schwarz · malla, barras, mutua y total' : 'Schwarz · resistencia de la malla';
     $('swF').innerHTML = `R₁ = ρeq/(π·Lc) · [ln(2·Lc/a′) + K₁·Lc/√A − K₂]` + (bars ? `<br>R₂ = ρeq/(2π·n·Lb) · [ln(4·Lb/rb) − 1 + 2·K₁·(Lb/√A)·(√n − 1)²]<br>Rm = ρeq/(π·Lc) · [ln(2·Lc/Lb) + K₁·Lc/√A − K₂ + 1]<br>RT = (R₁·R₂ − Rm²) / (R₁ + R₂ − 2·Rm)` : '');
@@ -1350,7 +1433,7 @@ function renderResult() {
     if (!(rho > 0)) return clear('Ingresa la resistividad manual');
     R = MG.barra(rho, Lb, rb); res = { Lb, rb, tH, rho, man };
     $('rLab').textContent = 'Resistencia del electrodo (barra)';
-    $('rOut').innerHTML = `${fmt(R, R < 10 ? 2 : 1)} <small>Ω</small>`;
+    showR(R);
     $('rSub').textContent = `ρ ${fmt(rho, 1)} Ω·m · barra de ${fmt(Lb, 2)} m desde ${fmt(tH, 2)} m de profundidad`;
     $('swH').textContent = 'Barra sola (Schwarz, n = 1)';
     $('swF').innerHTML = 'R = ρ/(2π·Lb) · [ln(4·Lb/rb) − 1]' + (man ? '' : '<br>ρ = Lb / Σ (tramo en cada capa / ρi)');
@@ -1363,6 +1446,8 @@ function renderResult() {
   if (VL > 0 && X >= 0 && isFinite(X)) { Ireal = MG.fallaIf(VL * 1000, X, R); if (res.S && res.S.R2 != null) IrealM = MG.fallaIf(VL * 1000, X, res.S.R1); sb += `<dl class="kv"><dt>Corriente real de falla If1φ</dt><dd>${fmt(Ireal, 0)} A</dd>${isFinite(IrealM) ? `<dt>Solo con la malla</dt><dd>${fmt(IrealM, 0)} A</dd>` : ''}</dl>`; }
   $('secBox').innerHTML = sb;
   const ric = ricChecks({ elec, res, R, Rdis, Rmax, Ireal, If, I, t, Ta, Tm, Smm });
+  const ricKey = ric.map(c => c.s + c.t).join('|'), ricChanged = ricKey !== st.ricKey; st.ricKey = ricKey;
+  $('ricList').classList.toggle('stagger', ricChanged);
   $('ricList').innerHTML = ric.map(c => `<li><span class="chip ${c.s === 'na' || c.s === 'nap' ? 'acc' : c.s}">${lab5[c.s]}</span><div><b>${c.t}</b><span class="d">${c.d}</span></div></li>`).join('');
   $('ricSum').textContent = `${ric.filter(c => c.s === 'ok').length} cumplen · ${ric.filter(c => c.s === 'warn').length} a revisar · ${ric.filter(c => c.s === 'bad').length} no cumplen`;
   st.last = { m, R, Rdis, Ireal, res, elec, ric };
