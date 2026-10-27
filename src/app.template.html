@@ -484,14 +484,22 @@ a.ghost { text-decoration: none; color: var(--accent) }
       <div class="f"><label for="mI3">Cortocircuito trifásico Icc3φ</label><input id="mI3" value="2000" inputmode="decimal"><span class="u">A · informado por la distribuidora</span></div>
       <div class="f"><label for="mI1">Cortocircuito monofásico Icc1φ</label><input id="mI1" value="1200" inputmode="decimal"><span class="u">A · informado por la distribuidora</span></div>
       <div class="f"><label for="mIaux">Corriente de falla auxiliar If aux</label><input id="mIaux" value="400" inputmode="decimal"><span class="u">A · entre If mín del fusible e Icc1φ</span></div>
-      <div class="f"><label for="mFus">Fusible</label><input id="mFus" value="10K"><span class="u">nombre comercial</span></div>
+      <div class="f"><label for="mFT">Tipo de fusible</label><select id="mFT">
+        <option value="K" selected>K · rápido (ANSI C37.43)</option>
+        <option value="T">T · lento (ANSI C37.43)</option>
+        <option value="S">Standard · intermedio K/T</option>
+        <option value="H10K">10K Hubbell · guía (con curva de despeje)</option>
+        <option value="custom">Personalizada (curva del fabricante)</option>
+      </select></div>
+      <div class="f"><label for="mFR">Calibre</label><select id="mFR"></select><span class="u" id="mFsug"></span></div>
+      <div class="f"><label for="mFus">Fusible elegido</label><input id="mFus" value="10K" readonly><span class="u">se completa al elegir tipo y calibre</span></div>
     </div>
     <div class="cols">
       <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
         <h3>Curva tiempo–corriente del fusible</h3>
-        <div class="scroll"><table id="fuT"><thead><tr><th>Tiempo (s)</th><th>I mín. fusión (A)</th><th>I despeje (A)</th></tr></thead><tbody><tr><td><input id="fT0" value="300" inputmode="decimal" aria-label="Tiempo 1"></td><td><input id="fM0" value="19,5" inputmode="decimal" aria-label="Corriente mínima de fusión 1"></td><td><input id="fC0" value="23,5" inputmode="decimal" aria-label="Corriente de despeje 1"></td></tr><tr><td><input id="fT1" value="100" inputmode="decimal" aria-label="Tiempo 2"></td><td><input id="fM1" value="20" inputmode="decimal" aria-label="Corriente mínima de fusión 2"></td><td><input id="fC1" value="24" inputmode="decimal" aria-label="Corriente de despeje 2"></td></tr><tr><td><input id="fT2" value="10" inputmode="decimal" aria-label="Tiempo 3"></td><td><input id="fM2" value="25" inputmode="decimal" aria-label="Corriente mínima de fusión 3"></td><td><input id="fC2" value="29,5" inputmode="decimal" aria-label="Corriente de despeje 3"></td></tr><tr><td><input id="fT3" value="1" inputmode="decimal" aria-label="Tiempo 4"></td><td><input id="fM3" value="42,5" inputmode="decimal" aria-label="Corriente mínima de fusión 4"></td><td><input id="fC3" value="52" inputmode="decimal" aria-label="Corriente de despeje 4"></td></tr><tr><td><input id="fT4" value="0,1" inputmode="decimal" aria-label="Tiempo 5"></td><td><input id="fM4" value="129" inputmode="decimal" aria-label="Corriente mínima de fusión 5"></td><td><input id="fC4" value="167" inputmode="decimal" aria-label="Corriente de despeje 5"></td></tr></tbody></table></div>
+        <div class="scroll"><table id="fuT"><thead><tr><th>Tiempo (s)</th><th>I mín. fusión (A)</th><th id="fuColC">I despeje (A)</th></tr></thead><tbody><tr><td><input id="fT0" value="300" inputmode="decimal" aria-label="Tiempo 1"></td><td><input id="fM0" value="19,5" inputmode="decimal" aria-label="Corriente mínima de fusión 1"></td><td><input id="fC0" value="23,5" inputmode="decimal" aria-label="Corriente de despeje 1"></td></tr><tr><td><input id="fT1" value="100" inputmode="decimal" aria-label="Tiempo 2"></td><td><input id="fM1" value="20" inputmode="decimal" aria-label="Corriente mínima de fusión 2"></td><td><input id="fC1" value="24" inputmode="decimal" aria-label="Corriente de despeje 2"></td></tr><tr><td><input id="fT2" value="10" inputmode="decimal" aria-label="Tiempo 3"></td><td><input id="fM2" value="25" inputmode="decimal" aria-label="Corriente mínima de fusión 3"></td><td><input id="fC2" value="29,5" inputmode="decimal" aria-label="Corriente de despeje 3"></td></tr><tr><td><input id="fT3" value="1" inputmode="decimal" aria-label="Tiempo 4"></td><td><input id="fM3" value="42,5" inputmode="decimal" aria-label="Corriente mínima de fusión 4"></td><td><input id="fC3" value="52" inputmode="decimal" aria-label="Corriente de despeje 4"></td></tr><tr><td><input id="fT4" value="0,1" inputmode="decimal" aria-label="Tiempo 5"></td><td><input id="fM4" value="129" inputmode="decimal" aria-label="Corriente mínima de fusión 5"></td><td><input id="fC4" value="167" inputmode="decimal" aria-label="Corriente de despeje 5"></td></tr></tbody></table></div>
       </div>
-      <p class="hint" style="align-self:center">Valores del fusible tipo K de 10 A de la guía (Hubbell, boletín 10-7701). Reemplázalos por los del fusible elegido. El programa interpola en escala log-log para obtener el tiempo de operación.</p>
+      <p class="hint" style="align-self:center" id="fuNote"></p>
     </div>
   </div>
 
@@ -960,7 +968,7 @@ function updTodo() {
     add('Malla, conductor y barras', has(['gA', 'gB', 'gCl', 'gCa', 'gH', 'gSmm']), 'mallaBox', 'dimensiones, retícula, profundidad, sección');
     if (lv === 'mt') {
       add('Red de media tensión', has(['mST', 'mVL', 'mI3', 'mI1', 'mIaux']), 'mtBox', 'ST, VL, Icc3φ, Icc1φ e If aux');
-      add('Curva del fusible', [0, 1, 2, 3, 4].every(k => has(['fT' + k, 'fC' + k])), 'mtBox', 'reemplaza los valores por los de tu fusible');
+      add('Fusible y su curva', [0, 1, 2, 3, 4].filter(k => num($('fT' + k).value) > 0 && num($('fC' + k).value) > 0).length >= 2, 'mtBox', $('mFus').value ? `${$('mFus').value} · ${$('mFT').selectedOptions[0].textContent.split(' · ')[0]}` : 'elige tipo y calibre');
     } else {
       add('Red de alta tensión', has(['aVL', 'aI3', 'aI1']), 'atBox', 'VL, Icc3φ e Icc1φ');
       add('Protección de respaldo', has(['aT', 'aSf']), 'atBox', 'ts, Sf y Df');
@@ -1173,9 +1181,9 @@ function renderModel() {
 }
 
 // ---------- Paso 4 y 5 ----------
-const GIDS = ['gA', 'gB', 'gCl', 'gCa', 'gH', 'gSec', 'gSmm', 'gTm', 'gN', 'gLb', 'gRb', 'eLb', 'eRb', 'eT', 'eRm', 'eRho', 'gRmax', 'gVL', 'gX', 'gIf', 'gI', 'gT', 'gTa', 'gMet', 'mST', 'mVL', 'mI3', 'mI1', 'mIaux', 'mFus', 'fT0', 'fM0', 'fC0', 'fT1', 'fM1', 'fC1', 'fT2', 'fM2', 'fC2', 'fT3', 'fM3', 'fC3', 'fT4', 'fM4', 'fC4', 'aVL', 'aI3', 'aI1', 'aT', 'aSf', 'aDf', 'aDfv', 'pKg', 'pTt', 'pGrav', 'pRs', 'pHs'];
+const GIDS = ['gA', 'gB', 'gCl', 'gCa', 'gH', 'gSec', 'gSmm', 'gTm', 'gN', 'gLb', 'gRb', 'eLb', 'eRb', 'eT', 'eRm', 'eRho', 'gRmax', 'gVL', 'gX', 'gIf', 'gI', 'gT', 'gTa', 'gMet', 'mST', 'mVL', 'mI3', 'mI1', 'mIaux', 'mFT', 'mFR', 'mFus', 'fT0', 'fM0', 'fC0', 'fT1', 'fM1', 'fC1', 'fT2', 'fM2', 'fC2', 'fT3', 'fM3', 'fC3', 'fT4', 'fM4', 'fC4', 'aVL', 'aI3', 'aI1', 'aT', 'aSf', 'aDf', 'aDfv', 'pKg', 'pTt', 'pGrav', 'pRs', 'pHs'];
 function gState() { const o = {}; GIDS.forEach(k => o[k] = $(k).value); o.joint = st.joint; o.volt = st.volt; o.kind = st.kind; return o; }
-function restoreG(o) { GIDS.forEach(k => { if (o[k] != null && $(k)) $(k).value = o[k]; }); setJoint(o.joint || 'soldada', true); setSeg('gV', o.volt || 'bt'); setSeg('gK', o.kind || 'malla'); updSec(); updE(); updHV(); updCdp(); renderAll(); }
+function restoreG(o) { GIDS.forEach(k => { if (o[k] != null && $(k)) $(k).value = o[k]; }); setJoint(o.joint || 'soldada', true); setSeg('gV', o.volt || 'bt'); setSeg('gK', o.kind || 'malla'); updSec(); updE(); updHV(); initFuse(o.mFR); updCdp(); renderAll(); }
 const JOINT = { soldada: { tm: '1083', txt: 'soldadas (exotérmica)', note: 'Unión bajo tierra permitida por RIC N°06 (7.11)' }, compresion: { tm: '250', txt: 'por compresión', note: 'Conector apto para enterrar, ensayado según IEEE 837 (RIC N°06, 7.11 c)' }, apernada: { tm: '250', txt: 'apernadas', note: 'Bajo tierra no es inspeccionable: RIC N°06 (7.11) exige soldadura de alto punto de fusión o conector apto' } };
 function setJoint(v, keepTm) { if (!JOINT[v]) v = 'soldada'; st.joint = v; [...$('gJ').children].forEach(b => b.classList.toggle('on', b.dataset.v === v)); if (!keepTm) $('gTm').value = JOINT[v].tm; $('gJnote').textContent = JOINT[v].note; }
 const LVNOTE = {
@@ -1291,6 +1299,58 @@ function renderResult() {
   updStepper();
 }
 
+// ---------- Fusibles de media tensión ----------
+// Bandas de fusión normalizadas (ANSI C37.43, según la especificación técnica ET-211 de EPEC):
+// [calibre, 300s mín, 300s máx, 10s mín, 10s máx, 0,1s mín, 0,1s máx]; null = la norma no fija ese límite
+const FUSES = {
+  K: [[1,2,2.4,null,10,null,58],[2,4,4.8,null,10,null,58],[3,6,7.2,null,10,null,58],[6,12,14.4,13.5,20.5,72,86],[8,15,18,18,27,97,116],[10,19.5,23.4,22.5,34,128,154],[15,31,37.2,37,55,215,258],[25,50,60,60,90,350,420],[30,63,76,77.5,115,447,546],[40,80,96,98,146,565,680],[50,101,121,126,188,719,862],[65,128,153,159,237,918,1100],[80,160,192,205,307,1180,1420],[100,200,240,258,388,1520,1820]],
+  T: [[1,2,2.4,null,11,null,100],[2,4,4.8,null,11,null,100],[3,6,7.2,null,11,null,100],[6,12,14.4,15.3,23,120,144],[8,15,18,20.5,31,166,199],[10,19.5,23.4,26.5,40,224,269],[15,31,37.2,44.5,67,388,466],[25,50,60,73.5,109,635,762],[30,63,76,93,138,812,975],[40,80,96,120,178,1040,1240],[50,101,121,152,226,1310,1570],[65,128,153,195,291,1650,1975],[80,160,192,248,370,2080,2500],[100,200,240,319,475,2620,3150]],
+  S: [[1,2,2.6,null,3.2,null,35],[2,4,5.2,null,5.9,null,52],[3,6,7.8,null,8.9,null,72],[5,10,13,11.5,14.4,74,110],[7,14,16,16,18,110,140],[10,19.5,22,24,26,160,200],[15,30,33,36,40,240,300],[20,40,44,46,51,327,360],[25,50,55,57,64,380,460],[30,60,65,72,78,450,540],[40,80,88,100,110,600,720],[50,100,110,130,140,780,940],[65,130,140,160,180,960,1100],[80,160,175,190,215,1200,1400],[100,200,220,260,260,1600,1750]]
+};
+const H10K = [[300, 19.5, 23.5], [100, 20, 24], [10, 25, 29.5], [1, 42.5, 52], [0.1, 129, 167]];
+const fz = x => x == null ? '' : String(x).replace('.', ',');
+function fillFuseRows(rows) { for (let k = 0; k < 5; k++) { const r = rows[k] || [null, null, null]; $('fT' + k).value = fz(r[0]); $('fM' + k).value = fz(r[1]); $('fC' + k).value = fz(r[2]); } }
+function fuseRatings(tp) { return tp === 'H10K' ? [10] : FUSES[tp] ? FUSES[tp].map(r => r[0]) : []; }
+function updFuseUI(keepRating) {
+  const tp = $('mFT').value, ansi = !!FUSES[tp], prev = $('mFR').value;
+  const rts = fuseRatings(tp);
+  $('mFR').innerHTML = rts.length ? rts.map(r => `<option value="${r}">${r} A</option>`).join('') : '<option value="">—</option>';
+  $('mFR').disabled = !rts.length || tp === 'H10K';
+  if (keepRating && rts.includes(+prev)) $('mFR').value = prev;
+  $('fuColC').textContent = ansi ? 'I máx. fusión (A)' : 'I despeje (A)';
+  $('fuNote').textContent = ansi ? 'Banda de fusión normalizada (ANSI C37.43, según ET-211 de EPEC): corriente mínima y máxima de fusión a 300, 10 y 0,1 s. La norma no fija la curva de despeje; el programa usa la corriente máxima de fusión como referencia de operación. Para el tiempo exacto usa la curva de despeje del fabricante (opción Personalizada).'
+    : tp === 'H10K' ? 'Fusible tipo K de 10 A de la guía (Hubbell, boletín 10-7701), con corriente mínima de fusión y de despeje total.'
+    : 'Ingresa los puntos de la curva del fabricante: tiempo, corriente mínima de fusión y corriente de despeje total. El programa interpola en escala log-log.';
+  ['T', 'M', 'C'].forEach(c => { for (let k = 0; k < 5; k++) $('f' + c + k).readOnly = tp !== 'custom'; });
+}
+function applyFuse() {
+  const tp = $('mFT').value, R = +$('mFR').value;
+  if (FUSES[tp] && R) st.lastRating = String(R);
+  if (tp === 'H10K') { fillFuseRows(H10K); $('mFus').value = '10K (Hubbell)'; }
+  else if (FUSES[tp]) {
+    const r = FUSES[tp].find(x => x[0] === R); if (!r) return;
+    fillFuseRows([[300, r[1], r[2]], [10, r[3], r[4]], [0.1, r[5], r[6]]]);
+    $('mFus').value = `${R}${tp === 'S' ? ' Std' : tp}`;
+  } else $('mFus').value = 'curva del fabricante';
+  sugFuse();
+}
+function sugFuse() {
+  const ST = num($('mST').value), VL = num($('mVL').value), tp = $('mFT').value, rts = fuseRatings(tp);
+  if (!(ST > 0 && VL > 0) || !FUSES[tp]) { $('mFsug').textContent = ''; return; }
+  const IA = 1.5 * ST / (Math.sqrt(3) * VL), sug = rts.find(r => r >= IA);
+  $('mFsug').innerHTML = sug ? `IA = ${fmt(IA, 2)} A → sugerido ${sug} A${+$('mFR').value !== sug ? ` · <a href="#" id="useSug" data-r="${sug}">usar</a>` : ' ✓'}` : `IA = ${fmt(IA, 2)} A supera el mayor calibre`;
+}
+$('mFT').addEventListener('change', () => {
+  const prev = st.lastRating || $('mFR').value, tp = $('mFT').value, rts = fuseRatings(tp);
+  updFuseUI(false);
+  if (rts.includes(+prev)) $('mFR').value = prev;
+  else if (FUSES[tp]) { const ST = num($('mST').value), VL = num($('mVL').value), IA = ST > 0 && VL > 0 ? 1.5 * ST / (Math.sqrt(3) * VL) : 10, s2 = rts.find(r => r >= IA); $('mFR').value = String(s2 || rts[rts.length - 1]); }
+  applyFuse(); renderResult(); save();
+});
+$('mFR').addEventListener('change', () => { applyFuse(); renderResult(); save(); });
+$('mtBox').addEventListener('click', e => { const a = e.target.closest('#useSug'); if (!a) return; e.preventDefault(); $('mFR').value = a.dataset.r; applyFuse(); renderResult(); save(); });
+$('mST').addEventListener('input', sugFuse); $('mVL').addEventListener('input', sugFuse);
+function initFuse(rating) { updFuseUI(false); const tp = $('mFT').value; if (rating && fuseRatings(tp).includes(+rating)) $('mFR').value = rating; else if (FUSES[tp]) $('mFR').value = '10'; if (tp !== 'custom') applyFuse(); else sugFuse(); }
 function fuseTable() { const t = []; for (let k = 0; k < 5; k++) t.push({ t: num($('fT' + k).value), imin: num($('fM' + k).value), iclr: num($('fC' + k).value) }); return t; }
 function calcHV(lvl, m, R, res, Tm, Ta, Smm) {
   const mt = lvl === 'mt', g = res.g, M = res.M;
@@ -1427,7 +1487,7 @@ $('copyRep').onclick = () => {
 };
 
 function renderAll() { renderFit(); renderHom(); renderModel(); plot(); renderResult(); updStepper(); }
-setSeg('gV', st.volt); setSeg('gK', st.kind); updSec(); updE(); updHV(); updCdp();
+setSeg('gV', st.volt); setSeg('gK', st.kind); updSec(); updE(); updHV(); initFuse(); updCdp();
 renderTable(); plot(); renderResult(); route();
 setTimeout(run, 60);
 })();
