@@ -98,7 +98,9 @@ Después de modificar `src/`, ejecutar `python3 build.py`.
 
 - Temperatura máxima de la unión por defecto: 1083 °C soldada exotérmica, 250 °C compresión y apernada, como en la guía (editable).
 - Electrodo: la resistividad ponderada de las capas que atraviesa la barra es un criterio del programa; se puede reemplazar por un valor manual.
-- Alta tensión: usa IEEE 80-2013 con Sf y Df ingresados (Df automático con la tabla de la guía); confirmar con el ingeniero la variable adicional que pidió.
+- Alta tensión (RPTD N°06, Res. Ex. 33.277/2020): IEEE 80-2013 (8.25), 20 Ω (8.27), mayor corriente de falla a tierra previsible (8.12) y ts entre el despeje de la NTSyCS y el tiempo de la protección de respaldo (sección 5). Sf y Df son los factores de IEEE 80-2013 para la corriente IG.
+- Media tensión (RIC N°06, Res. Ex. 33.877/2020): tensiones de paso y contacto obligatorias con transformador de MT (Anexo 6.1); si la malla es también tierra de servicio con subestación propia, el límite es 5 Ω (6.7.3); unión o separación de tierras MT/BT según la sección 10.
+- La curva del fusible no la fija la normativa: se toma del fabricante del fusible elegido.
 - Con retículas distintas en cada dirección, las tensiones usan la mayor como D (lado seguro).
 - La lámina 36 (A-4 y A-5) no viene en el PDF usado, así que esas familias no están en el catálogo.
 - En las familias de 4 capas se usan las 20 combinaciones E2-E3 de las láminas (A a T: E2 = 1, 2, 3, 5 y E3 = 1, 3, 5, 10, 25).
