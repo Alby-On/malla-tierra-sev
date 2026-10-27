@@ -11,7 +11,7 @@ Abre `index.html` en el navegador (no necesita instalación ni internet, salvo l
 1. **Mediciones**: ingresa entre 13 y 16 lecturas (L = AB/2, s = MN completo, V/I). Se calculan K, ρa y las coordenadas X/Y en mm para AutoCAD. Se puede pegar desde Excel.
 2. **Homologación**: la curva de campo se compara con todas las familias de las láminas Orellana-Mooney (lámina 1 de 2 capas; H-1 a H-25, K-1 a K-25, Q-1 a Q-13, A-1 a A-13; y las familias de 4 capas HK, HA, KH, KQ, QH, QQ, AK, AA), unas 1.500 curvas en total, y se ubica la cruz de campo (Ec, ρc en mm). Luego se ajusta el modelo para 2, 3 y 4 capas. Incluye un modo manual: eliges lámina, familia y curva, ingresas las cotas de AutoCAD y el programa dibuja la familia completa sobre tus datos.
 3. **Modelo de suelo**: capas, espesores y resistividades.
-4. **Malla**: largo, ancho, cuadrícula, profundidad, sección y diámetro del conductor, unión apernada o soldada.
+4. **Malla**: largo, ancho, cuadrícula, profundidad, sección y diámetro del conductor, tipo de unión (soldadura exotérmica, compresión o apernada).
 5. **Resultado**: resistividad equivalente (Burgsdorf-Yakobs), resistencia de la malla (Schwarz), referencia Laurent-Niemann y verificación térmica de la sección (Onderdonk).
 
 ## Módulo de 62,5 mm por década y reescalado de las láminas
