@@ -330,12 +330,14 @@ a.ghost { text-decoration: none; color: var(--accent) }
 <!-- PASO 1 -->
 <section class="step" id="s1">
   <div class="step-h"><span class="n">1</span><h2>Mediciones de terreno</h2><span class="count" id="cnt"></span></div>
-  <p class="hint">Ingresa L = AB/2, s = MN (completo) y la lectura V/I del instrumento. ρa = π · (V/I) · [(L/s)² − 0,25] · s. Acepta coma o punto decimal. Desmarca una lectura para excluirla del ajuste sin borrarla.</p>
+  <div class="form"><div class="f fw"><label>Método de medición <span class="u">(RIC N°06, Anexo 6.6: Schlumberger o Wenner, uno a la vez)</span></label>
+    <div class="seg" id="gMeth"><button data-v="sch" class="on" type="button">Schlumberger</button><button data-v="wen" type="button">Wenner</button></div></div></div>
+  <p class="hint" id="s1hint"></p>
   <div class="cols">
     <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
       <button type="button" class="ghost colT" id="colT" aria-pressed="false">Mostrar K, X e Y</button>
       <div class="scroll"><table id="tbl">
-        <thead><tr><th>N.º</th><th>L (m)</th><th>s (m)</th><th>V/I (Ω)</th><th class="oc">K (m)</th><th>ρa (Ω·m)</th><th class="oc">X (mm)</th><th class="oc">Y (mm)</th><th>Usar</th><th></th></tr></thead>
+        <thead><tr><th>N.º</th><th id="th1">L (m)</th><th id="th2">s (m)</th><th id="th3">V/I (Ω)</th><th class="oc">K (m)</th><th>ρa (Ω·m)</th><th class="oc">X (mm)</th><th class="oc">Y (mm)</th><th>Usar</th><th></th></tr></thead>
         <tbody></tbody>
       </table></div>
       <div class="btns">
@@ -348,6 +350,7 @@ a.ghost { text-decoration: none; color: var(--accent) }
         <span class="lbl">Cargar ejemplo:</span>
         <button class="ghost" id="ex">Guía 6.1</button>
         <button class="ghost" id="ex2">Planilla</button>
+        <button class="ghost" id="ex3">Planilla Wenner</button>
         <a class="ghost lnk" href="#metodos">Plantilla de aberturas</a>
       </div>
       <div id="pasteBox" hidden style="display:flex;flex-direction:column;gap:6px">
@@ -492,6 +495,8 @@ a.ghost { text-decoration: none; color: var(--accent) }
         <option value="custom">Personalizada (curva del fabricante)</option>
       </select></div>
       <div class="f"><label for="mFR">Calibre</label><select id="mFR"></select><span class="u" id="mFsug"></span></div>
+      <div class="f"><label for="mServ">¿La malla es también tierra de servicio?</label><select id="mServ"><option value="no" selected>No, solo protección de MT</option><option value="si">Sí, neutro de BT de red interna con subestación propia</option></select><span class="u">RIC N°06, 6.7.3: en ese caso el límite es 5 Ω</span></div>
+      <div class="f"><label for="mSis">Esquema de la instalación de BT</label><select id="mSis"><option value="TT" selected>TT</option><option value="TN">TN</option></select><span class="u">para la separación de tierras MT/BT (RIC N°06, sección 10)</span></div>
       <div class="f"><label for="mFus">Fusible elegido</label><input id="mFus" value="10K" readonly><span class="u">se completa al elegir tipo y calibre</span></div>
     </div>
     <div class="cols">
@@ -659,7 +664,7 @@ a.ghost { text-decoration: none; color: var(--accent) }
 
   <div class="pan" role="tabpanel" id="pan-wen" aria-labelledby="tab-wen" hidden>
     <p class="hint">Método de cuatro electrodos igualmente separados, aceptado por el RIC N°06 (Anexo 6.6). Es el que aparece en la hoja «Wenner» de tu planilla. Los cuatro electrodos se mueven en cada lectura.</p>
-    <p class="note">Los pasos 1 a 3 de este programa trabajan con Schlumberger: las láminas de Orellana-Mooney son curvas Schlumberger. El cálculo con lecturas Wenner se puede agregar como siguiente paso.</p>
+    <p class="note">En el paso 1 elige «Wenner» como método de medición. Con Wenner el modelo de capas sale del ajuste fino, porque las láminas de Orellana-Mooney son curvas Schlumberger.</p>
     <div class="cols">
       <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
         <div class="chart" style="padding:10px">
@@ -707,6 +712,7 @@ a.ghost { text-decoration: none; color: var(--accent) }
         <h3>Tabla de separaciones recomendada</h3>
         <div class="scroll"><table><thead><tr><th>N.º</th><th>a (m)</th><th>AB = 3a (m)</th><th>AB/2 (m)</th><th>p máx. (m)</th></tr></thead><tbody><tr><td>1</td><td>1</td><td>3</td><td>1,5</td><td>0,05</td></tr><tr><td>2</td><td>1,5</td><td>4,5</td><td>2,25</td><td>0,075</td></tr><tr><td>3</td><td>2</td><td>6</td><td>3</td><td>0,1</td></tr><tr><td>4</td><td>3</td><td>9</td><td>4,5</td><td>0,15</td></tr><tr><td>5</td><td>4</td><td>12</td><td>6</td><td>0,2</td></tr><tr><td>6</td><td>5</td><td>15</td><td>7,5</td><td>0,25</td></tr><tr><td>7</td><td>7</td><td>21</td><td>10,5</td><td>0,35</td></tr><tr><td>8</td><td>10</td><td>30</td><td>15</td><td>0,5</td></tr><tr><td>9</td><td>15</td><td>45</td><td>22,5</td><td>0,75</td></tr><tr><td>10</td><td>20</td><td>60</td><td>30</td><td>1</td></tr><tr><td>11</td><td>25</td><td>75</td><td>37,5</td><td>1,25</td></tr><tr><td>12</td><td>30</td><td>90</td><td>45</td><td>1,5</td></tr><tr><td>13</td><td>40</td><td>120</td><td>60</td><td>2</td></tr></tbody></table></div>
         <p class="hint">Separaciones repartidas en escala logarítmica. Con a = 33 m las alas llegan a 50 m (lo aceptable según el RIC N°06); con a = 67 m llegan a 100 m. Si el terreno no lo permite, termina donde puedas y déjalo escrito en el informe.</p>
+        <div class="btns"><button class="pri" id="useWen">Cargar esta tabla en el paso 1</button><span class="count">Carga a y cambia el método a Wenner; p y R los ingresas tú</span></div>
         <h3>Requisitos</h3>
         <ul class="steps0">
           <li>Mínimo 12 y máximo 20 lecturas.</li>
@@ -871,6 +877,12 @@ const MG = (() => {
     const dV = (G(L - s / 2, rho, h) - G(L + s / 2, rho, h)) / PI;
     return K(L, s) * dV;
   }
+  // ρa Wenner (electrodos en superficie): ρa = 2a·[G(a) − G(2a)]
+  function rhoAW(a, rho, h) { return 2 * a * (G(a, rho, h) - G(2 * a, rho, h)); }
+  // Factor Wenner con profundidad de electrodos p (fórmula completa de la planilla): ρa = K·R
+  function KW(a, p) { return 4 * PI * a / (1 + 2 * a / Math.sqrt(a * a + 4 * p * p) - a / Math.sqrt(a * a + p * p)); }
+  // Separación de tierras MT/BT (RIC N°06, sección 10)
+  function vca(t) { return t <= 0.9 ? 72 / Math.pow(t, 1) : t <= 3 ? 38 / Math.pow(t, 0.18) : t <= 5 ? 64 : 50; }
   // ρa Schlumberger ideal (MN→0), como en las láminas de Orellana-Mooney
   function rhoAideal(L, rho, h) {
     const s = L * 0.02;
@@ -958,7 +970,7 @@ const MG = (() => {
   // ---------- Ajuste fino (Levenberg-Marquardt en log) ----------
   function misfit(p, n, data) {
     const rho = p.slice(0, n).map(x => Math.exp(x)), h = p.slice(n).map(x => Math.exp(x));
-    return data.map(d => Math.log(rhoAmodel(d.L, d.s, rho, h)) - Math.log(d.rho));
+    return data.map(d => Math.log(d.w ? rhoAW(d.L, rho, h) : rhoAmodel(d.L, d.s, rho, h)) - Math.log(d.rho));
   }
   function lm(p0, n, data, iters = 60) {
     const rs = data.map(d => d.rho), Ls = data.map(d => d.L);
@@ -1191,7 +1203,7 @@ const MG = (() => {
     return { cmil, mm2: cmil * 5.067075e-4 };
   }
 
-  return { K, rhoA, codX, codY, decX, decY, T, G, rhoAmodel, rhoAideal, homologar, ajustar, tipo, burgsdorf, malla, schwarz, laurent, onderdonk, sistema, barra, rhoBarra, fallaIf, red, rmax, fusible, fd, kCu, smin, cs, tolerables, tensiones, buildLibrary, families, familyMembers, curveOf };
+  return { K, rhoAW, KW, vca, rhoA, codX, codY, decX, decY, T, G, rhoAmodel, rhoAideal, homologar, ajustar, tipo, burgsdorf, malla, schwarz, laurent, onderdonk, sistema, barra, rhoBarra, fallaIf, red, rmax, fusible, fd, kCu, smin, cs, tolerables, tensiones, buildLibrary, families, familyMembers, curveOf };
 })();
 
 
@@ -1215,22 +1227,28 @@ async function copy(txt, msg) { try { await navigator.clipboard.writeText(txt); 
 
 // ---------- Paso 1: tabla ----------
 function data(all) {
-  return st.rows.map((r, i) => { const L = num(r.L), s = num(r.s), vi = num(r.vi);
+  const wen = st.meth === 'wen';
+  return st.rows.map((r, i) => {
+    if (wen) { const a = num(r.L), p0 = num(r.s), p = isFinite(p0) ? p0 : 0, R = num(r.vi), ok = a > 0 && p >= 0 && R > 0, K = ok ? MG.KW(a, p) : NaN;
+      return { i, L: a, s: p, vi: R, ok, on: r.on, w: true, K, rho: ok ? K * R : NaN }; }
+    const L = num(r.L), s = num(r.s), vi = num(r.vi);
     const ok = L > 0 && s > 0 && vi > 0 && L > s / 2;
     return { i, L, s, vi, ok, on: r.on, K: ok ? MG.K(L, s) : NaN, rho: ok ? MG.rhoA(L, s, vi) : NaN }; })
     .filter(d => all || (d.ok && d.on));
 }
+const cX = L => st.meth === 'wen' ? Math.log10(L) * 62.5 : MG.codX(L);
+const LAB = () => st.meth === 'wen' ? 'AB/2 = 1,5·a' : 'AB/2';
 function renderTable() {
   const tb = $('tbl').tBodies[0]; tb.innerHTML = '';
   data(true).forEach((d, i) => {
     const r = st.rows[i], tr = document.createElement('tr');
     if (!r.on) tr.className = 'off';
-    tr.innerHTML = `<td>${i + 1}${d.ok && d.L < 2.5 * d.s ? ' <span class="flag" title="MN mayor que AB/5: no cumple la condición Schlumberger">!</span>' : ''}</td>
+    tr.innerHTML = `<td>${i + 1}${d.ok && !d.w && d.L < 2.5 * d.s ? ' <span class="flag" title="MN mayor que AB/5: no cumple la condición Schlumberger">!</span>' : ''}</td>
       <td><input id="rL${i}" value="${r.L}" inputmode="decimal" aria-label="L lectura ${i + 1}"></td>
       <td><input id="rs${i}" value="${r.s}" inputmode="decimal" aria-label="s lectura ${i + 1}" style="width:52px"></td>
       <td><input id="rv${i}" value="${r.vi}" inputmode="decimal" aria-label="V/I lectura ${i + 1}"></td>
       <td class="calc oc" data-k>${d.ok ? fmt(d.K) : '—'}</td><td class="rho" data-r>${d.ok ? fmt(d.rho, 1) : '—'}</td>
-      <td class="calc oc" data-x>${d.ok ? fmt(MG.codX(d.L)) : '—'}</td><td class="calc oc" data-y>${d.ok ? fmt(MG.codY(d.rho)) : '—'}</td>
+      <td class="calc oc" data-x>${d.ok ? fmt(cX(d.L)) : '—'}</td><td class="calc oc" data-y>${d.ok ? fmt(MG.codY(d.rho)) : '—'}</td>
       <td><input type="checkbox" id="ru${i}" ${r.on ? 'checked' : ''} aria-label="Usar lectura ${i + 1}" style="width:auto"></td>
       <td><button class="x" data-del="${i}" aria-label="Eliminar lectura ${i + 1}">✕</button></td>`;
     tb.appendChild(tr);
@@ -1241,14 +1259,14 @@ function refreshRow(i) {
   const d = data(true)[i], tr = $('tbl').tBodies[0].rows[i];
   tr.querySelector('[data-k]').textContent = d.ok ? fmt(d.K) : '—';
   tr.querySelector('[data-r]').textContent = d.ok ? fmt(d.rho, 1) : '—';
-  tr.querySelector('[data-x]').textContent = d.ok ? fmt(MG.codX(d.L)) : '—';
+  tr.querySelector('[data-x]').textContent = d.ok ? fmt(cX(d.L)) : '—';
   tr.querySelector('[data-y]').textContent = d.ok ? fmt(MG.codY(d.rho)) : '—';
   ['rL', 'rs', 'rv'].forEach(k => { const el = $(k + i); el.classList.toggle('bad', !(num(el.value) > 0)); });
   tr.classList.toggle('off', !st.rows[i].on);
 }
 function updCount() {
   const n = data().length, el = $('cnt');
-  const nf = data().filter(d => d.L < 2.5 * d.s).length;
+  const nf = data().filter(d => !d.w && d.L < 2.5 * d.s).length;
   el.textContent = `${n} lecturas válidas · mínimo 12, máximo 20` + (nf ? ` · ${nf} con MN > AB/5 (!)` : '');
   el.className = 'count' + (n < 12 || n > 20 ? ' warn' : '');
   if (typeof updStepper === 'function' && $('stepper')) try { updStepper(); } catch (e) {}
@@ -1268,8 +1286,24 @@ $('tbl').addEventListener('keydown', e => {
 $('colT').onclick = () => { const on = !$('tbl').classList.contains('full'); $('tbl').classList.toggle('full', on); $('colT').setAttribute('aria-pressed', on); $('colT').textContent = on ? 'Ocultar K, X e Y' : 'Mostrar K, X e Y'; };
 $('tbl').addEventListener('click', e => { const b = e.target.closest('[data-del]'); if (!b) return; st.rows.splice(+b.dataset.del, 1); renderTable(); schedule(); });
 $('add').onclick = () => { if (st.rows.length >= 20) { toast('Máximo 20 lecturas'); return; } const last = st.rows[st.rows.length - 1]; st.rows.push({ L: '', s: last ? last.s : '1', vi: '', on: true }); renderTable(); $('rL' + (st.rows.length - 1)).focus(); };
-$('ex').onclick = () => { st.anim = true; st.rows = EX.map(r => ({ ...r })); renderTable(); schedule(); };
-$('ex2').onclick = () => { st.anim = true; st.rows = EX2.map(r => ({ ...r })); renderTable(); schedule(); };
+$('ex').onclick = () => { setMeth('sch', true); st.anim = true; st.rows = EX.map(r => ({ ...r })); renderTable(); schedule(); };
+$('ex2').onclick = () => { setMeth('sch', true); st.anim = true; st.rows = EX2.map(r => ({ ...r })); renderTable(); schedule(); };
+const EXW = [[1,17.8],[2,10.5],[3,8.9],[4,7.5],[5,5.8],[7,4.5],[10,2.75],[15,1.46],[20,0.98],[30,0.56]].map(([a, R]) => ({ L: String(a), s: '0,29', vi: String(R).replace('.', ','), on: true }));
+$('ex3').onclick = () => { setMeth('wen', true); st.anim = true; st.rows = EXW.map(r => ({ ...r })); renderTable(); schedule(); };
+const S1H = {
+  sch: 'Ingresa L = AB/2, s = MN (completo) y la lectura V/I del instrumento. ρa = π · (V/I) · [(L/s)² − 0,25] · s. Acepta coma o punto decimal. Desmarca una lectura para excluirla del ajuste sin borrarla.',
+  wen: 'Ingresa la separación a entre electrodos, la profundidad p a la que están enterrados y la lectura R del instrumento. ρa = 4π·a·R / [1 + 2a/√(a² + 4p²) − a/√(a² + p²)], la fórmula de la hoja Wenner de la planilla; con p = 0 queda ρa = 2π·a·R. X = log(a)·62,5.'
+};
+function setMeth(v, quiet) {
+  st.meth = v === 'wen' ? 'wen' : 'sch';
+  [...$('gMeth').children].forEach(b => b.classList.toggle('on', b.dataset.v === st.meth));
+  const w = st.meth === 'wen';
+  $('th1').textContent = w ? 'a (m)' : 'L (m)'; $('th2').textContent = w ? 'p (m)' : 's (m)'; $('th3').textContent = w ? 'R (Ω)' : 'V/I (Ω)';
+  $('s1hint').textContent = S1H[st.meth]; $('manDet').hidden = w;
+  if (w && (st.src === 'pat' || st.src === 'man')) st.src = 'fit';
+  if (!quiet) { renderTable(); schedule(); }
+}
+$('gMeth').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.dataset.v === st.meth) return; setMeth(b.dataset.v); save(); toast(b.dataset.v === 'wen' ? 'Método Wenner: columnas a, p y R' : 'Método Schlumberger: columnas L, s y V/I'); });
 function setTab(t) {
   document.querySelectorAll('#s0 .tab').forEach(b => { const on = b.dataset.t === t; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
   document.querySelectorAll('#s0 .pan').forEach(p => p.hidden = p.id !== 'pan-' + t);
@@ -1347,6 +1381,7 @@ function updStepper() {
   if (busy) setStp(2, '', 'calculando…');
   else if (st.src === 'man' && st.manPat) setStp(2, 'ok', `manual · ${st.manPat.name || '2 capas'}`);
   else if (st.hom.length) { const c = st.hom[st.homSel]; setStp(2, 'ok', st.src === 'pat' ? `Lám. ${c.lam} · ${c.n === 2 ? '2 capas' : c.name}` : `mejor: Lám. ${st.hom[0].lam} · ${st.hom[0].n === 2 ? '2 capas' : st.hom[0].name}`); }
+  else if (st.meth === 'wen' && st.fit) setStp(2, 'ok', 'Wenner · ajuste fino');
   else setStp(2, '', '—');
   setStp(3, m ? 'ok' : '', m ? `${m.n} capas · tipo ${MG.tipo(m.rho)}` : '—');
   const L = st.last;
@@ -1368,8 +1403,10 @@ function route() {
   if (v === 'principal') plot();
 }
 window.addEventListener('hashchange', () => { route(); window.scrollTo(0, 0); });
+const WPLANT = ['1', '1,5', '2', '3', '4', '5', '7', '10', '15', '20', '25', '30', '40'];
+$('useWen').onclick = () => { setMeth('wen', true); st.rows = WPLANT.map(a => ({ L: a, s: '', vi: '', on: true })); renderTable(); schedule(); save(); if (location.hash !== '#principal') location.hash = 'principal'; setTimeout(() => document.getElementById('s1').scrollIntoView({ behavior: 'smooth' }), 50); toast('Plantilla Wenner cargada: ingresa p y R'); };
 const PLANT = [['0,6', '0,2'], ['0,8', '0,2'], ['1', '0,2'], ['1,6', '0,2'], ['2', '0,2'], ['2,5', '0,2'], ['2,5', '1'], ['3', '1'], ['4', '1'], ['5', '1'], ['6', '1'], ['8', '1'], ['10', '1'], ['15', '1'], ['15', '5'], ['20', '5'], ['30', '5'], ['40', '5'], ['50', '5']];
-$('usePlant').onclick = () => { st.rows = PLANT.map(([L, s]) => ({ L, s, vi: '', on: true })); renderTable(); schedule(); if (location.hash !== '#principal') location.hash = 'principal'; setTimeout(() => document.getElementById('s1').scrollIntoView({ behavior: 'smooth' }), 50); toast('Plantilla cargada: ingresa los V/I'); };
+$('usePlant').onclick = () => { setMeth('sch', true); st.rows = PLANT.map(([L, s]) => ({ L, s, vi: '', on: true })); renderTable(); schedule(); if (location.hash !== '#principal') location.hash = 'principal'; setTimeout(() => document.getElementById('s1').scrollIntoView({ behavior: 'smooth' }), 50); toast('Plantilla cargada: ingresa los V/I'); };
 $('clr').onclick = () => {
   const b = $('clr');
   if (!b.classList.contains('armed')) { b.classList.add('armed'); b.textContent = '¿Seguro? Vaciar'; clearTimeout(b.t); b.t = setTimeout(() => { b.classList.remove('armed'); b.textContent = 'Vaciar tabla'; }, 3000); return; }
@@ -1387,7 +1424,7 @@ $('pasteOk').onclick = () => {
 };
 $('copyTbl').onclick = () => {
   const lines = ['N\tL (m)\ts (m)\tV/I (Ohm)\tK (m)\trho_a (Ohm m)\tX (mm)\tY (mm)'];
-  data(true).forEach((d, i) => d.ok && lines.push([i + 1, d.L, d.s, d.vi, d.K.toFixed(2), d.rho.toFixed(1), MG.codX(d.L).toFixed(2), MG.codY(d.rho).toFixed(2)].join('\t').replace(/\./g, ',')));
+  data(true).forEach((d, i) => d.ok && lines.push([i + 1, d.L, d.s, d.vi, d.K.toFixed(2), d.rho.toFixed(1), cX(d.L).toFixed(2), MG.codY(d.rho).toFixed(2)].join('\t').replace(/\./g, ',')));
   copy(lines.join('\n'), 'Tabla copiada para Excel');
 };
 
@@ -1396,7 +1433,7 @@ const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).
 function curvePts(model, L0, L1, ideal) {
   const pts = []; if (!model) return pts;
   for (let lg = Math.log10(L0); lg <= Math.log10(L1) + 1e-9; lg += 0.04) {
-    const L = 10 ** lg; const r = MG.rhoAideal(L, model.rho, model.h); if (isFinite(r) && r > 0) pts.push([L, r]);
+    const L = 10 ** lg; const r = st.meth === 'wen' && !ideal ? MG.rhoAW(L, model.rho, model.h) : MG.rhoAideal(L, model.rho, model.h); if (isFinite(r) && r > 0) pts.push([L, r]);
   }
   return pts;
 }
@@ -1406,7 +1443,7 @@ function plot() {
   const Ls = D.map(d => d.L).concat(all.map(d => d.L)), Rs = D.map(d => d.rho).concat(all.map(d => d.rho));
   if (!Ls.length) { svg.setAttribute('viewBox', '0 0 400 120'); svg.innerHTML = `<text x="200" y="64" text-anchor="middle" fill="${css('--muted')}" font-size="13">Ingresa lecturas para ver la curva</text>`; $('leg').innerHTML = ''; return; }
   let x0 = Math.floor(Math.log10(Math.min(...Ls)) + 1e-9), x1 = Math.ceil(Math.log10(Math.max(...Ls)) - 1e-9);
-  const cPat = pat ? curvePts(pat, 10 ** x0, 10 ** x1) : [], cMod = mod ? curvePts(mod, 10 ** x0, 10 ** x1) : [];
+  const cPat = pat ? curvePts(pat, 10 ** x0, 10 ** x1, true) : [], cMod = mod ? curvePts(mod, 10 ** x0, 10 ** x1) : [];
   const allR = Rs.concat(cMod.map(p => p[1]), cPat.map(p => p[1]));
   if (pat) { allR.push(pat.rho1); x0 = Math.min(x0, Math.floor(Math.log10(pat.E1))); }
   let y0 = Math.floor(Math.log10(Math.min(...Rs) / 1.5)), y1 = Math.ceil(Math.log10(Math.max(...Rs) * 1.5));
@@ -1421,7 +1458,7 @@ function plot() {
   const lab = v => v >= 1 ? v.toLocaleString('es-CL') : String(v).replace('.', ',');
   for (let d = x0; d <= x1; d++) s += `<text x="${X(10 ** d)}" y="${H - mb + 16}" text-anchor="middle" fill="${mu}" font-size="11.5" font-family="${css('--f-mono')}">${lab(+(10 ** d).toPrecision(1))}</text>`;
   for (let d = y0; d <= y1; d++) s += `<text x="${ml - 6}" y="${Y(10 ** d) + 4}" text-anchor="end" fill="${mu}" font-size="11.5" font-family="${css('--f-mono')}">${lab(+(10 ** d).toPrecision(1))}</text>`;
-  s += `<text x="${(ml + W - mr) / 2}" y="${H - 6}" text-anchor="middle" fill="${ink}" font-size="12.5">L = AB/2 (m)</text>`;
+  s += `<text x="${(ml + W - mr) / 2}" y="${H - 6}" text-anchor="middle" fill="${ink}" font-size="12.5">${st.meth === 'wen' ? 'a (m) · separación Wenner' : 'L = AB/2 (m)'}</text>`;
   s += `<text transform="translate(13 ${(mt + H - mb) / 2}) rotate(-90)" text-anchor="middle" fill="${ink}" font-size="12.5">ρa (Ω·m)</text>`;
   const path = (pts, c, dash, w) => pts.length ? `<polyline fill="none" stroke="${c}" stroke-width="${w}" ${dash ? `stroke-dasharray="${dash}"` : ''} points="${pts.map(p => X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1)).join(' ')}"/>` : '';
   s += `<clipPath id="cp"><rect x="${ml}" y="${mt}" width="${W - ml - mr}" height="${H - mt - mb}"/></clipPath><g clip-path="url(#cp)">`;
@@ -1459,16 +1496,17 @@ let timer = null, libReady = false;
 function schedule() { save(); clearTimeout(timer); timer = setTimeout(run, 350); plot(); }
 async function run() {
   const D = data();
-  const key = JSON.stringify(D.map(d => [d.L, d.s, d.rho]));
+  const key = st.meth + JSON.stringify(D.map(d => [d.L, d.s, d.rho]));
   if (key === st.dataKey) { renderAll(); return; }
   st.dataKey = key;
   if (D.length < 4) { st.hom = []; st.fit = null; $('homList').innerHTML = '<p class="hint">Se necesitan al menos 4 lecturas válidas.</p>'; $('fitList').innerHTML = ''; renderAll(); return; }
   if (!libReady) { setBusy('Generando curvas patrón…'); await new Promise(r => setTimeout(r, 30)); MG.buildLibrary(); libReady = true; }
   setBusy('Homologando…'); await new Promise(r => setTimeout(r, 20));
   if (key !== st.dataKey) return;
-  const hom = MG.homologar(D.map(d => d.L), D.map(d => d.rho));
-  // quedarse con la mejor curva de cada familia
-  const seen = new Set(); st.hom = hom.filter(c => { const k = c.n === 2 ? '2' : c.name + c.ratio; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6);
+  const wen = st.meth === 'wen';
+  const hom = MG.homologar(D.map(d => wen ? 1.5 * d.L : d.L), D.map(d => d.rho));
+  // quedarse con la mejor curva de cada familia (con Wenner solo sirven como punto de partida del ajuste)
+  const seen = new Set(); st.hom = wen ? [] : hom.filter(c => { const k = c.n === 2 ? '2' : c.name + c.ratio; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6);
   st.homSel = 0; renderHom(); plot();
   setBusy('Ajustando 2, 3 y 4 capas…'); await new Promise(r => setTimeout(r, 20));
   if (key !== st.dataKey) return;
@@ -1479,6 +1517,7 @@ async function run() {
 }
 function renderHom() {
   const el = $('homList');
+  if (st.meth === 'wen') { el.innerHTML = '<p class="note">Las láminas de Orellana-Mooney son curvas Schlumberger y no se superponen directamente a una curva Wenner. Con Wenner el modelo de capas sale del ajuste fino de la derecha, que usa el cálculo exacto de la configuración Wenner.</p>'; return; }
   if (!st.hom.length) { el.innerHTML = '<p class="hint">Sin resultados.</p>'; return; }
   el.innerHTML = st.hom.map((c, i) => `<button class="row ${i === st.homSel ? 'sel' : ''}" data-h="${i}"><span><b>${patLabel(c)}</b><br>E1 = ${fmtS(c.E1)} m · ρ1 = ${fmtS(c.rho1)} Ω·m · cruz Ec ${fmt(c.Ec)} / ρc ${fmt(c.rhoc)} mm</span><span class="chip ${c.rms < 8 ? 'ok' : c.rms < 15 ? 'warn' : 'bad'}">error ${fmt(c.rms, 1)} %</span></button>`).join('')
     + `<div class="btns"><button id="usePat">Adoptar la curva patrón seleccionada</button></div>`;
@@ -1541,9 +1580,9 @@ function renderModel() {
 }
 
 // ---------- Paso 4 y 5 ----------
-const GIDS = ['gA', 'gB', 'gCl', 'gCa', 'gH', 'gSec', 'gSmm', 'gTm', 'gN', 'gLb', 'gRb', 'eLb', 'eRb', 'eT', 'eRm', 'eRho', 'gRmax', 'gVL', 'gX', 'gIf', 'gI', 'gT', 'gTa', 'gMet', 'mST', 'mVL', 'mI3', 'mI1', 'mIaux', 'mFT', 'mFR', 'mFus', 'fT0', 'fM0', 'fC0', 'fT1', 'fM1', 'fC1', 'fT2', 'fM2', 'fC2', 'fT3', 'fM3', 'fC3', 'fT4', 'fM4', 'fC4', 'aVL', 'aI3', 'aI1', 'aT', 'aSf', 'aDf', 'aDfv', 'pKg', 'pTt', 'pGrav', 'pRs', 'pHs'];
-function gState() { const o = {}; GIDS.forEach(k => o[k] = $(k).value); o.joint = st.joint; o.volt = st.volt; o.kind = st.kind; return o; }
-function restoreG(o) { GIDS.forEach(k => { if (o[k] != null && $(k)) $(k).value = o[k]; }); setJoint(o.joint || 'soldada', true); setSeg('gV', o.volt || 'bt'); setSeg('gK', o.kind || 'malla'); updSec(); updE(); updHV(); initFuse(o.mFR); updCdp(); renderAll(); }
+const GIDS = ['gA', 'gB', 'gCl', 'gCa', 'gH', 'gSec', 'gSmm', 'gTm', 'gN', 'gLb', 'gRb', 'eLb', 'eRb', 'eT', 'eRm', 'eRho', 'gRmax', 'gVL', 'gX', 'gIf', 'gI', 'gT', 'gTa', 'gMet', 'mST', 'mVL', 'mI3', 'mI1', 'mIaux', 'mFT', 'mFR', 'mFus', 'mServ', 'mSis', 'fT0', 'fM0', 'fC0', 'fT1', 'fM1', 'fC1', 'fT2', 'fM2', 'fC2', 'fT3', 'fM3', 'fC3', 'fT4', 'fM4', 'fC4', 'aVL', 'aI3', 'aI1', 'aT', 'aSf', 'aDf', 'aDfv', 'pKg', 'pTt', 'pGrav', 'pRs', 'pHs'];
+function gState() { const o = {}; GIDS.forEach(k => o[k] = $(k).value); o.meth = st.meth; o.joint = st.joint; o.volt = st.volt; o.kind = st.kind; return o; }
+function restoreG(o) { GIDS.forEach(k => { if (o[k] != null && $(k)) $(k).value = o[k]; }); setMeth(o.meth || 'sch', true); renderTable(); setJoint(o.joint || 'soldada', true); setSeg('gV', o.volt || 'bt'); setSeg('gK', o.kind || 'malla'); updSec(); updE(); updHV(); initFuse(o.mFR); updCdp(); renderAll(); }
 const JOINT = { soldada: { tm: '1083', txt: 'soldadas (exotérmica)', note: 'Unión bajo tierra permitida por RIC N°06 (7.11)' }, compresion: { tm: '250', txt: 'por compresión', note: 'Conector apto para enterrar, ensayado según IEEE 837 (RIC N°06, 7.11 c)' }, apernada: { tm: '250', txt: 'apernadas', note: 'Bajo tierra no es inspeccionable: RIC N°06 (7.11) exige soldadura de alto punto de fusión o conector apto' } };
 function setJoint(v, keepTm) { if (!JOINT[v]) v = 'soldada'; st.joint = v; [...$('gJ').children].forEach(b => b.classList.toggle('on', b.dataset.v === v)); if (!keepTm) $('gTm').value = JOINT[v].tm; $('gJnote').textContent = JOINT[v].note; }
 const LVNOTE = {
@@ -1724,6 +1763,7 @@ function calcHV(lvl, m, R, res, Tm, Ta, Smm) {
     o.Ifmin = Math.min(...tab.filter(r => r.imin > 0).map(r => r.imin));
     o.Rmax = Ifaux > 0 ? MG.rmax(VL, Ifaux, rd.SX) : NaN;
     o.Rdis = isFinite(o.Rmax) ? Math.min(o.Rmax, 20) : 20;
+    o.serv = $('mServ').value === 'si'; if (o.serv) o.Rdis = Math.min(o.Rdis, 5);
     o.t2 = MG.fusible(tab, Ifaux, 'iclr'); o.tr = MG.fusible(tab, If, 'iclr');
     o.tTerm = o.tr.estado === 'ok' || o.tr.estado === 'menor' ? o.tr.t : NaN;
     o.tTol = num($('pTt').value); o.Sf = 1; o.Df = 1;
@@ -1747,6 +1787,14 @@ function calcHV(lvl, m, R, res, Tm, Ta, Smm) {
   o.D = Math.max(num($('gCl').value), num($('gCa').value));
   o.T = MG.tensiones({ rhoEq: res.by.rhoEq, IG: o.IG, Lc: M.Lt, a: M.largo, b: M.ancho, D: o.D, h: g.h, d: g.d, nb: res.n, Lb: res.Lb, perim: res.n > 0 });
   o.okC = o.GPR <= o.tol.Etc || o.T.Em <= o.tol.Etc; o.okP = o.T.Es <= o.tol.Etp;
+  if (mt) { // RIC N°06, sección 10: unión o separación de las tierras de MT y BT
+    const sis = $('mSis').value, tD = o.tr && (o.tr.estado === 'ok' || o.tr.estado === 'menor') ? o.tr.t : o.tTol;
+    o.s10 = { sis, t: tD, Id: I1, Vca: MG.vca(tD) };
+    o.s10.Rt = o.s10.Vca / I1;
+    o.s10.U = sis === 'TT' ? (tD <= 5 ? 600 : 250) : 2 * o.tol.Etc;
+    o.s10.D = res.by.rhoEq * I1 / (2 * Math.PI * o.s10.U);
+    o.s10.unir = R <= o.s10.Rt;
+  }
   return o;
 }
 function renderHV(o, R) {
@@ -1755,7 +1803,8 @@ function renderHV(o, R) {
     $('mtH').textContent = 'Red, fusible, corriente de falla y resistencia máxima';
     const tt = e => e.estado === 'menor' ? `< ${fmtS(e.t)} s` : e.estado === 'ok' ? `${fmtS(e.t)} s` : e.estado === 'no opera' ? 'no opera' : '—';
     $('mtKv1').innerHTML = `<dt>Fusible de arranque IA = 1,5·ST/(√3·VL)</dt><dd>${A(r.IA, 2)} → ${o.fus || '—'}</dd><dt>X₁ = X₂ = VL/(√3·Icc3φ)</dt><dd>${fmt(r.X1, 3)} Ω</dd><dt>X₀ = 3VL/(√3·Icc1φ) − (X₁ + X₂)</dt><dd>${fmt(r.X0, 3)} Ω</dd><dt>ΣX = X₀ + X₁ + X₂</dt><dd>${fmt(r.SX, 3)} Ω</dd><dt>If mín del fusible</dt><dd>${A(o.Ifmin)}</dd><dt>If aux · tiempo t₂</dt><dd>${A(o.Ifaux, 0)} · ${tt(o.t2)}</dd>`;
-    $('mtKv2').innerHTML = `<dt>Rmáx = ⅓·√(3VL²/If aux² − ΣX²)</dt><dd>${isFinite(o.Rmax) ? fmt(o.Rmax, 2) + ' Ω' : '—'}</dd><dt><b>Rdiseño</b> (menor entre Rmáx y 20 Ω)</dt><dd><b>${fmt(o.Rdis, 2)} Ω</b></dd><dt>R proyectada</dt><dd>${fmt(R, 2)} Ω</dd><dt><b>If1φ real</b> = 3VL/[√3·√((3R)² + ΣX²)]</dt><dd><b>${A(o.If)}</b></dd><dt>Tiempo real de operación</dt><dd>${tt(o.tr)}</dd><dt>Smín = K·If·FD·√t/1973</dt><dd>${isFinite(o.Smin) ? fmt(o.Smin, 2) + ' mm²' : '—'} (K ${fmt(o.K, 2)} · FD ${isFinite(o.FD) ? fmt(o.FD, 2) : '—'})</dd>`;
+    $('mtKv2').innerHTML = `<dt>Rmáx = ⅓·√(3VL²/If aux² − ΣX²)</dt><dd>${isFinite(o.Rmax) ? fmt(o.Rmax, 2) + ' Ω' : '—'}</dd><dt><b>Rdiseño</b> (menor entre Rmáx, 20 Ω${o.serv ? ' y 5 Ω' : ''})</dt><dd><b>${fmt(o.Rdis, 2)} Ω</b></dd><dt>R proyectada</dt><dd>${fmt(R, 2)} Ω</dd><dt><b>If1φ real</b> = 3VL/[√3·√((3R)² + ΣX²)]</dt><dd><b>${A(o.If)}</b></dd><dt>Tiempo real de operación</dt><dd>${tt(o.tr)}</dd><dt>Smín = K·If·FD·√t/1973</dt><dd>${isFinite(o.Smin) ? fmt(o.Smin, 2) + ' mm²' : '—'} (K ${fmt(o.K, 2)} · FD ${isFinite(o.FD) ? fmt(o.FD, 2) : '—'})</dd>`
+      + (o.s10 ? `<dt>Sección 10 · Vca (t = ${fmtS(o.s10.t)} s)</dt><dd>${fmt(o.s10.Vca, 1)} V</dd><dt>Rt máx. para unir = Vca/Id</dt><dd>${fmt(o.s10.Rt, 3)} Ω (Id = Icc1φ ${fmtS(o.s10.Id)} A)</dd><dt>U (${o.s10.sis}) · D = ρ·Id/(2π·U)</dt><dd>${fmt(o.s10.U, 0)} V · ${fmt(o.s10.D, 1)} m</dd><dt><b>Tierras de MT y BT</b></dt><dd><b>${o.s10.unir ? 'se pueden unir' : 'separadas, D ≥ ' + fmt(o.s10.D, 1) + ' m'}</b></dd>` : '');
   }
   const T = o.T, tol = o.tol;
   const card = (name, E, Et, ok, extra) => { const pct = Math.min(100, E / Et * 100); return `<div class="tcard ${ok ? 'ok' : 'bad'}"><div class="tt"><b>${name}</b><span class="chip ${ok ? 'ok' : 'bad'}">${ok ? 'cumple' : 'no cumple'}</span></div><div class="nums"><span>calculada<strong>${fmt(E, 0)} V</strong></span><span>tolerable<strong>${fmt(Et, 0)} V</strong></span></div><div class="meter" role="img" aria-label="${fmt(pct, 0)} % de la tolerable"><i style="width:${pct}%"></i></div><span class="u">${extra}</span></div>`; };
@@ -1772,11 +1821,13 @@ function hvChecks(o, R) {
   const c = [], mt = o.lvl === 'mt', T = o.T;
   if (mt) {
     c.push(o.Ifaux > o.Ifmin && o.Ifaux < o.I1 ? { s: 'ok', t: `Corriente auxiliar: ${fmtS(o.Ifmin)} A < If aux ${fmtS(o.Ifaux)} A < Icc1φ ${fmtS(o.I1)} A`, d: 'Guía de resistencia máxima, paso 3.' } : { s: 'bad', t: `Corriente auxiliar fuera de rango: If aux ${fmtS(o.Ifaux)} A`, d: 'Debe quedar entre la corriente mínima de fusión del fusible y la corriente de cortocircuito monofásica.' });
-    c.push(R <= o.Rdis ? { s: 'ok', t: `Resistencia: ${fmt(R, 2)} Ω ≤ Rdiseño ${fmt(o.Rdis, 2)} Ω`, d: `Menor entre Rmáx (${isFinite(o.Rmax) ? fmt(o.Rmax, 2) + ' Ω' : '—'}) y 20 Ω de la normativa (RIC N°06).` } : { s: 'bad', t: `Resistencia: ${fmt(R, 2)} Ω > Rdiseño ${fmt(o.Rdis, 2)} Ω`, d: 'Agrandar la malla: el término del área es el que más pesa. Luego barras más largas o más barras en el perímetro.' });
+    c.push(R <= o.Rdis ? { s: 'ok', t: `Resistencia: ${fmt(R, 2)} Ω ≤ Rdiseño ${fmt(o.Rdis, 2)} Ω`, d: `Menor entre Rmáx (${isFinite(o.Rmax) ? fmt(o.Rmax, 2) + ' Ω' : '—'}), 20 Ω (RIC N°06)${o.serv ? ' y 5 Ω (6.7.3)' : ''}.` } : { s: 'bad', t: `Resistencia: ${fmt(R, 2)} Ω > Rdiseño ${fmt(o.Rdis, 2)} Ω`, d: 'Agrandar la malla: el término del área es el que más pesa. Luego barras más largas o más barras en el perímetro.' });
     const opera = o.tr.estado === 'ok' || o.tr.estado === 'menor';
     c.push(opera && o.If > o.Ifaux ? { s: 'ok', t: `Corriente real de falla: ${fmt(o.If, 1)} A > If aux ${fmtS(o.Ifaux)} A`, d: `El fusible opera en ${o.tr.estado === 'menor' ? 'menos de ' : ''}${fmtS(o.tr.t)} s.` } : { s: 'bad', t: `Corriente real de falla: ${fmt(o.If, 1)} A`, d: opera ? 'Es menor que la corriente auxiliar: el fusible demora más que lo exigido.' : 'El fusible no opera con esta corriente según su curva.' });
-    c.push({ s: 'na', t: 'Tierra de servicio con subestación propia: 5 Ω', d: 'RIC N°06, 6.7.3: si la malla es también la tierra de servicio (neutro de BT) de una red interna con subestación, la resistencia combinada no debe superar 5 Ω y la tensión de los conductores activos a tierra, 250 V (6.7.1).' });
-    c.push({ s: 'na', t: 'Tierras de MT y de BT unidas o separadas', d: 'RIC N°06, sección 10: se pueden unir solo si la resistencia es lo bastante baja según la tensión Vca y el tiempo de despeje; si no, deben ser independientes, separadas a la distancia mínima D.' });
+    if (o.serv) c.push(R <= 5 ? { s: 'ok', t: `Tierra de servicio con subestación propia: ${fmt(R, 2)} Ω ≤ 5 Ω`, d: 'RIC N°06, 6.7.3. Además, la tensión de los conductores activos a tierra no debe superar 250 V en falla permanente (6.7.1).' } : { s: 'bad', t: `Tierra de servicio con subestación propia: ${fmt(R, 2)} Ω > 5 Ω`, d: 'RIC N°06, 6.7.3: la resistencia combinada de las puestas a tierra de servicio no debe superar 5 Ω.' });
+    else c.push({ s: 'nap', t: 'Tierra de servicio con subestación propia (5 Ω)', d: 'RIC N°06, 6.7.3: aplica solo si la malla es también el neutro de BT de una red interna con subestación propia. Indícalo en el paso 4 si corresponde.' });
+    if (o.s10) c.push(o.s10.unir ? { s: 'ok', t: `Tierras de MT y BT: se pueden unir (${fmt(R, 2)} Ω ≤ ${fmt(o.s10.Rt, 3)} Ω)`, d: `RIC N°06, sección 10.2: con t = ${fmtS(o.s10.t)} s, Vca = ${fmt(o.s10.Vca, 1)} V e Id = ${fmtS(o.s10.Id)} A.` }
+      : { s: 'warn', t: `Tierras de MT y BT separadas: distancia mínima D ≥ ${fmt(o.s10.D, 1)} m`, d: `RIC N°06, sección 10: R = ${fmt(R, 2)} Ω supera ${fmt(o.s10.Rt, 3)} Ω (Vca/Id), así que no se pueden unir. Deben ser independientes: D = ρ·Id/(2π·U) con U = ${fmt(o.s10.U, 0)} V (${o.s10.sis}), sin canalizaciones metálicas que crucen la zona y con el centro de transformación sin unión metálica con el edificio.` });
     if (opera) c.push(o.tr.t <= 0.5 ? { s: 'ok', t: `Tiempo de despeje: ${o.tr.estado === 'menor' ? '< ' : ''}${fmtS(o.tr.t)} s ≤ 0,5 s`, d: 'RIC N°06, 8.8: el tiempo de exposición nunca puede superar 0,5 s.' } : { s: 'bad', t: `Tiempo de despeje: ${fmtS(o.tr.t)} s > 0,5 s`, d: 'RIC N°06, 8.8: nunca superior a 0,5 s. Hay que bajar la resistencia o cambiar la protección.' });
   } else {
     c.push(R <= 20 ? { s: 'ok', t: `Resistencia: ${fmt(R, 2)} Ω ≤ 20 Ω`, d: 'RPTD N°06, 8.27: la puesta a tierra no puede superar 20 Ω.' } : { s: 'bad', t: `Resistencia: ${fmt(R, 2)} Ω > 20 Ω`, d: 'RPTD N°06, 8.27: máximo 20 Ω.' });
@@ -1791,11 +1842,11 @@ function hvChecks(o, R) {
 }
 function ricChecks({ lvl, hv, elec, res, R, Rdis, Rmax, Ireal, If, I, t, Ta, Tm, Smm }) {
   const at = lvl === 'at', P = at ? 'RPTD N°06' : 'RIC N°06';
-  const out = [], D = data(), Lmax = D.length ? Math.max(...D.map(d => d.L)) : 0;
+  const out = [], D = data(), Lmax = D.length ? Math.max(...D.map(d => d.w ? 1.5 * d.L : d.L)) : 0;
   out.push(D.length >= 12 && D.length <= 20 ? { s: 'ok', t: `Lecturas del sondeo: ${D.length}`, d: 'Mínimo 12 y máximo 20 lecturas.' } : { s: 'warn', t: `Lecturas del sondeo: ${D.length}`, d: D.length < 12 ? 'Faltan lecturas: el mínimo es 12.' : 'Sobran lecturas: el máximo es 20. Desmarca «Usar» en las que no correspondan.' });
   out.push(Lmax >= 50 ? { s: 'ok', t: `Sondeo de resistividad: AB/2 máx. = ${fmtS(Lmax)} m`, d: 'Anexo 6.6: alas de hasta 100 m; 50 m es aceptable si no se puede llegar a 100 m.' }
     : { s: 'warn', t: `Sondeo reducido: AB/2 máx. = ${fmtS(Lmax)} m`, d: 'Anexo 6.6 pide alas de hasta 100 m (50 m aceptable). En terreno se reduce cuando no hay espacio: el programa lo acepta, pero conviene dejar la razón escrita en el informe.' });
-  out.push({ s: 'ok', t: 'Método de medición: Schlumberger', d: 'Anexo 6.6: se acepta Schlumberger o Wenner, uno a la vez.' });
+  out.push({ s: 'ok', t: `Método de medición: ${st.meth === 'wen' ? 'Wenner' : 'Schlumberger'}`, d: 'Anexo 6.6: se acepta Schlumberger o Wenner, uno a la vez.' });
   if (!elec) {
     const { g, S, n, Lb, M } = res;
     out.push(Smm >= 25 ? { s: 'ok', t: `Sección del conductor: ${fmt(Smm, 2)} mm²`, d: at ? 'RPTD N°06, 8.14: cobre de 25 mm² como mínimo.' : 'RIC N°06, 8.7: mínimo 25 mm² para conductores desnudos usados como electrodo (cobre nuevo, 8.9).' } : { s: 'bad', t: `Sección del conductor: ${fmt(Smm, 2)} mm²`, d: `${P}: el mínimo es 25 mm².` });
@@ -1822,7 +1873,7 @@ function ricChecks({ lvl, hv, elec, res, R, Rdis, Rmax, Ireal, If, I, t, Ta, Tm,
 $('copyRep').onclick = () => {
   if (!st.last) return; const { m, R, Rdis, Ireal, res, elec, ric } = st.last; const D = data();
   const hv = st.last.hv, lvn = { bt: 'BAJA TENSIÓN', mt: 'MEDIA TENSIÓN', at: 'ALTA TENSIÓN' }[st.last.lvl];
-  let t = `INFORME PUESTA A TIERRA · ${lvn} · ${elec ? 'ELECTRODO' : 'MALLA'}\n\nMediciones Schlumberger (${D.length} lecturas)\nL(m)\ts(m)\tV/I(Ohm)\trho_a(Ohm m)\n` + D.map(d => [d.L, d.s, d.vi, d.rho.toFixed(1)].join('\t')).join('\n').replace(/\./g, ',');
+  let t = `INFORME PUESTA A TIERRA · ${lvn} · ${elec ? 'ELECTRODO' : 'MALLA'}\n\nMediciones ${st.meth === 'wen' ? 'Wenner' : 'Schlumberger'} (${D.length} lecturas)\n${st.meth === 'wen' ? 'a(m)\tp(m)\tR(Ohm)' : 'L(m)\ts(m)\tV/I(Ohm)'}\trho_a(Ohm m)\n` + D.map(d => [d.L, d.s, d.vi, d.rho.toFixed(1)].join('\t')).join('\n').replace(/\./g, ',');
   t += `\n\nModelo de suelo (${$('modSrc').textContent}, tipo ${MG.tipo(m.rho)}, error ${fmt(modelRms(m), 1)} %)\n`;
   let z = 0; m.rho.forEach((r, i) => { const h = m.h[i]; t += `Capa ${i + 1}: ${fmt(z)} a ${h ? fmt(z += h) : 'inf.'} m, rho = ${fmtS(r)} Ohm m\n`; });
   if (!elec) {
@@ -1837,6 +1888,7 @@ $('copyRep').onclick = () => {
     t += `\nRED: VL = ${fmt(hv.VL / 1000, 1)} kV, Icc3 = ${fmtS(hv.I3)} A, Icc1 = ${fmtS(hv.I1)} A\n  X1 = X2 = ${fmt(hv.rd.X1, 3)} Ohm, X0 = ${fmt(hv.rd.X0, 3)} Ohm, suma X = ${fmt(hv.rd.SX, 3)} Ohm\n`;
     if (hv.lvl === 'mt') t += `  Fusible de arranque IA = ${fmt(hv.rd.IA, 2)} A (${hv.fus}); If aux = ${fmtS(hv.Ifaux)} A; Rmax = ${isFinite(hv.Rmax) ? fmt(hv.Rmax, 2) : '-'} Ohm\n  If1fi real = ${fmt(hv.If, 1)} A; tiempo de operación ${hv.tr.estado === 'menor' ? '< ' : ''}${isFinite(hv.tr.t) ? fmtS(hv.tr.t) : '-'} s\n`;
     else t += `  If = ${fmt(hv.If, 1)} A; Sf = ${fmt(hv.Sf, 2)}; Df = ${fmt(hv.Df, 2)}; ts = ${fmtS(hv.tTerm)} s\n`;
+    if (hv.s10) t += `  Sección 10 RIC N°06: Vca = ${fmt(hv.s10.Vca, 1)} V, Rt máx para unir = ${fmt(hv.s10.Rt, 3)} Ohm, U = ${fmt(hv.s10.U, 0)} V (${hv.s10.sis}), D = ${fmt(hv.s10.D, 1)} m -> ${hv.s10.unir ? 'se pueden unir' : 'tierras separadas'}\n`;
     if (isFinite(hv.Smin)) t += `  Smin térmica = ${fmt(hv.Smin, 2)} mm2 (K ${fmt(hv.K, 2)}, FD ${fmt(hv.FD, 2)}); mínimo normativo 25 mm2\n`;
     t += `\nTENSIONES (IEEE 80-2013, ${hv.kg} kg, t = ${fmtS(hv.tTol)} s${hv.grav ? `, gravilla ${fmtS(hv.rhoS)} Ohm m x ${fmtS(hv.hs)} m, Cs = ${fmt(hv.Cs, 4)}` : ''})\n  IG = ${fmt(hv.IG, 1)} A, GPR = ${fmt(hv.GPR, 0)} V\n  n = ${fmt(hv.T.n, 3)}, Km = ${fmt(hv.T.Km, 4)}, Ks = ${fmt(hv.T.Ks, 4)}, Ki = ${fmt(hv.T.Ki, 3)}, LM = ${fmt(hv.T.LM, 2)} m, LS = ${fmt(hv.T.LS, 1)} m\n  Contacto: Em = ${fmt(hv.T.Em, 0)} V / tolerable ${fmt(hv.tol.Etc, 1)} V\n  Paso: Es = ${fmt(hv.T.Es, 0)} V / tolerable ${fmt(hv.tol.Etp, 1)} V\n`;
   }
@@ -1847,7 +1899,7 @@ $('copyRep').onclick = () => {
 };
 
 function renderAll() { renderFit(); renderHom(); renderModel(); plot(); renderResult(); updStepper(); }
-setSeg('gV', st.volt); setSeg('gK', st.kind); updSec(); updE(); updHV(); initFuse(); updCdp();
+setMeth(st.meth || 'sch', true); setSeg('gV', st.volt); setSeg('gK', st.kind); updSec(); updE(); updHV(); initFuse(); updCdp();
 renderTable(); plot(); renderResult(); route();
 setTimeout(run, 60);
 })();

@@ -35,6 +35,12 @@ const MG = (() => {
     const dV = (G(L - s / 2, rho, h) - G(L + s / 2, rho, h)) / PI;
     return K(L, s) * dV;
   }
+  // ρa Wenner (electrodos en superficie): ρa = 2a·[G(a) − G(2a)]
+  function rhoAW(a, rho, h) { return 2 * a * (G(a, rho, h) - G(2 * a, rho, h)); }
+  // Factor Wenner con profundidad de electrodos p (fórmula completa de la planilla): ρa = K·R
+  function KW(a, p) { return 4 * PI * a / (1 + 2 * a / Math.sqrt(a * a + 4 * p * p) - a / Math.sqrt(a * a + p * p)); }
+  // Separación de tierras MT/BT (RIC N°06, sección 10)
+  function vca(t) { return t <= 0.9 ? 72 / Math.pow(t, 1) : t <= 3 ? 38 / Math.pow(t, 0.18) : t <= 5 ? 64 : 50; }
   // ρa Schlumberger ideal (MN→0), como en las láminas de Orellana-Mooney
   function rhoAideal(L, rho, h) {
     const s = L * 0.02;
@@ -122,7 +128,7 @@ const MG = (() => {
   // ---------- Ajuste fino (Levenberg-Marquardt en log) ----------
   function misfit(p, n, data) {
     const rho = p.slice(0, n).map(x => Math.exp(x)), h = p.slice(n).map(x => Math.exp(x));
-    return data.map(d => Math.log(rhoAmodel(d.L, d.s, rho, h)) - Math.log(d.rho));
+    return data.map(d => Math.log(d.w ? rhoAW(d.L, rho, h) : rhoAmodel(d.L, d.s, rho, h)) - Math.log(d.rho));
   }
   function lm(p0, n, data, iters = 60) {
     const rs = data.map(d => d.rho), Ls = data.map(d => d.L);
@@ -355,6 +361,6 @@ const MG = (() => {
     return { cmil, mm2: cmil * 5.067075e-4 };
   }
 
-  return { K, rhoA, codX, codY, decX, decY, T, G, rhoAmodel, rhoAideal, homologar, ajustar, tipo, burgsdorf, malla, schwarz, laurent, onderdonk, sistema, barra, rhoBarra, fallaIf, red, rmax, fusible, fd, kCu, smin, cs, tolerables, tensiones, buildLibrary, families, familyMembers, curveOf };
+  return { K, rhoAW, KW, vca, rhoA, codX, codY, decX, decY, T, G, rhoAmodel, rhoAideal, homologar, ajustar, tipo, burgsdorf, malla, schwarz, laurent, onderdonk, sistema, barra, rhoBarra, fallaIf, red, rmax, fusible, fd, kCu, smin, cs, tolerables, tensiones, buildLibrary, families, familyMembers, curveOf };
 })();
 if (typeof module !== 'undefined') module.exports = MG;
