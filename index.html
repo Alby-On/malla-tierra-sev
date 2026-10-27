@@ -166,9 +166,6 @@ details.quick > summary::-webkit-details-marker { display: none }
 details.quick > summary::after { content: "ocultar"; font-family: var(--f-body); font-size: 12px; text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--muted) }
 details.quick:not([open]) > summary::after { content: "mostrar"; }
 details.quick[open] { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px }
-.next { display: flex; justify-content: flex-end; border-top: 1px dashed var(--line); padding-top: 12px }
-.nextb { font-weight: 600; color: var(--accent); border-color: var(--accent); background: var(--paper) }
-.nextb:hover { background: var(--accent-soft) }
 button.danger { color: var(--bad); border-color: var(--line) }
 button.danger:hover, button.danger.armed { border-color: var(--bad); background: var(--bad); color: var(--paper) }
 .btns.sub2 { gap: 6px }
@@ -242,8 +239,7 @@ a.ghost { text-decoration: none; color: var(--accent) }
   .checks li { grid-template-columns: minmax(0, 1fr); gap: 4px }
   .quick { padding: 10px 12px }
   .tab { padding: 6px 10px 7px; font-size: 15px }
-  .next { justify-content: stretch } .next .nextb { width: 100% }
-}
+  .next { justify-content: stretch } .next }
 @media (pointer: coarse) { button, .stp, .tab, .mainnav a { min-height: 40px } }
 .f.fw { grid-column: 1 / -1 }
 .seg.lv3 button { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 8px 14px; text-align: left }
@@ -281,6 +277,12 @@ label.chk input { width: 18px; height: 18px; accent-color: var(--accent) }
 input.auto { background: var(--accent-soft) !important; color: var(--accent) !important; font-weight: 600 }
 .autobox { display: flex; flex-direction: column; gap: 6px; background: var(--bg); border-radius: 5px; padding: 10px 12px }
 #autoT tr.pick td { background: var(--accent-soft); font-weight: 600 }
+.btns select { font-family: var(--f-body); font-weight: 600; font-size: 14px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); color: var(--ink); max-width: 100%; cursor: pointer }
+.btns select:hover { border-color: var(--ink) }
+.todo .th { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap }
+.todo .th a { font-size: 13px; color: var(--accent); font-weight: 600 }
+#gMeth { align-self: flex-start }
+@media (max-width: 640px) { #gMeth { align-self: stretch } }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); padding: 8px 14px; border-radius: 4px; font-size: 14px }
 @media (prefers-reduced-motion: no-preference) { .opt, .row { transition: border-color .12s, background .12s } }
 </style>
@@ -316,21 +318,11 @@ input.auto { background: var(--accent-soft) !important; color: var(--accent) !im
       <div class="seg lv3" id="gV"><button data-v="bt" class="on" type="button">Baja tensión<small>hasta 1 kV</small></button><button data-v="mt" type="button">Media tensión<small>sobre 1 y hasta 23 kV</small></button><button data-v="at" type="button">Alta tensión<small>sobre 23 y hasta 230 kV</small></button></div></div>
   <p class="note lv" id="lvNote"></p>
   <div class="todo">
-    <h3>Qué debes completar</h3>
+    <div class="th"><h3>Qué debes completar</h3><a href="#instrucciones">Ver instrucciones →</a></div>
     <ul id="todoList"></ul>
   </div>
 </section>
-<details class="quick" id="quickD" open>
-  <summary class="qt">Cómo usar</summary>
-  <ol>
-    <li><b>Ingresa las lecturas</b> del sondeo o carga la plantilla desde <a href="#metodos">Métodos de medición</a>.</li>
-    <li><b>Revisa la homologación</b> con las curvas patrón o ingresa la tuya.</li>
-    <li><b>Confirma el modelo</b> de suelo.</li>
-    <li><b>Diseña</b> la malla o el electrodo.</li>
-    <li><b>Lee el resultado</b> y la verificación, y copia el informe.</li>
-  </ol>
-  <a class="qmore" href="#instrucciones">Instrucciones completas →</a>
-</details>
+
 
 <!-- PASO 1 -->
 <section class="step" id="s1">
@@ -348,15 +340,20 @@ input.auto { background: var(--accent-soft) !important; color: var(--accent) !im
       <div class="btns">
         <button class="pri" id="add">+ Agregar lectura</button>
         <button id="pasteBtn">Pegar desde Excel</button>
-        <button id="copyTbl">Copiar tabla</button>
-        <button class="danger" id="clr">Vaciar tabla</button>
-      </div>
-      <div class="btns sub2">
-        <span class="lbl">Cargar ejemplo:</span>
-        <button class="ghost" id="ex">Guía 6.1</button>
-        <button class="ghost" id="ex2">Planilla</button>
-        <button class="ghost" id="ex3">Planilla Wenner</button>
-        <a class="ghost lnk" href="#metodos">Plantilla de aberturas</a>
+        <select id="exSel" aria-label="Cargar datos de ejemplo o una plantilla">
+          <option value="">Cargar ejemplo o plantilla…</option>
+          <optgroup label="Ejemplos">
+            <option value="g61">Guía 6.1 · Schlumberger</option>
+            <option value="pla">Planilla · Schlumberger</option>
+            <option value="plw">Planilla · Wenner</option>
+          </optgroup>
+          <optgroup label="Plantillas vacías">
+            <option value="tsch">Aberturas Schlumberger (19 lecturas)</option>
+            <option value="twen">Separaciones Wenner (13 lecturas)</option>
+          </optgroup>
+        </select>
+        <button id="copyTbl" title="Copia la tabla con K, ρa, X e Y para Excel o AutoCAD">Copiar</button>
+        <button class="danger" id="clr">Vaciar</button>
       </div>
       <div id="pasteBox" hidden style="display:flex;flex-direction:column;gap:6px">
         <label class="hint" for="pasteTa">Pega columnas L, s, V/I (separadas por tabulación o punto y coma). Si pegas solo L y V/I, se usa s = 1 m.</label>
@@ -369,18 +366,13 @@ input.auto { background: var(--accent-soft) !important; color: var(--accent) !im
       <div class="legend" id="leg"></div>
     </div>
   </div>
-  <div class="next"><button type="button" class="nextb" data-go="s2">Siguiente: Homologación →</button></div>
 </section>
 
 <!-- PASO 2 -->
 <section class="step" id="s2">
   <div class="step-h"><span class="n">2</span><h2>Homologación con curvas patrón</h2><span class="busy" id="busy"></span></div>
-  <p class="hint">El programa compara la curva de campo con todas las familias de las láminas Orellana-Mooney (2 capas, H, K, Q, A y 4 capas), desplazándola sin girar ni escalar, y ubica la cruz de campo. Las curvas se calculan a 62,5 mm por década, el mismo módulo de la planilla. Luego afina el modelo para 2, 3 y 4 capas con la geometría real de los electrodos.</p>
-  <div class="rescale">
-    <div class="f"><label for="modPdf">Módulo de la lámina impresa o escaneada</label><input id="modPdf" value="62,8" inputmode="decimal"><span class="u">mm por década · en tu PDF: láminas 1–41 ≈ 62,8 y láminas 42–66 ≈ 62,6</span></div>
-    <div class="f"><label>Módulo de la planilla y de este programa</label><input value="62,5" disabled><span class="u">mm por década</span></div>
-    <div class="resc-out"><span class="lab">Factor de reescalado</span><span class="fac" id="facOut">0,99522</span><span class="u" id="facHow"></span></div>
-  </div>
+  <p class="hint">El programa compara la curva de campo con todas las familias de las láminas Orellana-Mooney (2 capas, H, K, Q, A y 4 capas), desplazándola sin girar ni escalar, y ubica la cruz de campo. Luego afina el modelo para 2, 3 y 4 capas con la geometría real de los electrodos.</p>
+
   <div class="cols">
     <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
       <h3>Curvas patrón más parecidas</h3>
@@ -404,7 +396,6 @@ input.auto { background: var(--accent-soft) !important; color: var(--accent) !im
       </details>
     </div>
   </div>
-  <div class="next"><button type="button" class="nextb" data-go="s3">Siguiente: Modelo de suelo →</button></div>
 </section>
 
 <!-- PASO 3 -->
@@ -417,7 +408,6 @@ input.auto { background: var(--accent-soft) !important; color: var(--accent) !im
       <p class="note" id="modNote" hidden></p>
     </div>
   </div>
-  <div class="next"><button type="button" class="nextb" data-go="s4">Siguiente: Diseño →</button></div>
 </section>
 
 <!-- PASO 4 -->
@@ -543,7 +533,7 @@ input.auto { background: var(--accent-soft) !important; color: var(--accent) !im
     </div>
   </div>
 
-  <details id="verDet" open>
+  <details id="verDet">
     <summary>Verificación del diseño (guía de Schwarz y RIC N°06)</summary>
     <div class="form" style="padding-top:10px">
       <div class="f"><label for="gRmax">Rmáx calculada</label><input id="gRmax" value="" placeholder="opcional" inputmode="decimal"><span class="u">Ω · Rdiseño = menor entre Rmáx y 20 Ω</span></div>
@@ -560,7 +550,6 @@ input.auto { background: var(--accent-soft) !important; color: var(--accent) !im
       <div class="f"><label for="gTa">Temperatura ambiente</label><input id="gTa" value="40" inputmode="decimal"><span class="u">°C</span></div>
     </div>
   </details>
-  <div class="next"><button type="button" class="nextb" data-go="s5">Siguiente: Resultado →</button></div>
 </section>
 
 <!-- PASO 5 -->
@@ -838,7 +827,12 @@ input.auto { background: var(--accent-soft) !important; color: var(--accent) !im
 
 <section class="step" aria-labelledby="lamT">
   <div class="step-h"><h2 id="lamT">Láminas y escala</h2></div>
-  <p class="hint">La planilla y el programa trabajan con 62,5 mm por década. Las láminas impresas o escaneadas suelen venir a 62,8 mm: para superponerlas en AutoCAD usa ESCALA → R → 62.8 → 62.5 (factor 0,99522). Las curvas del programa ya se calculan a 62,5 mm, así que no necesitan reescalado.</p>
+  <p class="hint">La planilla y el programa trabajan con 62,5 mm por década. Las láminas impresas o escaneadas suelen venir a 62,8 mm: para superponerlas en AutoCAD hay que reescalarlas. Las curvas del programa ya se calculan a 62,5 mm, así que no necesitan reescalado.</p>
+  <div class="rescale">
+    <div class="f"><label for="modPdf">Módulo de la lámina impresa o escaneada</label><input id="modPdf" value="62,8" inputmode="decimal"><span class="u">mm por década · en tu PDF: láminas 1–41 ≈ 62,8 y láminas 42–66 ≈ 62,6</span></div>
+    <div class="f"><label>Módulo de la planilla y de este programa</label><input value="62,5" disabled><span class="u">mm por década</span></div>
+    <div class="resc-out"><span class="lab">Factor de reescalado</span><span class="fac" id="facOut">0,99522</span><span class="u" id="facHow"></span></div>
+  </div>
 </section>
 
 </div>
@@ -1296,14 +1290,19 @@ $('tbl').addEventListener('keydown', e => {
 $('colT').onclick = () => { const on = !$('tbl').classList.contains('full'); $('tbl').classList.toggle('full', on); $('colT').setAttribute('aria-pressed', on); $('colT').textContent = on ? 'Ocultar K, X e Y' : 'Mostrar K, X e Y'; };
 $('tbl').addEventListener('click', e => { const b = e.target.closest('[data-del]'); if (!b) return; st.rows.splice(+b.dataset.del, 1); renderTable(); schedule(); });
 $('add').onclick = () => { if (st.rows.length >= 20) { toast('Máximo 20 lecturas'); return; } const last = st.rows[st.rows.length - 1]; st.rows.push({ L: '', s: last ? last.s : '1', vi: '', on: true }); renderTable(); $('rL' + (st.rows.length - 1)).focus(); };
-$('ex').onclick = () => { setMeth('sch', true); st.anim = true; st.rows = EX.map(r => ({ ...r })); renderTable(); schedule(); };
-$('ex2').onclick = () => { setMeth('sch', true); st.anim = true; st.rows = EX2.map(r => ({ ...r })); renderTable(); schedule(); };
+const exG = () => { setMeth('sch', true); st.anim = true; st.rows = EX.map(r => ({ ...r })); renderTable(); schedule(); };
+const exP = () => { setMeth('sch', true); st.anim = true; st.rows = EX2.map(r => ({ ...r })); renderTable(); schedule(); };
 const EXW = [[1,17.8],[2,10.5],[3,8.9],[4,7.5],[5,5.8],[7,4.5],[10,2.75],[15,1.46],[20,0.98],[30,0.56]].map(([a, R]) => ({ L: String(a), s: '0,29', vi: String(R).replace('.', ','), on: true }));
-$('ex3').onclick = () => { setMeth('wen', true); st.anim = true; st.rows = EXW.map(r => ({ ...r })); renderTable(); schedule(); };
+const exW = () => { setMeth('wen', true); st.anim = true; st.rows = EXW.map(r => ({ ...r })); renderTable(); schedule(); };
 const S1H = {
   sch: 'Ingresa L = AB/2, s = MN (completo) y la lectura V/I del instrumento. ρa = π · (V/I) · [(L/s)² − 0,25] · s. Acepta coma o punto decimal. Desmarca una lectura para excluirla del ajuste sin borrarla.',
   wen: 'Ingresa la separación a entre electrodos, la profundidad p a la que están enterrados y la lectura R del instrumento. ρa = 4π·a·R / [1 + 2a/√(a² + 4p²) − a/√(a² + p²)], la fórmula de la hoja Wenner de la planilla; con p = 0 queda ρa = 2π·a·R. X = log(a)·62,5.'
 };
+$('exSel').addEventListener('change', () => {
+  const v = $('exSel').value; $('exSel').value = '';
+  ({ g61: exG, pla: exP, plw: exW, tsch: () => $('usePlant').onclick(), twen: () => $('useWen').onclick() })[v]?.();
+  if (v) toast(v.startsWith('t') ? 'Plantilla cargada: completa las lecturas' : 'Ejemplo cargado');
+});
 function setMeth(v, quiet) {
   st.meth = v === 'wen' ? 'wen' : 'sch';
   [...$('gMeth').children].forEach(b => b.classList.toggle('on', b.dataset.v === st.meth));
@@ -1401,8 +1400,6 @@ function updStepper() {
   const v = nb ? 'bad' : nw ? 'warn' : 'ok';
   setStp(5, v, `${fmt(L.R, L.R < 10 ? 2 : 1)} Ω · ${v === 'ok' ? 'cumple' : v === 'warn' ? 'revisar' : 'no cumple'}`);
 }
-try { if (localStorage.getItem('malla-sev-quick') === '0') $('quickD').open = false; } catch (e) {}
-$('quickD').addEventListener('toggle', () => { try { localStorage.setItem('malla-sev-quick', $('quickD').open ? '1' : '0'); } catch (e) {} });
 // ---------- Menú principal ----------
 const VIEWS = ['principal', 'metodos', 'instrucciones'];
 function route() {
@@ -1419,8 +1416,8 @@ const PLANT = [['0,6', '0,2'], ['0,8', '0,2'], ['1', '0,2'], ['1,6', '0,2'], ['2
 $('usePlant').onclick = () => { setMeth('sch', true); st.rows = PLANT.map(([L, s]) => ({ L, s, vi: '', on: true })); renderTable(); schedule(); if (location.hash !== '#principal') location.hash = 'principal'; setTimeout(() => document.getElementById('s1').scrollIntoView({ behavior: 'smooth' }), 50); toast('Plantilla cargada: ingresa los V/I'); };
 $('clr').onclick = () => {
   const b = $('clr');
-  if (!b.classList.contains('armed')) { b.classList.add('armed'); b.textContent = '¿Seguro? Vaciar'; clearTimeout(b.t); b.t = setTimeout(() => { b.classList.remove('armed'); b.textContent = 'Vaciar tabla'; }, 3000); return; }
-  b.classList.remove('armed'); b.textContent = 'Vaciar tabla';
+  if (!b.classList.contains('armed')) { b.classList.add('armed'); b.textContent = '¿Seguro? Vaciar'; clearTimeout(b.t); b.t = setTimeout(() => { b.classList.remove('armed'); b.textContent = 'Vaciar'; }, 3000); return; }
+  b.classList.remove('armed'); b.textContent = 'Vaciar';
   st.rows = Array.from({ length: 12 }, () => ({ L: '', s: '1', vi: '', on: true })); renderTable(); schedule(); toast('Tabla vaciada');
 };
 $('pasteBtn').onclick = () => { $('pasteBox').hidden = false; $('pasteTa').focus(); };
