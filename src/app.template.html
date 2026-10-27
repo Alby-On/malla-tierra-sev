@@ -143,6 +143,49 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .howto .hn { font-family: var(--f-mono); font-size: 12px; color: var(--paper); background: var(--ink); padding: 2px 7px; border-radius: 3px; align-self: flex-start }
 .howto p { margin: 0; font-size: 14px; line-height: 1.55; color: var(--ink) }
 .howto a { color: var(--accent) }
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; flex-direction: column; gap: 6px; padding-block: 8px; border-bottom: 1px solid var(--line); margin-top: -8px }
+.topbar .mainnav { position: static; border: 0; padding-block: 0; margin: 0 }
+.stepper { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px }
+.stepper[hidden] { display: none !important }
+.stp { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 5px; border: 1px solid var(--line); background: var(--paper); text-align: left; font-weight: 400; min-width: 0 }
+.stp .sn { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-family: var(--f-mono); font-size: 12px; background: var(--grid); color: var(--muted) }
+.stp .sx { display: flex; flex-direction: column; min-width: 0 }
+.stp .sl { font-family: var(--f-display); font-weight: 600; font-size: 14px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.stp .ss { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.stp.ok .sn { background: var(--ok); color: var(--paper) }
+.stp.warn .sn { background: var(--warn); color: var(--paper) }
+.stp.bad .sn { background: var(--bad); color: var(--paper) }
+.stp.res { border-color: var(--ink) }
+.stp.res .ss { color: var(--ink); font-weight: 500 }
+.stp:hover { border-color: var(--ink) }
+@media (max-width: 760px) { .stepper { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px } .stp { padding: 5px; justify-content: center } .stp .sx { display: none } .stp.res .sx { display: flex } .stepper { grid-template-columns: repeat(4, auto) minmax(0, 1fr) } }
+section.step { scroll-margin-top: 150px }
+details.quick { display: block }
+details.quick > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px }
+details.quick > summary::-webkit-details-marker { display: none }
+details.quick > summary::after { content: "ocultar"; font-family: var(--f-body); font-size: 12px; text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--muted) }
+details.quick:not([open]) > summary::after { content: "mostrar"; }
+details.quick[open] { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px }
+.next { display: flex; justify-content: flex-end; border-top: 1px dashed var(--line); padding-top: 12px }
+.nextb { font-weight: 600; color: var(--accent); border-color: var(--accent); background: var(--paper) }
+.nextb:hover { background: var(--accent-soft) }
+button.danger { color: var(--bad); border-color: var(--line) }
+button.danger:hover, button.danger.armed { border-color: var(--bad); background: var(--bad); color: var(--paper) }
+.btns.sub2 { gap: 6px }
+.btns .lbl { font-size: 13px; color: var(--muted) }
+.ghost { font-size: 13px; padding: 4px 10px; font-weight: 500; background: transparent; border: 1px dashed var(--line); border-radius: 4px; color: var(--ink) }
+a.ghost { text-decoration: none; color: var(--accent) }
+.ghost:hover { border-style: solid; border-color: var(--ink) }
+.verd { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px }
+.verd .big-chip { font-family: var(--f-display); font-weight: 700; font-size: 15px; padding: 3px 12px; border-radius: 14px; color: var(--paper) }
+.verd .big-chip.ok { background: var(--ok) } .verd .big-chip.warn { background: var(--warn) } .verd .big-chip.bad { background: var(--bad) }
+.verd .vt { font-size: 13px; color: var(--muted) }
+.busy:not(:empty)::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 50%; border: 2px solid var(--accent); border-right-color: transparent; vertical-align: -1px }
+@media (prefers-reduced-motion: no-preference) { .busy:not(:empty)::before { animation: spin .8s linear infinite } }
+@keyframes spin { to { transform: rotate(360deg) } }
+@media (pointer: coarse) { td input { padding: 8px 6px; min-height: 36px } }
+@media (max-width: 480px) { .mainnav .lg { display: none } .mainnav a { padding: 6px 10px; font-size: 15px } }
+.verd a { color: var(--accent) }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); padding: 8px 14px; border-radius: 4px; font-size: 14px }
 @media (prefers-reduced-motion: no-preference) { .opt, .row { transition: border-color .12s, background .12s } }
 </style>
@@ -156,15 +199,24 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   <div class="flow">Schlumberger → log-log 62,5 mm/déc → Orellana-Mooney → Burgsdorf-Yakobs → Schwarz</div>
 </header>
 
+<div class="topbar">
 <nav class="mainnav" aria-label="Menú principal">
   <a href="#principal" data-v="principal">Principal</a>
-  <a href="#metodos" data-v="metodos">Métodos de medición</a>
+  <a href="#metodos" data-v="metodos">Métodos<span class="lg"> de medición</span></a>
   <a href="#instrucciones" data-v="instrucciones">Instrucciones</a>
 </nav>
+<div class="stepper" id="stepper" role="navigation" aria-label="Avance del cálculo">
+  <button type="button" class="stp" data-go="s1"><span class="sn">1</span><span class="sx"><span class="sl">Mediciones</span><span class="ss" id="ss1">—</span></span></button>
+  <button type="button" class="stp" data-go="s2"><span class="sn">2</span><span class="sx"><span class="sl">Homologación</span><span class="ss" id="ss2">—</span></span></button>
+  <button type="button" class="stp" data-go="s3"><span class="sn">3</span><span class="sx"><span class="sl">Modelo de suelo</span><span class="ss" id="ss3">—</span></span></button>
+  <button type="button" class="stp" data-go="s4"><span class="sn">4</span><span class="sx"><span class="sl">Diseño</span><span class="ss" id="ss4">—</span></span></button>
+  <button type="button" class="stp res" data-go="s5"><span class="sn">5</span><span class="sx"><span class="sl">Resultado</span><span class="ss" id="ss5">—</span></span></button>
+</div>
+</div>
 
 <div class="view" id="v-principal">
-<div class="quick">
-  <span class="qt">Cómo usar</span>
+<details class="quick" id="quickD" open>
+  <summary class="qt">Cómo usar</summary>
   <ol>
     <li><b>Ingresa las lecturas</b> del sondeo o carga la plantilla desde <a href="#metodos">Métodos de medición</a>.</li>
     <li><b>Revisa la homologación</b> con las curvas patrón o ingresa la tuya.</li>
@@ -173,7 +225,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     <li><b>Lee el resultado</b> y la verificación, y copia el informe.</li>
   </ol>
   <a class="qmore" href="#instrucciones">Instrucciones completas →</a>
-</div>
+</details>
 
 <!-- PASO 1 -->
 <section class="step" id="s1">
@@ -186,12 +238,16 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
         <tbody></tbody>
       </table></div>
       <div class="btns">
-        <button id="add">+ Agregar lectura</button>
+        <button class="pri" id="add">+ Agregar lectura</button>
         <button id="pasteBtn">Pegar desde Excel</button>
-        <button id="ex">Ejemplo guía 6.1</button>
-        <button id="ex2">Ejemplo planilla</button>
-        <button id="clr">Vaciar</button>
         <button id="copyTbl">Copiar tabla</button>
+        <button class="danger" id="clr">Vaciar tabla</button>
+      </div>
+      <div class="btns sub2">
+        <span class="lbl">Cargar ejemplo:</span>
+        <button class="ghost" id="ex">Guía 6.1</button>
+        <button class="ghost" id="ex2">Planilla</button>
+        <a class="ghost lnk" href="#metodos">Plantilla de aberturas</a>
       </div>
       <div id="pasteBox" hidden style="display:flex;flex-direction:column;gap:6px">
         <label class="hint" for="pasteTa">Pega columnas L, s, V/I (separadas por tabulación o punto y coma). Si pegas solo L y V/I, se usa s = 1 m.</label>
@@ -204,6 +260,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
       <div class="legend" id="leg"></div>
     </div>
   </div>
+  <div class="next"><button type="button" class="nextb" data-go="s2">Siguiente: Homologación →</button></div>
 </section>
 
 <!-- PASO 2 -->
@@ -238,6 +295,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
       </details>
     </div>
   </div>
+  <div class="next"><button type="button" class="nextb" data-go="s3">Siguiente: Modelo de suelo →</button></div>
 </section>
 
 <!-- PASO 3 -->
@@ -250,6 +308,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
       <p class="note" id="modNote" hidden></p>
     </div>
   </div>
+  <div class="next"><button type="button" class="nextb" data-go="s4">Siguiente: Diseño →</button></div>
 </section>
 
 <!-- PASO 4 -->
@@ -332,6 +391,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
       <div class="f"><label for="gTa">Temperatura ambiente</label><input id="gTa" value="40" inputmode="decimal"><span class="u">°C</span></div>
     </div>
   </details>
+  <div class="next"><button type="button" class="nextb" data-go="s5">Siguiente: Resultado →</button></div>
 </section>
 
 <!-- PASO 5 -->
@@ -341,7 +401,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   <div id="resBox" style="display:flex;flex-direction:column;gap:14px">
   <div class="result">
     <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
-      <div class="big"><span class="lab" id="rLab">Schwarz · resistencia total</span><span class="val" id="rOut">—</span><span class="count" id="rSub"></span></div>
+      <div class="big"><span class="lab" id="rLab">Schwarz · resistencia total</span><span class="val" id="rOut">—</span><span class="count" id="rSub"></span><span class="verd" id="rVer"></span></div>
       <div id="byBlock" style="display:flex;flex-direction:column;gap:14px;min-width:0">
         <h3>Burgsdorf-Yakobs · resistividad equivalente</h3>
         <div class="formula">r = √(S/π) · r0² = r² − b² · q0² = 2r(r + b) · vi² = ½[zi² + q0² + r0² − √((zi² + q0² + r0²)² − 4q0²r0²)] · Fi = √(1 − vi²/r0²) · ρeq = Fn / Σ (Fi − Fi−1)/ρi</div>
@@ -667,6 +727,7 @@ function updCount() {
   const nf = data().filter(d => d.L < 2.5 * d.s).length;
   el.textContent = `${n} lecturas válidas · mínimo 12, máximo 20` + (nf ? ` · ${nf} con MN > AB/5 (!)` : '');
   el.className = 'count' + (n < 12 || n > 20 ? ' warn' : '');
+  if (typeof updStepper === 'function' && $('stepper')) try { updStepper(); } catch (e) {}
 }
 $('tbl').addEventListener('input', e => {
   const m = e.target.id.match(/^r([Lsvu])(\d+)$/); if (!m) return;
@@ -701,18 +762,49 @@ function updCdp() {
     .map(([n, p]) => `<tr${p === 62 ? ' class="emp"' : ''}><td style="text-align:left">${n}</td><td>${p} %</td><td>${fmt(Dc * p / 100, 1)}</td></tr>`).join('');
 }
 $('s4').addEventListener('input', updCdp); $('s4').addEventListener('click', () => setTimeout(updCdp, 0));
+function setBusy(t) { $('busy').textContent = t; updStepper(); }
+// ---------- Barra de avance y navegación entre pasos ----------
+function goStep(id) { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }
+document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) { if (b.tagName === 'A') e.preventDefault(); goStep(b.dataset.go); } });
+function setStp(i, cls, txt) { const b = document.querySelector(`.stp[data-go="s${i}"]`); b.classList.remove('ok', 'warn', 'bad'); if (cls) b.classList.add(cls); $('ss' + i).textContent = txt; b.title = txt; }
+function updStepper() {
+  const n = data().length;
+  setStp(1, n >= 12 && n <= 20 ? 'ok' : n ? 'warn' : '', `${n} lecturas`);
+  const busy = $('busy').textContent;
+  const m = current();
+  if (busy) setStp(2, '', 'calculando…');
+  else if (st.src === 'man' && st.manPat) setStp(2, 'ok', `manual · ${st.manPat.name || '2 capas'}`);
+  else if (st.hom.length) { const c = st.hom[st.homSel]; setStp(2, 'ok', st.src === 'pat' ? `Lám. ${c.lam} · ${c.n === 2 ? '2 capas' : c.name}` : `mejor: Lám. ${st.hom[0].lam} · ${st.hom[0].n === 2 ? '2 capas' : st.hom[0].name}`); }
+  else setStp(2, '', '—');
+  setStp(3, m ? 'ok' : '', m ? `${m.n} capas · tipo ${MG.tipo(m.rho)}` : '—');
+  if (st.volt === 'at') { setStp(4, 'warn', 'alta tensión'); setStp(5, '', 'sin cálculo'); return; }
+  const L = st.last;
+  if (!L) { setStp(4, '', '—'); setStp(5, '', '—'); return; }
+  setStp(4, 'ok', L.elec ? `electrodo ${fmt(L.res.Lb, 1)} m` : `malla ${fmt(L.res.M.largo, 0)}×${fmt(L.res.M.ancho, 0)} m${L.res.n ? ` + ${L.res.n} barras` : ''}`);
+  const nb = L.ric.filter(c => c.s === 'bad').length, nw = L.ric.filter(c => c.s === 'warn').length;
+  const v = nb ? 'bad' : nw ? 'warn' : 'ok';
+  setStp(5, v, `${fmt(L.R, L.R < 10 ? 2 : 1)} Ω · ${v === 'ok' ? 'cumple' : v === 'warn' ? 'revisar' : 'no cumple'}`);
+}
+try { if (localStorage.getItem('malla-sev-quick') === '0') $('quickD').open = false; } catch (e) {}
+$('quickD').addEventListener('toggle', () => { try { localStorage.setItem('malla-sev-quick', $('quickD').open ? '1' : '0'); } catch (e) {} });
 // ---------- Menú principal ----------
 const VIEWS = ['principal', 'metodos', 'instrucciones'];
 function route() {
   let v = location.hash.slice(1); if (!VIEWS.includes(v)) v = 'principal';
   VIEWS.forEach(x => $('v-' + x).hidden = x !== v);
+  $('stepper').hidden = v !== 'principal';
   document.querySelectorAll('.mainnav a').forEach(a => { if (a.dataset.v === v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
   if (v === 'principal') plot();
 }
 window.addEventListener('hashchange', () => { route(); window.scrollTo(0, 0); });
 const PLANT = [['0,6', '0,2'], ['0,8', '0,2'], ['1', '0,2'], ['1,6', '0,2'], ['2', '0,2'], ['2,5', '0,2'], ['2,5', '1'], ['3', '1'], ['4', '1'], ['5', '1'], ['6', '1'], ['8', '1'], ['10', '1'], ['15', '1'], ['15', '5'], ['20', '5'], ['30', '5'], ['40', '5'], ['50', '5']];
 $('usePlant').onclick = () => { st.rows = PLANT.map(([L, s]) => ({ L, s, vi: '', on: true })); renderTable(); schedule(); if (location.hash !== '#principal') location.hash = 'principal'; setTimeout(() => document.getElementById('s1').scrollIntoView({ behavior: 'smooth' }), 50); toast('Plantilla cargada: ingresa los V/I'); };
-$('clr').onclick = () => { st.rows = Array.from({ length: 14 }, () => ({ L: '', s: '1', vi: '', on: true })); renderTable(); schedule(); };
+$('clr').onclick = () => {
+  const b = $('clr');
+  if (!b.classList.contains('armed')) { b.classList.add('armed'); b.textContent = '¿Seguro? Vaciar'; clearTimeout(b.t); b.t = setTimeout(() => { b.classList.remove('armed'); b.textContent = 'Vaciar tabla'; }, 3000); return; }
+  b.classList.remove('armed'); b.textContent = 'Vaciar tabla';
+  st.rows = Array.from({ length: 12 }, () => ({ L: '', s: '1', vi: '', on: true })); renderTable(); schedule(); toast('Tabla vaciada');
+};
 $('pasteBtn').onclick = () => { $('pasteBox').hidden = false; $('pasteTa').focus(); };
 $('pasteNo').onclick = () => { $('pasteBox').hidden = true; };
 $('pasteOk').onclick = () => {
@@ -799,18 +891,18 @@ async function run() {
   if (key === st.dataKey) { renderAll(); return; }
   st.dataKey = key;
   if (D.length < 4) { st.hom = []; st.fit = null; $('homList').innerHTML = '<p class="hint">Se necesitan al menos 4 lecturas válidas.</p>'; $('fitList').innerHTML = ''; renderAll(); return; }
-  if (!libReady) { $('busy').textContent = 'Generando curvas patrón…'; await new Promise(r => setTimeout(r, 30)); MG.buildLibrary(); libReady = true; }
-  $('busy').textContent = 'Homologando…'; await new Promise(r => setTimeout(r, 20));
+  if (!libReady) { setBusy('Generando curvas patrón…'); await new Promise(r => setTimeout(r, 30)); MG.buildLibrary(); libReady = true; }
+  setBusy('Homologando…'); await new Promise(r => setTimeout(r, 20));
   if (key !== st.dataKey) return;
   const hom = MG.homologar(D.map(d => d.L), D.map(d => d.rho));
   // quedarse con la mejor curva de cada familia
   const seen = new Set(); st.hom = hom.filter(c => { const k = c.n === 2 ? '2' : c.name + c.ratio; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6);
   st.homSel = 0; renderHom(); plot();
-  $('busy').textContent = 'Ajustando 2, 3 y 4 capas…'; await new Promise(r => setTimeout(r, 20));
+  setBusy('Ajustando 2, 3 y 4 capas…'); await new Promise(r => setTimeout(r, 20));
   if (key !== st.dataKey) return;
   st.fit = MG.ajustar(D, hom); st.fitN = st.fit.rec;
   if (st.src !== 'man' && st.src !== 'pat') st.src = 'fit';
-  $('busy').textContent = '';
+  setBusy('');
   renderAll();
 }
 function renderHom() {
@@ -912,10 +1004,10 @@ const lab5 = { ok: 'cumple', warn: 'revisar', bad: 'no cumple', na: 'pendiente',
 function renderResult() {
   const at = st.volt === 'at';
   $('atMsg').hidden = !at; $('resBox').hidden = at;
-  if (at) { st.last = null; return; }
+  if (at) { st.last = null; updStepper(); return; }
   const m = current(), elec = st.kind === 'electrodo';
   $('byBlock').hidden = elec;
-  const clear = msg => { $('rOut').innerHTML = '—'; $('rSub').textContent = msg; ['byKv', 'swKv', 'plan', 'secBox', 'ricList', 'swF'].forEach(k => $(k).innerHTML = ''); $('byT').tBodies[0].innerHTML = ''; $('ricSum').textContent = ''; st.last = null; };
+  const clear = msg => { $('rOut').innerHTML = '—'; $('rVer').innerHTML = ''; $('rSub').textContent = msg; ['byKv', 'swKv', 'plan', 'secBox', 'ricList', 'swF'].forEach(k => $(k).innerHTML = ''); $('byT').tBodies[0].innerHTML = ''; $('ricSum').textContent = ''; st.last = null; };
   if (!m) return clear('Falta el modelo de suelo');
   const I = num($('gI').value), t = num($('gT').value), Ta = num($('gTa').value), Tm = num($('gTm').value), Smm = num($('gSmm').value);
   const Rmax = num($('gRmax').value), Rdis = Rmax > 0 ? Math.min(Rmax, 20) : 20;
@@ -972,6 +1064,9 @@ function renderResult() {
   $('ricList').innerHTML = ric.map(c => `<li><span class="chip ${c.s === 'na' || c.s === 'nap' ? 'acc' : c.s}">${lab5[c.s]}</span><div><b>${c.t}</b><span class="d">${c.d}</span></div></li>`).join('');
   $('ricSum').textContent = `${ric.filter(c => c.s === 'ok').length} cumplen · ${ric.filter(c => c.s === 'warn').length} a revisar · ${ric.filter(c => c.s === 'bad').length} no cumplen`;
   st.last = { m, R, Rdis, Ireal, res, elec, ric };
+  const nb = ric.filter(c => c.s === 'bad').length, nw = ric.filter(c => c.s === 'warn').length, vv = nb ? 'bad' : nw ? 'warn' : 'ok';
+  $('rVer').innerHTML = `<span class="big-chip ${vv}">${vv === 'ok' ? 'Cumple' : vv === 'warn' ? 'Cumple, con puntos a revisar' : 'No cumple'}</span><span class="vt">${nb ? nb + ' no cumplen · ' : ''}${nw ? nw + ' a revisar · ' : ''}<a href="#" data-go="ricList">ver verificación</a></span>`;
+  updStepper();
 }
 function ricChecks({ elec, res, R, Rdis, Rmax, Ireal, If, I, t, Ta, Tm, Smm }) {
   const out = [], D = data(), Lmax = D.length ? Math.max(...D.map(d => d.L)) : 0;
@@ -1018,7 +1113,7 @@ $('copyRep').onclick = () => {
   copy(t, 'Informe copiado');
 };
 
-function renderAll() { renderFit(); renderHom(); renderModel(); plot(); renderResult(); }
+function renderAll() { renderFit(); renderHom(); renderModel(); plot(); renderResult(); updStepper(); }
 setSeg('gV', st.volt); setSeg('gK', st.kind); updSec(); updE(); updCdp();
 renderTable(); plot(); renderResult(); route();
 setTimeout(run, 60);
