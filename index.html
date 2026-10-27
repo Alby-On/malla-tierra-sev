@@ -99,6 +99,15 @@ details summary { cursor: pointer; font-weight: 600; font-size: 14px }
 .resc-out .lab { font-size: 12.5px; color: var(--muted); font-weight: 500 }
 .resc-out .fac { font-family: var(--f-display); font-weight: 700; font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums }
 .resc-out .u { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted) }
+.intro { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 20px; display: flex; flex-direction: column; gap: 16px }
+.intro .lead { font-size: 16px; line-height: 1.6; margin: 0; max-width: 78ch; text-wrap: pretty }
+.intro .lead b { font-weight: 600 }
+.intro-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px 24px; align-items: start }
+.intro-grid > div { display: flex; flex-direction: column; gap: 8px; min-width: 0 }
+.intro h3 { font-size: 15px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 6px }
+.intro ol, .intro ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.5 }
+.intro li b { font-weight: 600 }
+.intro .disc { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; margin: 0; max-width: 95ch }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); padding: 8px 14px; border-radius: 4px; font-size: 14px }
 @media (prefers-reduced-motion: no-preference) { .opt, .row { transition: border-color .12s, background .12s } }
 </style>
@@ -111,6 +120,43 @@ details summary { cursor: pointer; font-weight: 600; font-size: 14px }
   </div>
   <div class="flow">Schlumberger → log-log 62,5 mm/déc → Orellana-Mooney → Burgsdorf-Yakobs → Schwarz</div>
 </header>
+
+<section class="intro" aria-labelledby="introT">
+  <h2 id="introT" hidden>Presentación</h2>
+  <p class="lead">Este software calcula la <b>resistencia proyectada de una malla de puesta a tierra</b> antes de construirla. Parte de un sondeo eléctrico vertical con el método Schlumberger, obtiene el modelo de capas del terreno comparando la curva de campo con las curvas patrón de Orellana-Mooney, reduce ese terreno a una resistividad equivalente con Burgsdorf-Yakobs y calcula la resistencia de la malla con Schwarz. Sigue el mismo procedimiento del curso, con la hoja bilogarítmica de 62,5 mm por década.</p>
+  <div class="intro-grid">
+    <div>
+      <h3>Qué hace</h3>
+      <ul>
+        <li>Calcula K y ρa de cada lectura y sus coordenadas X/Y en mm para AutoCAD.</li>
+        <li>Grafica la curva de campo en escala log-log.</li>
+        <li>Busca entre unas 1.500 curvas patrón (2, 3 y 4 capas) la que mejor calza y entrega la cruz de campo.</li>
+        <li>Calcula ρ equivalente, la resistencia de la malla y la sección mínima del conductor.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Cómo se usa</h3>
+      <ol>
+        <li>Ingresa o pega las lecturas de terreno (paso 1).</li>
+        <li>Revisa las curvas patrón propuestas o ingresa tu homologación de AutoCAD (paso 2).</li>
+        <li>Confirma el modelo de suelo (paso 3).</li>
+        <li>Ingresa las dimensiones de la malla (paso 4).</li>
+        <li>Lee la resistencia proyectada y copia el informe (paso 5).</li>
+      </ol>
+    </div>
+    <div>
+      <h3>Consideraciones</h3>
+      <ul>
+        <li><b>s es MN completo</b>, no MN/2, y L debe ser mayor que s/2.</li>
+        <li>Usa <b>13 a 16 lecturas</b> y abre AB/2 al menos hasta la dimensión mayor de la malla: las capas profundas son las que más pesan en la resistencia.</li>
+        <li>Las láminas impresas o escaneadas suelen venir a 62,8 mm por década: reescálalas a 62,5 antes de superponerlas.</li>
+        <li>Varias curvas patrón pueden calzar casi igual (equivalencia). Elige la que tenga sentido geológico y compárala con el ajuste fino.</li>
+        <li>Revisa con tu apunte los valores de k1 y k2, la temperatura máxima de la unión y la corriente de falla. El cálculo no incluye barras verticales.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="disc">El resultado es un valor proyectado. La resistencia real de la puesta a tierra se debe verificar midiéndola una vez construida la malla. Esta herramienta apoya el cálculo, pero no reemplaza el criterio del proyectista ni la normativa eléctrica vigente.</p>
+</section>
 
 <!-- PASO 1 -->
 <section class="step" id="s1">
